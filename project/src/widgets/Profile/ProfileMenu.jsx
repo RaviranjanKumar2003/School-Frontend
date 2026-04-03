@@ -19,6 +19,8 @@ function ProfileMenu({ openMenu, setOpenMenu }) {
   const navigate = useNavigate();
   const userRole = localStorage.getItem("userRole");
   const [user, setUser] = useState(null);
+  console.log(user);
+  
 
   const logout = useLogout();
 
@@ -72,8 +74,7 @@ function ProfileMenu({ openMenu, setOpenMenu }) {
         <Button
           variant="text"
           color="gray"
-          className="flex items-center gap-2 px-2 py-1 md:px-3 md:py-2 bg-gray-100 rounded-full shadow-md"
-        >
+          className="flex items-center gap-2 px-2 py-1 md:px-3 md:py-2 bg-gray-100 rounded-full shadow-md">
           {/* ✅ PROFILE IMAGE */}
           <Avatar
             src={getImageUrl()}
