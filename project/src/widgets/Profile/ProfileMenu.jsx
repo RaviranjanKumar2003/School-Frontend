@@ -20,6 +20,7 @@ function ProfileMenu({ openMenu, setOpenMenu }) {
   const userRole = localStorage.getItem("userRole");
   const [user, setUser] = useState(null);
   console.log(user);
+ 
   
 
   const logout = useLogout();
