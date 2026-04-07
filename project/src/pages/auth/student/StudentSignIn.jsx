@@ -267,15 +267,12 @@ export function StudentSignIn() {
       if (response.ok) {
         const data = await response.json();
         console.log("Login Response:", data);
-
         // 🔥🔥 MAIN FIX (IMPORTANT)
         localStorage.setItem("userRole", "student");
-        localStorage.setItem("studentId", data.id); // ✅ DB ID
-        localStorage.setItem("studentCustomId", data.studentId); // optional
+       localStorage.setItem("studentId", data.studentId); // ✅ string id
+       localStorage.setItem("id", data.id); // ✅ number id
 
-        // optional: पूरा data save
-        localStorage.setItem("studentData", JSON.stringify(data));
-
+       localStorage.setItem("studentData", JSON.stringify(data));
         alert("Login Successful ✅");
         navigate("/dashboard/student/home");
       } else {
