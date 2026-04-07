@@ -5,15 +5,16 @@ const ProfessorEvents = () => {
   const [events, setEvents] = useState([]);
   const [statusMap, setStatusMap] = useState({});
 
-  const teacherId = localStorage.getItem("userId"); // adjust if needed
+  const teacherId = localStorage.getItem("userId");
 
-  // 🔥 GET EVENTS
+  // 🔥 GET EVENTS (FIXED)
   const fetchEvents = async () => {
     try {
-      const res = await axios.get("/api/events");
+      const res = await axios.get("http://localhost:8080/api/events/teacher");
+      console.log("Events:", res.data);
       setEvents(res.data);
     } catch (err) {
-      console.error("Error fetching events", err);
+      console.error("Error fetching events", err.response?.data || err.message);
     }
   };
 
@@ -21,10 +22,10 @@ const ProfessorEvents = () => {
     fetchEvents();
   }, []);
 
-  // 🔥 STATUS UPDATE
+  // 🔥 STATUS UPDATE (FIXED)
   const updateStatus = async (eventId, status) => {
     try {
-      await axios.post("/api/events/respond", {
+      await axios.post("http://localhost:8080/api/events/respond", {
         eventId,
         teacherId,
         status,
@@ -35,7 +36,7 @@ const ProfessorEvents = () => {
         [eventId]: status,
       }));
     } catch (err) {
-      console.error("Error updating status", err);
+      console.error("Error updating status", err.response?.data || err.message);
     }
   };
 
@@ -56,9 +57,6 @@ const ProfessorEvents = () => {
               <p className="text-gray-600">{event.description}</p>
 
               <p className="mt-2 text-sm text-gray-500">
-                📍 {event.location}
-              </p>
-              <p className="text-sm text-gray-500">
                 🗓 {event.date}
               </p>
 
