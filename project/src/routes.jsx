@@ -502,6 +502,11 @@ const ProfessorResult = lazy(() =>
 
 const StudentHome = lazy(() => import("@/pages/dashboard/student/Home"));
 const StudentProfile = lazy(() => import("@/pages/dashboard/student/Profile"));
+
+const LiveClass = lazy(() =>
+  import("@/pages/dashboard/student/LiveClass")
+);
+
 const StudentNotifications = lazy(() =>
   import("@/pages/dashboard/student/Notifications")
 );
@@ -729,7 +734,20 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><StudentSemesterTable /></Suspense>,
       },
 
+      
       /* 🔥 STUDENT EVENTS (ADDED) */
+
+      {
+       icon: <TableCellsIcon {...icon} />,
+       name: "Live Classes",
+       path: "/student/live-class",
+       element: (
+       <Suspense fallback={<LoadingSpinner />}>
+       <LiveClass />
+       </Suspense>
+       ),
+      },
+
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Events",

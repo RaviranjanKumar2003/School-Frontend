@@ -24,14 +24,19 @@ import {
   setOpenSidenav,
 } from "@/context";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileMenu from "../Profile/ProfileMenu";
 import routes from "@/routes"; // ✅ IMPORTANT
 
-export function DashboardNavbar({ notifications = [] }) {
+export function DashboardNavbar() {
   const [controller, dispatch] = useMaterialTailwindController();
   const { fixedNavbar, openSidenav } = controller;
   const { pathname } = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [selectedNotice, setSelectedNotice] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  
 
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -53,6 +58,61 @@ export function DashboardNavbar({ notifications = [] }) {
     }
     return "Dashboard";
   };
+
+
+  // Notification well icon work start.....
+  const handleRead = async (id) => {
+  try {
+    await fetch(`http://localhost:8080/api/notifications/read/${id}`, {
+      method: "PUT",
+    });
+
+    // 🔥 REMOVE from list
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    // 🔥 update count
+    setUnreadCount((prev) => Math.max(prev - 1, 0));
+
+  } catch (err) {
+    console.error(err);
+  }
+  };
+
+  
+  useEffect(() => {
+  const fetchNotifications = async () => {
+    try {
+      const userRole = localStorage.getItem("userRole");
+
+      let id = null;
+      if (userRole === "student") {
+        id = localStorage.getItem("id");
+      }
+
+      if (!id) return;
+
+      const res = await fetch(
+        `http://localhost:8080/api/notifications/student/${id}`
+      );
+
+      const data = await res.json();
+
+      // ✅ FIX HERE
+      const unreadOnly = data.filter((n) => !n.readStatus);
+
+      setNotifications(unreadOnly);
+      setUnreadCount(unreadOnly.length);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchNotifications();
+  }, []);
+
+
+  // Notification well icon work end.....
 
   // ✅ CLEAN TEXT (remove - and capitalize)
   const formatName = (name) => {
@@ -145,9 +205,15 @@ export function DashboardNavbar({ notifications = [] }) {
           {/* NOTIFICATIONS */}
           <Menu>
             <MenuHandler>
-              <IconButton variant="text">
-                <BellIcon className="h-5 w-5" />
-              </IconButton>
+              <IconButton variant="text" className="relative">
+              <BellIcon className="h-8 w-8" />
+
+             {unreadCount > 0 && (
+             <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 rounded-full">
+             {unreadCount}
+            </span>
+           )}
+            </IconButton>
             </MenuHandler>
 
             <MenuList>
@@ -158,21 +224,25 @@ export function DashboardNavbar({ notifications = [] }) {
                 </MenuItem>
               ) : (
                 notifications.map((item, index) => (
-                  <MenuItem key={index} className="flex gap-3">
-
+                  <MenuItem
+                    key={index}
+                    className="flex gap-3 cursor-pointer"
+                    onClick={() => {
+                    setSelectedNotice(item);
+                     setOpenModal(true);
+                     handleRead(item.id);
+                    }}
+                    >
                     {item.avatar && (
                       <Avatar src={item.avatar} size="sm" />
                     )}
 
                     <div>
-                      <Typography>{item.message}</Typography>
-
-                      <Typography className="text-xs opacity-60 flex gap-1">
-                        <ClockIcon className="h-3 w-3" />
-                        {item.time}
+                      <Typography className="font-semibold">{item.title}</Typography>
+                      <Typography className="text-xs opacity-70">
+                      {item.message}
                       </Typography>
                     </div>
-
                   </MenuItem>
                 ))
               )}
@@ -182,6 +252,28 @@ export function DashboardNavbar({ notifications = [] }) {
 
         </div>
       </div>
+      {openModal && selectedNotice && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
+      
+      <h2 className="text-xl font-bold mb-2">
+        {selectedNotice.title}
+      </h2>
+
+      <p className="text-gray-700 mb-4">
+        {selectedNotice.message}
+      </p>
+
+      <button
+        onClick={() => setOpenModal(false)}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Close
+      </button>
+
+    </div>
+  </div>
+)}
     </Navbar>
   );
 }
