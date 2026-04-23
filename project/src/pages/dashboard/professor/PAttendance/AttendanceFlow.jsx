@@ -12,9 +12,9 @@ import {
   ClipboardDocumentIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/solid";
-import Profile from "@/pages/dashboard/professor/Attendance/Profile";
-import AttendanceForm from "@/pages/dashboard/professor/Attendance/AttendanceForm";
-import AttendanceView from "@/pages/dashboard/professor/Attendance/AttendanceView";
+import Profile from "@/pages/dashboard/professor/PAttendance/Profile";
+import AttendanceForm from "@/pages/dashboard/professor/PAttendance/AttendanceForm";
+import AttendanceView from "@/pages/dashboard/professor/PAttendance/AttendanceView";
 
 export function AttendanceFlow() {
   const [activeTab, setActiveTab] = useState("profile");

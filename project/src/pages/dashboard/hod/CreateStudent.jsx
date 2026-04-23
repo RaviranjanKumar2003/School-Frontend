@@ -28,6 +28,7 @@ export default function CreateStudent() {
       .catch(err => console.log(err));
   }, []);
 
+  console.log("CLASSES FROM API:", classes);
   // ================= HANDLE CHANGE =================
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,34 +61,14 @@ export default function CreateStudent() {
   };
 
   // ================= CLASS SELECT FIX (🔥 IMPORTANT) =================
-  const handleClassChange = async (e) => {
+  const handleClassChange = (e) => {
+  const value = e.target.value;
 
-    const value = e.target.value;
-
-    if (!value) {
-      setForm({ ...form, classNumber: "" });
-      setAutoRoll("");
-      return;
-    }
-
-    // "Class 5" → 5
-    const number = parseInt(value.replace("Class ", ""));
-
-    setForm({
-      ...form,
-      classNumber: number
-    });
-
-    // AUTO ROLL FETCH
-    try {
-      const res = await axios.get(
-        `http://localhost:8080/api/students/next-roll/${number}`
-      );
-      setAutoRoll(res.data);
-    } catch {
-      setAutoRoll("Auto");
-    }
-  };
+  setForm({
+    ...form,
+    classNumber: value
+  });
+};
 
   // ================= IMAGE =================
   const handleImageChange = (e) => {
@@ -120,7 +101,10 @@ export default function CreateStudent() {
     formData.append("studFatherName", form.studFatherName);
     formData.append("email", form.email.trim().toLowerCase());
     formData.append("studPhoneNumber", form.studPhoneNumber);
-    formData.append("classNumber", parseInt(form.classNumber));
+    formData.append(
+  "classNumber",
+  Number(form.classNumber)
+);
     formData.append("studentDob", form.studentDob || "");
     formData.append("studCategory", form.studCategory || "");
     formData.append("studCaste", form.studCaste || "");
@@ -145,10 +129,10 @@ export default function CreateStudent() {
       alert(
         `✅ Student Created Successfully
 
-Reg No: ${data.studentId}
-Roll No: ${data.studRollNo}
-Username: ${data.username}
-Password: ${data.password}`
+        Reg No: ${data.studentId}
+        Roll No: ${data.studRollNo}
+        Username: ${data.username}
+        Password: ${data.password}`
       );
 
       // RESET
@@ -174,7 +158,7 @@ Password: ${data.password}`
       console.error(err);
 
       if (err.response) {
-  alert("❌ " + (err.response.data || "Server error"));
+  alert("❌ " + (err.response.data.message || err.response.data || "Server error"));
 } else {
   alert("❌ Server error");
 }
@@ -200,19 +184,25 @@ Password: ${data.password}`
         <input name="studPhoneNumber" placeholder="Phone Number" className="border p-2" onChange={handleChange} />
 
         {/* ✅ CLASS DROPDOWN FIXED */}
+        
         <select
-          className="border p-2"
-          value={form.classNumber ? `Class ${form.classNumber}` : ""}
-          onChange={handleClassChange}
-        >
-          <option value="">Select Class</option>
+  className="border p-2"
+  value={form.classNumber || ""}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      classNumber: Number(e.target.value)
+    })
+  }
+>
+  <option value="">Select Class</option>
 
-          {classes.map((c) => (
-            <option key={c.id} value={c.className}>
-              {c.className}
-            </option>
-          ))}
-        </select>
+  {classes.map((c) => (
+    <option key={c.id} value={c.id}>
+      {c.className.trim()}
+    </option>
+  ))}
+</select>
 
         {/* AUTO ROLL */}
         <input
