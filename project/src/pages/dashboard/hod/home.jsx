@@ -25,17 +25,22 @@ export function Home() {
   // ✅ FETCH DATA
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/students");
+      // 🔥 CALL BOTH APIs PARALLEL
+      const [studentRes, teacherRes] = await Promise.all([
+        axios.get("http://localhost:8080/api/students"),
+        axios.get("http://localhost:8080/api/professors"),
+      ]);
 
-      const students = res.data;
+      const students = studentRes.data;
+      const teachers = teacherRes.data;
 
-      // ✅ TOTAL COUNT
+      // ✅ TOTAL COUNT FIXED
       setStats({
         students: students.length,
-        teachers: 0,
+        teachers: teachers.length,
       });
 
-      // ✅ GROUP BY DAY (example: attendance style graph)
+      // ✅ GROUP BY DAY (students example)
       const daysMap = {
         Mon: 0,
         Tue: 0,
@@ -52,7 +57,6 @@ export function Home() {
         }
       });
 
-      // ✅ CONVERT TO ARRAY
       const labels = Object.keys(daysMap);
       const data = Object.values(daysMap);
 
@@ -99,6 +103,7 @@ export function Home() {
       {/* 🔥 TOP CARDS */}
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
 
+        {/* STUDENTS */}
         <div
           onClick={() => navigate("/dashboard/hod/students")}
           className="cursor-pointer"
@@ -111,6 +116,7 @@ export function Home() {
           />
         </div>
 
+        {/* TEACHERS ✅ FIXED */}
         <div
           onClick={() => navigate("/dashboard/hod/teachers")}
           className="cursor-pointer"
@@ -119,10 +125,11 @@ export function Home() {
             title="Total Teachers"
             value={stats.teachers}
             icon={<i className="fas fa-chalkboard-teacher text-white" />}
-            footer={<Typography>Coming soon</Typography>}
+            footer={<Typography>Live from DB</Typography>}
           />
         </div>
 
+        {/* TOPPERS */}
         <div
           onClick={() => navigate("/dashboard/hod/toppers")}
           className="cursor-pointer"
@@ -137,14 +144,14 @@ export function Home() {
 
       </div>
 
-      {/* 🔥 DYNAMIC CHART */}
+      {/* 🔥 CHART */}
       <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
         {chartData.map((props, index) => (
           <StatisticsChart key={index} {...props} />
         ))}
       </div>
 
-      {/* 🔥 TABLE SAME */}
+      {/* 🔥 TABLE */}
       <div className="mb-4 grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         <Card className="xl:col-span-2 border shadow-sm">
