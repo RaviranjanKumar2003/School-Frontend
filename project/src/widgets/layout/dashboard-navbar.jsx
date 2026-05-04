@@ -63,12 +63,19 @@ export function DashboardNavbar() {
   // Notification well icon work start.....
   const handleRead = async (id) => {
   try {
-    await fetch(`http://localhost:8080/api/notifications/read/${id}`, {
+    const studentId = localStorage.getItem("id");
+
+    await fetch(
+     `http://localhost:8080/api/notifications/read/${id}/${studentId}`,
+    {
       method: "PUT",
-    });
+    }
+    );
 
     // 🔥 REMOVE from list
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) =>
+     prev.filter((n) => n.notificationId !== id)
+    );
 
     // 🔥 update count
     setUnreadCount((prev) => Math.max(prev - 1, 0));
@@ -98,11 +105,16 @@ export function DashboardNavbar() {
       const data = await res.json();
 
       // ✅ FIX HERE
-      const unreadOnly = data.filter((n) => !n.readStatus);
+      
+     setNotifications(data.filter((n) => !n.readStatus));
 
-      setNotifications(unreadOnly);
-      setUnreadCount(unreadOnly.length);
+    // 🔥 unread count backend से लो
+    const countRes = await fetch(
+      `http://localhost:8080/api/notifications/unread/${id}`
+    );
 
+const count = await countRes.json();
+setUnreadCount(count);
     } catch (err) {
       console.error(err);
     }
@@ -230,7 +242,7 @@ export function DashboardNavbar() {
                     onClick={() => {
                     setSelectedNotice(item);
                      setOpenModal(true);
-                     handleRead(item.id);
+                     handleRead(item.notificationId);
                     }}
                     >
                     {item.avatar && (

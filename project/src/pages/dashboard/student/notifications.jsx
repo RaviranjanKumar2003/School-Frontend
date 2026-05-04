@@ -48,9 +48,15 @@ function Notices() {
       `http://localhost:8080/api/notifications/student/${studentId}`
     );
     if (res.data && res.data.length > 0) {
-      setNotices(res.data);
-      console.log(res.data);
-      setFiltered(res.data);
+      const mapped = res.data.map((n) => ({
+      ...n,
+      notificationUserId: n.notificationUserId ,
+      notificationId: n.notificationId // 🔥 ये add
+    }));
+
+    setNotices(mapped);
+    setFiltered(mapped);
+
     } else {
       console.log("❌ No data from backend");
     }
@@ -62,30 +68,37 @@ function Notices() {
   }
   };
 
- const archiveNotice = async (id) => {
+
+
+  const archiveNotice = async (id) => {
   try {
-    const notice = notices.find((n) => n.id === id);
+    const studentId = localStorage.getItem("id");
 
-    // 🔥 agar unread hai to pehle read karo
+    const notice = notices.find((n) => n.notificationId === id);
+
+    // 🔥 read (notificationId से)
     if (notice && !notice.readStatus) {
-      await axios.put(
-        `http://localhost:8080/api/notifications/read/${id}`
-      );
-    }
+   await axios.put(
+    `http://localhost:8080/api/notifications/read/${notice.notificationId}/${studentId}`
+  );
+  }
 
-    // 🔥 phir archive
+    // 🔥 archive (notificationUserId से)
     await axios.put(
-      `http://localhost:8080/api/notifications/archive/${id}`
+      `http://localhost:8080/api/notifications/archive/${id}/${studentId}`
     );
 
-    // 🔥 UI update
-    setNotices((prev) => prev.filter((n) => n.id !== id));
-    setFiltered((prev) => prev.filter((n) => n.id !== id));
+    setNotices((prev) =>
+      prev.filter((n) => n.notificationId !== id)
+    );
+    setFiltered((prev) =>
+      prev.filter((n) => n.notificationId !== id)
+    );
 
   } catch (err) {
     console.error(err);
   }
-};
+  };
 
   const fetchLeaves = async () => {
     try {
@@ -108,7 +121,7 @@ function Notices() {
     if (type === "ALL") {
       setFiltered(notices);
     } else if (type === "REQUEST") {
-      setFiltered([]); // hide notices
+      setFiltered([]); 
     } else {
      setFiltered(notices.filter((n) => n.sender === type));
     }
@@ -213,7 +226,7 @@ function Notices() {
                 <button
                  onClick={(e) => {
                  e.stopPropagation();
-                 archiveNotice(item.id);
+                 archiveNotice(item.notificationId);
                  }}
                  className="mt-10 mr-10 ml-10 mb-10 text-1xl text-gray-500 rounded-full hover:text-red-500"
                  >

@@ -99,40 +99,6 @@ export function Profile() {
               <Typography variant="h6" color="blue-gray" className="mb-3">
                 Academic Information
               </Typography>
-              {/* <ul className="flex flex-col gap-6">
-                {student.semesters?.map((semester) => (
-                  <li key={semester.id} className="flex items-center">
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="flex-1"
-                    >
-                      {semester.semester}
-                    </Typography>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="flex-1"
-                    >
-                      {semester.name}
-                    </Typography>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="flex-1"
-                    >
-                      Credits: {semester.credits}
-                    </Typography>
-                    <Typography
-                      variant="small"
-                      color="blue-gray"
-                      className="flex-1"
-                    >
-                      Grade: {semester.grade}
-                    </Typography>
-                  </li>
-                ))}
-              </ul> */}
             </div>
           </div>
         </CardBody>

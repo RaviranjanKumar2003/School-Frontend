@@ -835,16 +835,26 @@ import { lazy, Suspense } from "react";
 
 const HODHome = lazy(() => import("@/pages/dashboard/hod/Home"));
 const HODProfile = lazy(() => import("@/pages/dashboard/hod/Profile"));
-const Email = lazy(() => import("@/components/email/MailSender"));
+const LiveResult = lazy(() => import("@/pages/dashboard/hod/LiveResult"));
+const Email = lazy(() =>
+   import("@/components/email/MailSender")
+);
+
 const HODSemesterTable = lazy(() =>
   import("@/pages/dashboard/hod/SemesterTable")
 );
+
 const HODNotifications = lazy(() =>
   import("@/pages/dashboard/hod/Notifications")
 );
 
 const HODResult = lazy(() =>
   import("@/pages/dashboard/hod/Result")
+);
+
+
+const StudentExam = lazy(() =>
+  import("@/pages/dashboard/hod/StudentExam")
 );
 
 const EventScheduler = lazy(() =>
@@ -876,6 +886,9 @@ const HODAttendance = lazy(() =>
 /* ================= PROFESSOR ================= */
 
 const ProfessorHome = lazy(() => import("@/pages/dashboard/professor/Home"));
+const ExamNotice = lazy(() => import("@/pages/dashboard/professor/ExamNotice"));
+const StudentExams = lazy(() => import("@/pages/dashboard/professor/StudentExams"));
+const ExamAttendance = lazy(() => import("@/pages/dashboard/professor/ExamAttendance"));
 const ProfessorProfile = lazy(() =>
   import("@/pages/dashboard/professor/Profile")
 );
@@ -898,7 +911,7 @@ const ProfessorEvents = lazy(() =>
 
 const StudentHome = lazy(() => import("@/pages/dashboard/student/Home"));
 const StudentProfile = lazy(() => import("@/pages/dashboard/student/Profile"));
-
+const Exams = lazy(() => import("@/pages/dashboard/student/Exams"));
 const LiveClass = lazy(() =>
   import("@/pages/dashboard/student/LiveClass")
 );
@@ -996,6 +1009,22 @@ export const routes = [
       },
       {
         icon: <TableCellsIcon {...icon} />,
+        name: "Live Results",
+        path: "/hod/liveresult",
+        element: <Suspense fallback={<LoadingSpinner />}><LiveResult /></Suspense>,
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Student Exams",  
+        path: "/hod/student-exam",  
+        element: (
+        <Suspense fallback={<LoadingSpinner />}>
+        <StudentExam />
+        </Suspense>
+        ),
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
         name: "Event Scheduler",
         path: "/hod/events",
         element: <Suspense fallback={<LoadingSpinner />}><EventScheduler /></Suspense>,
@@ -1073,10 +1102,28 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><AttendancePage /></Suspense>,
       },
       {
+        icon: <PencilIcon {...icon} />,
+        name: "Student Exams",
+        path: "/professor/student-exams",
+        element: <Suspense fallback={<LoadingSpinner />}><StudentExams /></Suspense>,
+      },
+      {
+        icon: <PencilIcon {...icon} />,
+        name: "Exam Attendance",
+        path: "/professor/exam-attendance",
+        element: <Suspense fallback={<LoadingSpinner />}><ExamAttendance /></Suspense>,
+      },
+      {
         icon: <TableCellsIcon {...icon} />,
         name: "Manage Results",
         path: "/professor/result",
         element: <Suspense fallback={<LoadingSpinner />}><ProfessorResult /></Suspense>,
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Exam Notice",
+        path: "/professor/examNotice",
+        element: <Suspense fallback={<LoadingSpinner />}><ExamNotice /></Suspense>,
       },
       {
         icon: <TableCellsIcon {...icon} />,
@@ -1107,6 +1154,12 @@ export const routes = [
         name: "Student notifications",
         path: "/student/notifications",
         element: <Suspense fallback={<LoadingSpinner />}><StudentNotifications /></Suspense>,
+      },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "Exams",
+        path: "/student/exams",
+        element: <Suspense fallback={<LoadingSpinner />}><Exams /></Suspense>,
       },
       {
         icon: <TableCellsIcon {...icon} />,
