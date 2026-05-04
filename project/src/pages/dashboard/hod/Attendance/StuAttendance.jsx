@@ -140,7 +140,7 @@ function StuAttendance() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-3">
+    <div className="min-h-[70%]  p-3">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
 
         {/* HEADER */}

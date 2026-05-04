@@ -127,9 +127,9 @@ export default function TeacherAttendance() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-3">
+    <div className="p-3">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className=" max-h-96 bg-white rounded-2xl shadow-lg overflow-auto scroll-auto">
 
         {/* HEADER */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-4 text-lg font-bold">
