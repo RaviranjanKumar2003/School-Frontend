@@ -10,7 +10,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LoginTypeSelection />} />
-      <Route path="/auth/sign-up" element={<SignUpTypeSelection />} />
+      <Route path="/auth/sign-up" element={<SignUpTypeSelection />}/>
       <Route path="/dashboard/*" element={<Dashboard />} />
       <Route path="/auth/*" element={<Auth />} />
       <Route path="/forgot-password" element={<ForgotPasswordFlow />} />
@@ -30,3 +30,5 @@ export default App;
       <Route path="*" element={<Navigate to="/dashboard/home" replace />} />
     </Routes> */
 }
+
+

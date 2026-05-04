@@ -3,6 +3,7 @@ import axios from "axios";
 
 export default function ArchivedNotifications() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const studentId = localStorage.getItem("id");
 
   useEffect(() => {
@@ -14,45 +15,67 @@ export default function ArchivedNotifications() {
       const res = await axios.get(
         `http://localhost:8080/api/notifications/archived/${studentId}`
       );
-      setData(res.data);
+
+      const mapped = res.data.map((n) => ({
+        ...n,
+        notificationUserId: n.notificationUserId, // 🔥 important
+      }));
+
+      setData(mapped);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    try {
-      await axios.delete(
-        `http://localhost:8080/api/notifications/delete/${id}`
-      );
-      setData((prev) => prev.filter((n) => n.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+  try {
+    await axios.delete(
+      `http://localhost:8080/api/notifications/delete/${id}/${studentId}`
+    );
+
+    fetchArchived(); // 🔥 instant update
+
+  } catch (err) {
+    console.error(err);
+  }
   };
 
+
+
   const handleRestore = async (id) => {
-    try {
-      await axios.put(
-        `http://localhost:8080/api/notifications/unarchive/${id}`
-      );
-      setData((prev) => prev.filter((n) => n.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+  try {
+    await axios.put(
+      `http://localhost:8080/api/notifications/unarchive/${id}/${studentId}`
+    );
+
+    fetchArchived(); // 🔥 instant update
+
+  } catch (err) {
+    console.error(err);
+  }
   };
 
   return (
     <div className="p-6 min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 mt-16">
 
       {/* 🔥 HEADER */}
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">
+      <h2 className="text-3xl font-bold mb-8 text-gray-800 flex items-center gap-2">
         📁 Archived Notifications
       </h2>
 
-      {data.length === 0 && (
-        <div className="text-center text-gray-400 mt-20">
-          <p className="text-lg">📭 No archived notifications</p>
+      {/* 🔥 LOADING */}
+      {loading && (
+        <div className="text-center mt-20 text-gray-500">
+          Loading...
+        </div>
+      )}
+
+      {/* 🔥 EMPTY */}
+      {!loading && data.length === 0 && (
+        <div className="text-center mt-20 text-gray-400">
+          <p className="text-xl">📭 No archived notifications</p>
         </div>
       )}
 
@@ -61,7 +84,7 @@ export default function ArchivedNotifications() {
 
         {data.map((n) => (
           <div
-            key={n.id}
+            key={n.notificationUserId}
             className="bg-white p-5 rounded-2xl shadow-md hover:shadow-xl transition duration-300 border border-gray-100 hover:-translate-y-1"
           >
 
@@ -83,17 +106,17 @@ export default function ArchivedNotifications() {
             {/* ACTIONS */}
             <div className="flex justify-between mt-5">
 
-              {/* Restore Button */}
+              {/* Restore */}
               <button
-                onClick={() => handleRestore(n.id)}
+                onClick={() => handleRestore(n.notificationId)}
                 className="px-3 py-1.5 text-sm font-medium bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
               >
                 ♻️ Restore
               </button>
 
-              {/* Delete Button */}
+              {/* Delete */}
               <button
-                onClick={() => handleDelete(n.id)}
+                onClick={() => handleDelete(n.notificationId)}
                 className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
               >
                 🗑 Delete
@@ -103,7 +126,6 @@ export default function ArchivedNotifications() {
 
           </div>
         ))}
-
       </div>
     </div>
   );

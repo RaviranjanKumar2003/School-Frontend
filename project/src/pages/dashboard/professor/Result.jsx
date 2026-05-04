@@ -1,192 +1,297 @@
 import React, { useEffect, useState } from "react";
-import {
-  Typography,
-  Card,
-  CardHeader,
-  CardBody,
-  Input,
-  Button,
-} from "@material-tailwind/react";
-
 import axios from "axios";
 
-export default function Result() {
+const Result = () => {
+
+  const [classes, setClasses] = useState([]);
+  const [classId, setClassId] = useState("");
   const [students, setStudents] = useState([]);
-  const [marksData, setMarksData] = useState({});
-  const [recheckList, setRecheckList] = useState([]);
+  const [marks, setMarks] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const teacherSubject = "Math"; // 🔥 later dynamic karenge
+  const [rechecks, setRechecks] = useState([]);
 
-  // ✅ FETCH STUDENTS
-  const fetchStudents = async () => {
-    try {
-      const res = await axios.get("http://localhost:8080/api/students");
-      setStudents(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const teacherData = JSON.parse(localStorage.getItem("professorData"));
+  const teacherId = teacherData?.id;
 
-  // ✅ FETCH RECHECK REQUESTS (ADMIN APPROVED ONLY)
-  const fetchRecheck = async () => {
-    try {
-      const res = await axios.get(
-        "http://localhost:8080/api/recheck/teacher"
-      );
-      setRecheckList(res.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+
 
   useEffect(() => {
-    fetchStudents();
-    fetchRecheck();
+  if (!teacherId) return;
+
+  axios.get(`http://localhost:8080/api/recheck/teacher/${teacherId}`)
+    .then(res => {
+      console.log("RECHECK DATA:", res.data);
+      setRechecks(res.data);
+    })
+    .catch(err => console.log(err));
+  }, [teacherId]);
+
+  // 🔥 LOAD CLASSES
+  useEffect(() => {
+    axios.get("http://localhost:8080/api/classes")
+      .then(res => setClasses(res.data))
+      .catch(() => alert("Error loading classes"));
   }, []);
 
-  // ✅ HANDLE INPUT
-  const handleChange = (id, value) => {
-    setMarksData({
-      ...marksData,
-      [id]: value,
-    });
-  };
+  // 🔥 LOAD STUDENTS (ONLY PRESENT)
+  const loadStudents = async () => {
+    if (!classId) return alert("Select class");
 
-  // ✅ SAVE MARKS
-  const saveMarks = async (student) => {
+    setLoading(true);
+
     try {
-      await axios.post("http://localhost:8080/api/results", {
-        studentId: student.id,
-        studentName: student.name,
-        subject: teacherSubject,
-        marks: marksData[student.id],
-        totalMarks: 100,
-      });
-
-      alert("Marks Saved ✅");
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  // ✅ UPDATE RECHECK
-  const updateRecheck = async (req) => {
-    try {
-      await axios.put(
-        `http://localhost:8080/api/recheck/update/${req.id}`,
-        {
-          marks: marksData[req.studentId],
-        }
+      const res = await axios.get(
+        `http://localhost:8080/api/exam-schedule/result/${classId}/${teacherId}`
       );
 
-      alert("Recheck Updated ✅");
-      fetchRecheck();
+      console.log("API DATA:", res.data);
+
+      // 🔥 FILTER ONLY PRESENT
+      const presentStudents = res.data.filter(
+        s => s.examStatus === "PRESENT"
+      );
+
+      setStudents(presentStudents);
+
     } catch (err) {
       console.log(err);
+      alert("No exam found or error");
+    }
+
+    setLoading(false);
+  };
+
+  // 🔥 HANDLE MARK INPUT
+  const handleMarks = (id, value) => {
+    setMarks(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  // 🔥 SAVE RESULT
+  const saveResult = async (student) => {
+    try {
+      await axios.post("http://localhost:8080/api/results", {
+      studentId: student.studentId,
+      subject: student.subjectName,
+      marks: Number(marks[student.id] || 0),
+      professorId: teacherId,
+      examId: student.examScheduleId
+      });
+
+      alert("Result Saved ✅");
+
+    } catch (err) {
+      console.log(err);
+      alert(err.response?.data?.message || err.response?.data || "Error saving result");
     }
   };
 
   return (
-    <div className="mt-8 px-4">
+    <div className="p-6 min-h-screen bg-gradient-to-br from-purple-50 to-blue-100">
 
-      {/* 🔥 MARKS UPLOAD */}
-      <Card className="mb-6 border shadow-sm">
-        <CardHeader className="p-6">
-          <Typography variant="h6">
-            Upload Marks ({teacherSubject})
-          </Typography>
-        </CardHeader>
+      {/* HEADER */}
+      <h1 className="text-3xl font-bold text-center mb-6">
+        📝 Manage Results
+      </h1>
 
-        <CardBody className="overflow-x-auto">
-          <table className="w-full min-w-[700px] table-auto">
-            <thead>
-              <tr>
-                <th className="p-3 text-left">Student</th>
-                <th className="p-3 text-left">Marks</th>
-                <th className="p-3 text-left">Action</th>
-              </tr>
-            </thead>
+      {/* CLASS SELECT */}
+      <div className="flex flex-col md:flex-row gap-3 justify-center mb-6">
 
-            <tbody>
-              {students.map((s) => (
-                <tr key={s.id} className="border-b">
-                  <td className="p-3">{s.name}</td>
+        <select
+          value={classId}
+          onChange={(e) => setClassId(e.target.value)}
+          className="p-3 rounded-lg border shadow focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="">Select Class</option>
+          {classes.map(c => (
+            <option key={c.id} value={c.id}>
+              Class {c.className}
+            </option>
+          ))}
+        </select>
 
-                  <td className="p-3">
-                    <Input
-                      type="number"
-                      placeholder="Enter marks"
-                      onChange={(e) =>
-                        handleChange(s.id, e.target.value)
+        <button
+          onClick={loadStudents}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow transition"
+        >
+          Load Students
+        </button>
+
+      </div>
+
+      {/* LOADING */}
+      {loading && (
+        <div className="text-center text-gray-500">
+          Loading...
+        </div>
+      )}
+
+      {/* ================= RECHECK REQUESTS ================= */}
+
+  {rechecks.length > 0 && (
+  <>
+    <h2 className="text-xl font-bold text-center mt-10 mb-4">
+      🔁 Recheck Requests
+    </h2>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      {rechecks.map(r => (
+
+        <div
+          key={r.id}
+          className="bg-yellow-50 p-5 rounded-xl shadow-md border"
+        >
+
+          <h2 className="text-lg font-bold text-orange-600">
+            👤 {r.studentName}
+          </h2>
+
+          <p className="text-sm mt-1">📘 Subject: {r.subjects?.[0]}</p>
+
+          <p className="text-sm">🏫 Class: {r.classId}</p>
+
+          <p className="text-sm">📝 Exam: {r.examType}</p>
+
+          <p className="text-sm">
+          📊 Old Marks: {r.oldMarks} / {r.totalMarks}
+          </p>
+
+          <p className="text-sm text-gray-600">
+          💬 {r.reason}
+          </p>
+          <input
+            type="number"
+            placeholder="Enter new marks"
+            value={marks[r.id] || ""}
+            onChange={(e) =>
+              setMarks(prev => ({
+                ...prev,
+                [r.id]: e.target.value
+              }))
+            }
+            className="w-full mt-3 p-2 border rounded"
+          />
+
+          <div className="flex gap-2 mt-3">
+
+            {/* ✅ UPDATE MARKS */}
+            <button
+              onClick={async () => {
+                try {
+                  await axios.put(
+                    "http://localhost:8080/api/results/update-marks",
+                    null,
+                    {
+                      params: {
+                        studentId: r.studentId,
+                        subject: r.subjects[0],
+                        newMarks: marks[r.id],
+                        requestId: r.id,
+                        professorId: teacherId
                       }
-                    />
-                  </td>
+                    }
+                  );
 
-                  <td className="p-3">
-                    <Button
-                      color="green"
-                      onClick={() => saveMarks(s)}
-                    >
-                      Save
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardBody>
-      </Card>
+                  alert("Marks Updated ✅");
 
-      {/* 🔥 RECHECK SECTION */}
-      <Card className="border shadow-sm">
-        <CardHeader className="p-6">
-          <Typography variant="h6">
-            Recheck Requests (Approved by Admin)
-          </Typography>
-        </CardHeader>
+                  // 🔥 remove from UI
+                  setRechecks(prev => prev.filter(x => x.id !== r.id));
 
-        <CardBody className="overflow-x-auto">
-          <table className="w-full min-w-[700px] table-auto">
-            <thead>
-              <tr>
-                <th className="p-3 text-left">Student</th>
-                <th className="p-3 text-left">Subject</th>
-                <th className="p-3 text-left">New Marks</th>
-                <th className="p-3 text-left">Action</th>
-              </tr>
-            </thead>
+                } catch (err) {
+                  alert("Error ❌");
+                }
+              }}
+              className="bg-green-500 text-white px-3 py-1 rounded"
+            >
+              Update
+            </button>
 
-            <tbody>
-              {recheckList.map((r) => (
-                <tr key={r.id} className="border-b">
-                  <td className="p-3">{r.studentName}</td>
-                  <td className="p-3">{r.subject}</td>
+            {/* ❌ NO CHANGE */}
+            <button
+             onClick={async () => {
 
-                  <td className="p-3">
-                    <Input
-                      type="number"
-                      placeholder="Rechecked marks"
-                      onChange={(e) =>
-                        handleChange(r.studentId, e.target.value)
-                      }
-                    />
-                  </td>
+             const remark = prompt("Reason (why no change?)");
 
-                  <td className="p-3">
-                    <Button
-                      color="blue"
-                      onClick={() => updateRecheck(r)}
-                    >
-                      Update
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardBody>
-      </Card>
+             if (!remark) return alert("Reason required");
 
+             await axios.put(
+             `http://localhost:8080/api/recheck/no-change/${r.id}`,
+             null,
+            {
+            params: { remark }
+           }
+          );
+
+          alert("No Change Saved ✅");
+
+         setRechecks(prev => prev.filter(x => x.id !== r.id));
+
+         }}
+         className="bg-gray-400 text-white px-3 py-1 rounded">  No Change
+        </button>
+        </div>
+        </div>
+        ))}
+        </div>
+        </>
+      )}
+
+     {/* STUDENTS */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        {students.map(s => (
+
+          <div
+            key={s.id}
+            className="bg-white p-5 rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition duration-300"
+          >
+
+            {/* STUDENT NAME */}
+            <h2 className="text-lg font-bold text-blue-600 flex items-center gap-2">
+              👤 {s.studentName}
+            </h2>
+            {/* SUBJECT */}
+            <p className="text-sm text-gray-500 mt-1">
+              📘 {s.subjectName}
+            </p>
+            {/* STATUS */}
+            <p className="text-sm mt-1">
+              Status:
+              <span className="ml-2 text-green-600 font-semibold">
+                {s.examStatus}
+              </span>
+            </p>
+            {/* MARK INPUT */}
+            <input
+             type="number"
+             placeholder={`Max ${s.totalMarks}`}
+             value={marks[s.id] || ""}
+             max={s.totalMarks}   // 🔥 LIMIT
+             onChange={(e) => handleMarks(s.id, e.target.value)}
+             className="w-full mt-3 p-2 border rounded-lg focus:ring-2 focus:ring-blue-400"
+            />
+            {/* SAVE BUTTON */}
+            <button
+              onClick={() => saveResult(s)}
+              className="mt-3 w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition"
+            >
+              Save Result
+            </button>
+          </div>
+        ))}
+      </div>
+      {/* EMPTY */}
+      {!loading && students.length === 0 && (
+        <div className="text-center text-gray-400 mt-10">
+          No students found
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default Result;
