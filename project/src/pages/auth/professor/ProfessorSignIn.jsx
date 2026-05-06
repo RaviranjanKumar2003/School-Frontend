@@ -228,7 +228,7 @@ export function ProfessorSignIn() {
 
       // save data
       localStorage.setItem("userRole", "professor");
-      localStorage.setItem("professorId", professor.professorId);
+      localStorage.setItem("professorId", professor.id);
       localStorage.setItem("professorData", JSON.stringify(professor));
 
       console.log("Login successful:", professor);

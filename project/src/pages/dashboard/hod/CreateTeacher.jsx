@@ -17,8 +17,6 @@ export default function CreateTeacher() {
   });
 
   const [classes, setClasses] = useState([]);
-
-  // ✅ NEW STRUCTURE
   const [selectedData, setSelectedData] = useState({});
 
   const [image, setImage] = useState(null);
@@ -50,13 +48,11 @@ export default function CreateTeacher() {
   const toggleClass = (className) => {
     setSelectedData(prev => {
       if (prev[className]) {
-        // remove class
         const updated = { ...prev };
         delete updated[className];
         return updated;
-      } else {
-        return { ...prev, [className]: [] };
       }
+      return { ...prev, [className]: [] };
     });
   };
 
@@ -86,30 +82,31 @@ export default function CreateTeacher() {
 
     try {
 
-      // ✅ BUILD FINAL ASSIGNMENTS
       let finalAssignments = [];
 
-Object.entries(selectedData).forEach(([className, subjects]) => {
+      Object.entries(selectedData).forEach(([className, subjects]) => {
+        if (!subjects || subjects.length === 0) return;
 
-  // ❌ skip empty subjects
-  if (!subjects || subjects.length === 0) return;
+        subjects.forEach(subject => {
+          finalAssignments.push({
+            className,
+            subjectName: subject
+          });
+        });
+      });
 
-  subjects.forEach(subject => {
-    finalAssignments.push({
-      className,
-      subjectName: subject
-    });
-  });
+      console.log("FINAL ASSIGNMENTS => ", finalAssignments);
 
-});
-
-// 🔥 DEBUG (VERY IMPORTANT)
-console.log("FINAL ASSIGNMENTS => ", finalAssignments);
+      const hodId = localStorage.getItem("hodId"); // 🔥 IMPORTANT FIX
 
       const formData = new FormData();
 
       Object.keys(form).forEach(k => formData.append(k, form[k]));
+
       formData.append("assignments", JSON.stringify(finalAssignments));
+
+      // 🔥 ADD HOD ID
+      formData.append("hodId", hodId);
 
       if (image) formData.append("image", image);
 
@@ -141,6 +138,7 @@ console.log("FINAL ASSIGNMENTS => ", finalAssignments);
       if (fileRef.current) fileRef.current.value = "";
 
     } catch (err) {
+      console.log(err);
       setErrorMessage("Teacher creation failed");
     } finally {
       setLoading(false);
@@ -168,20 +166,26 @@ console.log("FINAL ASSIGNMENTS => ", finalAssignments);
         {/* BASIC DETAILS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Object.keys(form).map(key => (
-            <input
-              key={key}
-              name={key}
-              type={key === "joiningDate" ? "date" : "text"}
-              value={form[key]}
-              onChange={handleChange}
-              placeholder={key}
-              className="border p-2 rounded"
-              required
-            />
+            <div key={key} className="flex flex-col">
+
+              <label className="text-sm text-gray-600 mb-1">
+                {key === "joiningDate" ? "Joining Date" : key}
+              </label>
+
+              <input
+                name={key}
+                type={key === "joiningDate" ? "date" : "text"}
+                value={form[key]}
+                onChange={handleChange}
+                className="border p-2 rounded"
+                required
+              />
+
+            </div>
           ))}
         </div>
 
-        {/* ================= CLASS + SUBJECT ================= */}
+        {/* CLASS + SUBJECT */}
         <div>
           <h3 className="font-semibold mb-2">Assign Classes & Subjects</h3>
 
@@ -190,7 +194,6 @@ console.log("FINAL ASSIGNMENTS => ", finalAssignments);
             {classes.map(cls => (
               <div key={cls.id} className="border rounded p-3">
 
-                {/* CLASS CHECK */}
                 <label className="flex items-center gap-2 font-semibold">
                   <input
                     type="checkbox"
@@ -200,7 +203,6 @@ console.log("FINAL ASSIGNMENTS => ", finalAssignments);
                   {cls.className}
                 </label>
 
-                {/* SUBJECTS */}
                 {selectedData[cls.className] && (
                   <div className="flex flex-wrap gap-2 mt-2">
 
@@ -275,6 +277,7 @@ console.log("FINAL ASSIGNMENTS => ", finalAssignments);
 
         </div>
       )}
+
     </div>
   );
 }
