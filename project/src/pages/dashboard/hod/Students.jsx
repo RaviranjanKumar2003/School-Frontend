@@ -5,6 +5,8 @@ import html2canvas from "html2canvas";
 
 export default function Students() {
 
+    const [userData, setUserData] = useState(null);
+
     const [students, setStudents] = useState([]);
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -88,6 +90,51 @@ export default function Students() {
             image: e.target.files[0],
         });
     };
+
+
+    // ============================================= Use Effect 
+       
+       useEffect(() => {
+
+    const role =
+        localStorage.getItem("userRole");
+
+    // ================= HOD =================
+    if (role?.toLowerCase() === "hod") {
+
+        const hodData =
+            JSON.parse(localStorage.getItem("hodData"));
+
+        setUserData(hodData);
+    }
+
+    // ================= PROFESSOR =================
+    else if (
+        role?.toLowerCase() === "professor"
+    ) {
+
+        const professorData =
+            JSON.parse(
+                localStorage.getItem("professorData")
+            );
+
+        setUserData(professorData);
+    }
+
+    // ================= STUDENT =================
+    else if (
+        role?.toLowerCase() === "student"
+    ) {
+
+        const studentData =
+            JSON.parse(
+                localStorage.getItem("studentData")
+            );
+
+        setUserData(studentData);
+    }
+
+}, []);
 
     // ================= UPDATE =================
     const updateStudent = async (e) => {
@@ -579,8 +626,8 @@ export default function Students() {
                             {/* HEADER */}
                             <div className="text-center pt-4 text-white">
 
-                                <h1 className="text-xl font-bold tracking-wide">
-                                    TGP CET SCHOOL
+                                <h1 className="text-2xl font-bold tracking-wide">
+                                   {userData?.schoolName || "TGP CET SCHOOL"}
                                 </h1>
 
                                 <p className="text-[10px] tracking-[3px]">

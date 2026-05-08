@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+
 import {
   XMarkIcon,
   AcademicCapIcon,
@@ -19,7 +20,7 @@ import {
 
 import { useEffect, useState } from "react";
 
-export function Sidenav({ brandImg, brandName, routes }) {
+export function Sidenav({ brandImg, routes }) {
 
   const [controller, dispatch] =
     useMaterialTailwindController();
@@ -36,40 +37,95 @@ export function Sidenav({ brandImg, brandName, routes }) {
   const [userData, setUserData] =
     useState(null);
 
+  const [profileImage, setProfileImage] =
+    useState(brandImg);
+
+  // ================= SIDENAV TYPES =================
   const sidenavTypes = {
-    dark: "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
-    white: "bg-white shadow-xl",
-    transparent: "bg-white/90 backdrop-blur-lg shadow-xl",
+    dark:
+      "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
+
+    white:
+      "bg-white shadow-xl",
+
+    transparent:
+      "bg-white/90 backdrop-blur-lg shadow-xl",
   };
 
-  // ================= USER DATA =================
+  // ================= LOAD USER =================
   useEffect(() => {
 
-    const storedUserRole =
+    const role =
       localStorage.getItem("userRole") || "student";
 
-    setUserRole(storedUserRole.toUpperCase());
+    const userId =
+      localStorage.getItem("userId");
 
-    // 🔥 HOD DATA
-    if (storedUserRole.toLowerCase() === "hod") {
+    setUserRole(role.toUpperCase());
 
-      const hodData =
-        JSON.parse(localStorage.getItem("hodData"));
+    let data = null;
 
-      setUserData(hodData);
+    const getParsed = (key) => {
+      try {
+        return JSON.parse(localStorage.getItem(key));
+      } catch {
+        return null;
+      }
+    };
 
-    } else {
+    // ================= HOD =================
+    if (role.toLowerCase() === "hod") {
 
-      // 🔥 OTHER USER DATA
-      const data =
-        JSON.parse(localStorage.getItem("userData"));
+      const hodData = getParsed("hodData");
 
-      setUserData(data);
+      data = Array.isArray(hodData)
+        ? hodData.find(h => String(h.id) === String(userId))
+        : hodData;
+
+      if (data?.id) {
+        setProfileImage(
+          `http://localhost:8080/api/hods/image/get/${data.id}`
+        );
+      }
     }
+
+    // ================= PROFESSOR =================
+    else if (role.toLowerCase() === "professor") {
+
+      const professorData = getParsed("professorData");
+
+      data = Array.isArray(professorData)
+        ? professorData.find(p => String(p.id) === String(userId))
+        : professorData;
+
+      if (data?.id) {
+        setProfileImage(
+          `http://localhost:8080/api/professors/image/get/${data.id}`
+        );
+      }
+    }
+
+    // ================= STUDENT =================
+    else if (role.toLowerCase() === "student") {
+
+      const studentData = getParsed("studentData");
+
+      data = Array.isArray(studentData)
+        ? studentData.find(s => String(s.id) === String(userId))
+        : studentData;
+
+      if (data?.id) {
+        setProfileImage(
+          `http://localhost:8080/api/students/image/get/${data.id}`
+        );
+      }
+    }
+
+    setUserData(data || null);
 
   }, []);
 
-  // ================= BODY SCROLL LOCK =================
+  // ================= BODY SCROLL =================
   useEffect(() => {
 
     if (openSidenav) {
@@ -84,12 +140,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
     setOpenSidenav(dispatch, false);
   };
 
-  // ================= IMAGE =================
-  const profileImage =
-    userRole === "HOD" && userData?.id
-      ? `http://localhost:8080/api/hods/image/get/${userData.id}`
-      : brandImg;
-
   return (
     <>
       {/* ================= MOBILE BACKDROP ================= */}
@@ -100,7 +150,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
         />
       )}
 
-      {/* ================= SIDENAV ================= */}
+      {/* ================= SIDEBAR ================= */}
       <aside
         className={`
           ${sidenavTypes[sidenavType]}
@@ -109,7 +159,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
               ? "translate-x-0"
               : "-translate-x-80"
           }
-          
+
           fixed top-0 left-0 z-50
           my-4 ml-4
           h-[calc(100vh-32px)]
@@ -123,7 +173,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
         `}
       >
 
-        {/* ================= TOP HEADER ================= */}
+        {/* ================= HEADER ================= */}
         <div
           className="
             relative
@@ -136,18 +186,13 @@ export function Sidenav({ brandImg, brandName, routes }) {
           "
         >
 
-          {/* CLOSE BUTTON */}
           <IconButton
             variant="text"
             size="sm"
             ripple={false}
             className="
-              absolute
-              right-2
-              top-2
-              grid
-              xl:hidden
-              text-white
+              absolute right-2 top-2
+              grid xl:hidden text-white
             "
             onClick={closeSidebar}
           >
@@ -157,7 +202,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
             />
           </IconButton>
 
-          {/* PROFILE */}
           <div className="flex flex-col items-center text-center">
 
             <Avatar
@@ -170,11 +214,12 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 object-cover
               "
               onError={(e) => {
-                e.target.src = "/img/logo-ct.png";
+                e.target.src =
+                  "/img/logo-ct.png";
               }}
             />
 
-            {/* SCHOOL NAME */}
+            {/* SCHOOL NAME (FIXED LOGIC SAFE) */}
             <Typography
               variant="h5"
               className="
@@ -185,13 +230,14 @@ export function Sidenav({ brandImg, brandName, routes }) {
               "
             >
               {userData?.schoolName ||
-                "YOUR SCHOOL"}
+                userData?.school?.schoolName ||
+                "EduNova International School"}
             </Typography>
 
             {/* ROLE */}
             <div
               className="
-                mt-2
+                mt-3
                 bg-white/20
                 px-4 py-1
                 rounded-full
@@ -213,20 +259,25 @@ export function Sidenav({ brandImg, brandName, routes }) {
               </Typography>
             </div>
 
-            {/* NAME */}
+            {/* USER NAME */}
             <Typography
               variant="small"
               className="
                 mt-4
                 text-blue-100
-                font-medium
+                font-semibold
                 text-base
               "
             >
-              {userData?.name || "User"}
+              {
+                userData?.name ||
+                userData?.studName + " " + userData?.studLastName ||
+                userData?.fullName ||
+                `${userData?.firstName || ""} ${userData?.lastName || ""}` ||
+                "User"
+              }
             </Typography>
 
-            {/* DASHBOARD TEXT */}
             <Typography
               variant="small"
               className="
@@ -247,174 +298,97 @@ export function Sidenav({ brandImg, brandName, routes }) {
         {/* ================= MENU ================= */}
         <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
 
-          {routes.map(
-            ({ layout, title, pages }, key) => (
+          {routes.map(({ layout, title, pages }, key) => (
+            <ul key={key} className="mb-5 flex flex-col gap-1">
 
-              <ul
-                key={key}
-                className="mb-5 flex flex-col gap-1"
-              >
+              {title && (
+                <li className="mx-3.5 mt-3 mb-2">
+                  <Typography
+                    variant="small"
+                    color={sidenavType === "dark" ? "white" : "blue-gray"}
+                    className="
+                      font-black
+                      uppercase
+                      opacity-60
+                      tracking-widest
+                      text-[11px]
+                    "
+                  >
+                    {title}
+                  </Typography>
+                </li>
+              )}
 
-                {/* SECTION TITLE */}
-                {title && (
-                  <li className="mx-3.5 mt-3 mb-2">
-
-                    <Typography
-                      variant="small"
-                      color={
-                        sidenavType === "dark"
-                          ? "white"
-                          : "blue-gray"
-                      }
-                      className="
-                        font-black
-                        uppercase
-                        opacity-60
-                        tracking-widest
-                        text-[11px]
-                      "
-                    >
-                      {title}
-                    </Typography>
-
-                  </li>
-                )}
-
-                {/* PAGES */}
-                {pages.map(
-                  ({ icon, name, path }) => (
-
-                    <li key={name}>
-
-                      <NavLink
-                        to={`/${layout}${path}`}
-                        onClick={closeSidebar}
-                      >
-                        {({ isActive }) => {
-
-                          const validColors = [
-                            "white",
-                            "blue-gray",
-                            "gray",
-                            "brown",
-                            "deep-orange",
-                            "orange",
-                            "amber",
-                            "yellow",
-                            "lime",
-                            "light-green",
-                            "green",
-                            "teal",
-                            "cyan",
-                            "light-blue",
-                            "blue",
-                            "indigo",
-                            "deep-purple",
-                            "purple",
-                            "pink",
-                            "red",
-                          ];
-
-                          const resolvedColor =
+              {pages.map(({ icon, name, path }) => (
+                <li key={name}>
+                  <NavLink
+                    to={`/${layout}${path}`}
+                    onClick={closeSidebar}
+                  >
+                    {({ isActive }) => (
+                      <Button
+                        variant={isActive ? "gradient" : "text"}
+                        color={
+                          isActive
+                            ? sidenavColor || "blue"
+                            : sidenavType === "dark"
+                            ? "white"
+                            : "blue-gray"
+                        }
+                        className={`
+                          flex items-center gap-4
+                          px-4 py-3
+                          capitalize
+                          rounded-2xl
+                          transition-all duration-300
+                          ${
                             isActive
-                              ? validColors.includes(
-                                  sidenavColor
-                                )
-                                ? sidenavColor
-                                : "blue"
-                              : sidenavType === "dark"
-                              ? "white"
-                              : "blue-gray";
+                              ? "shadow-lg scale-[1.02]"
+                              : "hover:bg-blue-gray-50"
+                          }
+                        `}
+                        fullWidth
+                      >
+                        <div className="text-lg">{icon}</div>
 
-                          return (
-                            <Button
-                              variant={
-                                isActive
-                                  ? "gradient"
-                                  : "text"
-                              }
-                              color={resolvedColor}
-                              className={`
-                                flex items-center gap-4
-                                px-4 py-3
-                                capitalize
-                                rounded-2xl
-                                transition-all
-                                duration-300
-                                ${
-                                  isActive
-                                    ? "shadow-lg scale-[1.02]"
-                                    : "hover:bg-blue-gray-50"
-                                }
-                              `}
-                              fullWidth
-                            >
+                        <Typography className="font-semibold text-sm capitalize">
+                          {name}
+                        </Typography>
+                      </Button>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
 
-                              <div className="text-lg">
-                                {icon}
-                              </div>
-
-                              <Typography
-                                color="inherit"
-                                className="
-                                  font-semibold
-                                  capitalize
-                                  text-sm
-                                "
-                              >
-                                {name}
-                              </Typography>
-
-                            </Button>
-                          );
-                        }}
-                      </NavLink>
-
-                    </li>
-                  )
-                )}
-
-              </ul>
-            )
-          )}
+            </ul>
+          ))}
 
         </div>
 
       </aside>
 
-      {/* ================= CUSTOM SCROLLBAR ================= */}
-      <style>
-        {`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 20px;
-          }
-
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-          }
-        `}
-      </style>
+      {/* ================= SCROLLBAR ================= */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #94a3b8;
+          border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #64748b;
+        }
+      `}</style>
     </>
   );
 }
 
 Sidenav.defaultProps = {
   brandImg: "/img/logo-ct.png",
-  brandName: "Your School",
 };
 
 Sidenav.propTypes = {
   brandImg: PropTypes.string,
-  brandName: PropTypes.string,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 

@@ -7,6 +7,8 @@ const BASE_URL = "http://localhost:8080/api/professors";
 
 export default function Teachers() {
 
+    const [userData, setUserData] = useState(null);
+
     const [teachers, setTeachers] = useState([]);
     const [search, setSearch] = useState("");
 
@@ -16,11 +18,9 @@ export default function Teachers() {
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
 
-    // ✅ PAGINATION
     const [currentPage, setCurrentPage] = useState(1);
     const teachersPerPage = 5;
 
-    // ✅ ID CARD
     const [showIDCard, setShowIDCard] = useState(false);
     const [cardTeacher, setCardTeacher] = useState(null);
 
@@ -36,13 +36,16 @@ export default function Teachers() {
             setTeachers(res.data);
 
         } catch (err) {
+
             console.log("Fetch error:", err);
         }
 
     }, []);
 
     useEffect(() => {
+
         fetchTeachers();
+
     }, [fetchTeachers]);
 
     // ================= DELETE =================
@@ -113,6 +116,50 @@ export default function Teachers() {
             setPreview(URL.createObjectURL(file));
         }
     };
+
+
+    // ======================================== USEEFFECT 
+       useEffect(() => {
+
+    const role =
+        localStorage.getItem("userRole");
+
+    // ================= HOD =================
+    if (role?.toLowerCase() === "hod") {
+
+        const hodData =
+            JSON.parse(localStorage.getItem("hodData"));
+
+        setUserData(hodData);
+    }
+
+    // ================= PROFESSOR =================
+    else if (
+        role?.toLowerCase() === "professor"
+    ) {
+
+        const professorData =
+            JSON.parse(
+                localStorage.getItem("professorData")
+            );
+
+        setUserData(professorData);
+    }
+
+    // ================= STUDENT =================
+    else if (
+        role?.toLowerCase() === "student"
+    ) {
+
+        const studentData =
+            JSON.parse(
+                localStorage.getItem("studentData")
+            );
+
+        setUserData(studentData);
+    }
+
+}, []);
 
     // ================= UPDATE =================
     const updateTeacher = async (e) => {
@@ -243,6 +290,51 @@ export default function Teachers() {
         pdf.save(`${cardTeacher.name}_Teacher_ID_Card.pdf`);
     };
 
+    // ================= ASSIGNMENT RENDER =================
+    const renderAssignments = (assignments) => {
+
+        if (!assignments || assignments.length === 0) {
+            return <p>No Assignments</p>;
+        }
+
+        const grouped = assignments.reduce((acc, item) => {
+
+            const className =
+                item.className ||
+                item.classNumber ||
+                "N/A";
+
+            const subjectName =
+                item.subjectName ||
+                item.subject ||
+                "N/A";
+
+            if (!acc[className]) {
+                acc[className] = [];
+            }
+
+            if (!acc[className].includes(subjectName)) {
+                acc[className].push(subjectName);
+            }
+
+            return acc;
+
+        }, {});
+
+        return Object.entries(grouped).map(
+            ([className, subjects], index) => (
+
+                <p key={index}>
+                    <span className="font-bold">
+                        {className}
+                    </span>
+                    {" - "}
+                    {subjects.join(", ")}
+                </p>
+            )
+        );
+    };
+
     return (
 
         <div className="p-4 md:p-6 bg-gray-100 min-h-screen">
@@ -323,66 +415,19 @@ export default function Teachers() {
                             </p>
 
                             {/* SUBJECTS & CLASSES */}
-<div className=" pb-4 text-xs">
+                            <div className="pb-4 text-xs">
 
-    <h3 className="font-bold text-sm mb-2 border-b border-white/30">
-        Assigned Classes & Subjects
-    </h3>
+                                <h3 className="font-bold text-sm mb-2 border-b border-gray-300">
+                                    Assigned Classes & Subjects
+                                </h3>
 
-    <div className="space-y-1">
+                                <div className="space-y-1">
+                                    {renderAssignments(
+                                        selectedTeacher.assignments
+                                    )}
+                                </div>
 
-        {cardTeacher.assignments &&
-        cardTeacher.assignments.length > 0 ? (
-
-            Object.entries(
-
-                cardTeacher.assignments.reduce((acc, item) => {
-
-                    const className =
-                        item.className ||
-                        item.classNumber ||
-                        "N/A";
-
-                    const subjectName =
-                        item.subjectName ||
-                        item.subject ||
-                        "N/A";
-
-                    // ✅ SAME CLASS GROUP
-                    if (!acc[className]) {
-                        acc[className] = [];
-                    }
-
-                    // ✅ DUPLICATE SUBJECT REMOVE
-                    if (!acc[className].includes(subjectName)) {
-                        acc[className].push(subjectName);
-                    }
-
-                    return acc;
-
-                }, {})
-
-            ).map(([className, subjects], index) => (
-
-                <p key={index}>
-                    <span className="font-bold">
-                        {className}
-                    </span>
-                    {" - "}
-                    {subjects.join(", ")}
-                </p>
-
-            ))
-
-        ) : (
-
-            <p>No Assignments</p>
-
-        )}
-
-    </div>
-
-</div>
+                            </div>
 
                         </div>
 
@@ -552,7 +597,7 @@ export default function Teachers() {
 
                                     <img
                                         src={`${BASE_URL}/image/get/${t.id}`}
-                                        className=" sm:w-14 sm:h-14 rounded-full object-cover mx-auto border-2 border-blue-500"
+                                        className="sm:w-14 sm:h-14 rounded-full object-cover mx-auto border-2 border-blue-500"
                                         crossOrigin="anonymous"
                                         onError={(e) => {
                                             e.target.src =
@@ -633,25 +678,23 @@ export default function Teachers() {
 
             </div>
 
-            {/* ================= ID CARD MODAL ================= */}
+            {/* ================= ID CARD ================= */}
             {showIDCard && cardTeacher && (
 
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
 
                     <div className="bg-white rounded-3xl p-6 shadow-2xl">
 
-                        {/* CARD */}
                         <div
                             ref={cardRef}
                             className="w-[350px] min-h-[230px] rounded-3xl overflow-hidden relative shadow-2xl bg-gradient-to-r from-indigo-700 via-blue-700 to-cyan-700 text-white"
                         >
 
-                            {/* TOP */}
                             <div className="text-center py-3 border-b border-white/30">
 
                                 <h1 className="text-2xl font-bold tracking-wide">
-                                    TGP CET SCHOOL
-                                </h1>
+    {userData?.schoolName || "TGP CET SCHOOL"}
+</h1>
 
                                 <p className="text-xs tracking-[4px]">
                                     TEACHER IDENTITY CARD
@@ -659,7 +702,6 @@ export default function Teachers() {
 
                             </div>
 
-                            {/* BODY */}
                             <div className="flex p-4 gap-4">
 
                                 <img
@@ -673,12 +715,14 @@ export default function Teachers() {
                                 />
 
                                 <div className="space-y-1 text-xs">
+
                                     <p>
                                         <span className="font-bold">
                                             Name :
                                         </span>{" "}
                                         {cardTeacher.name}
                                     </p>
+
                                     <p>
                                         <span className="font-bold">
                                             Designation :
@@ -704,73 +748,26 @@ export default function Teachers() {
 
                             </div>
 
-                            {/* SUBJECTS & CLASSES */}
                             <div className="px-4 pb-4 text-xs">
 
                                 <h3 className="font-bold text-sm mb-2 border-b border-white/30 pb-1">
-                                   Assigned Classes & Subjects
+                                    Assigned Classes & Subjects
                                 </h3>
 
                                 <div className="space-y-1">
-                                    {cardTeacher.assignments &&
-                                       cardTeacher.assignments.length > 0 ? (
-                                        Object.entries(
-                                          cardTeacher.assignments.reduce((acc, item) => {
+                                    {renderAssignments(
+                                        cardTeacher.assignments
+                                    )}
+                                </div>
 
-                    const className =
-                        item.className ||
-                        item.classNumber ||
-                        "N/A";
+                            </div>
 
-                    const subjectName =
-                        item.subjectName ||
-                        item.subject ||
-                        "N/A";
-
-                    // ✅ SAME CLASS GROUP
-                    if (!acc[className]) {
-                        acc[className] = [];
-                    }
-
-                    // ✅ DUPLICATE SUBJECT REMOVE
-                    if (!acc[className].includes(subjectName)) {
-                        acc[className].push(subjectName);
-                    }
-
-                    return acc;
-
-                }, {})
-
-            ).map(([className, subjects], index) => (
-
-                <p key={index}>
-                    <span className="font-bold">
-                        {className}
-                    </span>
-                    {" - "}
-                    {subjects.join(", ")}
-                </p>
-
-            ))
-
-        ) : (
-
-            <p>No Assignments</p>
-
-        )}
-
-    </div>
-
-</div>
-
-                            {/* FOOTER */}
                             <div className="absolute bottom-0 left-0 w-full bg-black/20 text-center py-2 text-xs tracking-widest">
                                 www.tgpcetschool.com
                             </div>
 
                         </div>
 
-                        {/* BUTTONS */}
                         <div className="flex justify-center gap-4 mt-5">
 
                             <button
