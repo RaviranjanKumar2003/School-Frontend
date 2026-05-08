@@ -24,6 +24,7 @@ export default function CreateStudent() {
     email: "",
     studPhoneNumber: "",
     classNumber: "",
+    className: "",
     studentDob: "",
     studCategory: "",
     studCaste: "",

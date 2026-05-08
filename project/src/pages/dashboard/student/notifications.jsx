@@ -19,14 +19,19 @@ function Notices() {
   const [activeType, setActiveType] = useState("ALL");
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [teachers, setTeachers] = useState([]);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+
   const [leaveData, setLeaveData] = useState({
   reason: "",
   fromDate: "",
   toDate: "",
-  sendTo: "HOD"
+  sendTo: "HOD",
+  teacherId: "",
+  sendToAll: false
   });
+
   const [leaves, setLeaves] = useState([]);
 
   useEffect(() => {
@@ -34,6 +39,31 @@ function Notices() {
     fetchLeaves();
   }, []);
 
+
+ const loadTeachers = async () => {
+
+  try {
+
+    const studentId = localStorage.getItem("id");
+
+    const studentRes = await axios.get(
+      `http://localhost:8080/api/students/by-id/${studentId}`
+    );
+
+    const className = studentRes.data.className;
+
+    if (!className) return;
+
+    const res = await axios.get(
+      `http://localhost:8080/api/professors/class/${className}`
+    );
+
+    setTeachers(res.data);
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
  const fetchNotices = async () => {
   try {
@@ -152,8 +182,10 @@ function Notices() {
   reason: "",
   fromDate: "",
   toDate: "",
-  sendTo: "HOD"   // 🔥 IMPORTANT
-  });
+  sendTo: "HOD",
+  teacherId: "",
+  sendToAll: false
+ });
       fetchLeaves();
     } catch (err) {
       console.error(err);
@@ -329,14 +361,70 @@ function Notices() {
             Send To
           </label>
           <select
-            name="sendTo"
-            value={leaveData.sendTo}
-            onChange={handleLeaveChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          >
-            <option value="HOD">HOD</option>
-            <option value="TEACHER">Teacher</option>
-          </select>
+  name="sendTo"
+  value={leaveData.sendTo}
+  onChange={(e) => {
+
+    handleLeaveChange(e);
+
+    if (e.target.value === "TEACHER") {
+      loadTeachers();
+    }
+  }}
+  className="w-full border border-gray-300 p-2 rounded-lg"
+>
+  <option value="HOD">HOD</option>
+  <option value="TEACHER">Teacher</option>
+</select>
+
+{/* 🔥 TEACHER LIST */}
+{leaveData.sendTo === "TEACHER" && (
+  <div>
+
+    <label className="text-sm text-gray-500 mb-1 block">
+      Select Teacher
+    </label>
+
+    <select
+      value={leaveData.teacherId}
+      onChange={(e) =>
+        setLeaveData({
+          ...leaveData,
+          teacherId: e.target.value,
+          sendToAll: false
+        })
+      }
+      className="w-full border border-gray-300 p-2 rounded-lg"
+    >
+
+      <option value="">
+        Select Teacher
+      </option>
+
+      {teachers.map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.name}
+        </option>
+      ))}
+
+    </select>
+
+    <button
+      type="button"
+      onClick={() =>
+        setLeaveData({
+          ...leaveData,
+          teacherId: "",
+          sendToAll: true
+        })
+      }
+      className="mt-2 text-sm text-blue-600"
+    >
+      Send To All Teachers
+    </button>
+
+  </div>
+)}
         </div>
 
         {/* Reason */}

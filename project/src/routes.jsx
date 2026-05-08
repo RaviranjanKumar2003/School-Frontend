@@ -7,6 +7,13 @@ import {
   RectangleStackIcon,
   EnvelopeIcon,
   PencilIcon,
+  BellAlertIcon,
+  PencilSquareIcon,
+  ChartBarIcon,
+  ClipboardDocumentCheckIcon,
+  ArchiveBoxIcon,
+  CalendarDaysIcon,
+  CurrencyRupeeIcon,
 } from "@heroicons/react/24/solid";
 import { lazy, Suspense } from "react";
 
@@ -67,6 +74,7 @@ const ProfessorHome = lazy(() => import("@/pages/dashboard/professor/Home"));
 const ExamNotice = lazy(() => import("@/pages/dashboard/professor/ExamNotice"));
 const StudentExams = lazy(() => import("@/pages/dashboard/professor/StudentExams"));
 const ExamAttendance = lazy(() => import("@/pages/dashboard/professor/ExamAttendance"));
+const StuLeaveRequest = lazy(() => import("@/pages/dashboard/professor/StuLeaveRequest"));
 const ProfessorProfile = lazy(() =>
   import("@/pages/dashboard/professor/Profile")
 );
@@ -92,15 +100,14 @@ const ProfessorEvents = lazy(() =>
 const StudentHome = lazy(() => import("@/pages/dashboard/student/Home"));
 const StudentProfile = lazy(() => import("@/pages/dashboard/student/Profile"));
 const Exams = lazy(() => import("@/pages/dashboard/student/Exams"));
+const Attendance = lazy(() => import("@/pages/dashboard/student/Attendance"));
+const StudentFee = lazy(() => import("@/pages/dashboard/student/StudentFee"));
 const LiveClass = lazy(() =>
   import("@/pages/dashboard/student/LiveClass")
 );
 
 const StudentNotifications = lazy(() =>
   import("@/pages/dashboard/student/Notifications")
-);
-const StudentSemesterTable = lazy(() =>
-  import("@/pages/dashboard/student/SemesterTable")
 );
 
 const StudentResult = lazy(() =>
@@ -303,6 +310,12 @@ export const routes = [
       },
       {
         icon: <TableCellsIcon {...icon} />,
+        name: "Student Leave Requests",
+        path: "/professor/stu-leave-request",
+        element: <Suspense fallback={<LoadingSpinner />}><StuLeaveRequest /></Suspense>,
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
         name: "Events",
         path: "/professor/events",
         element: <Suspense fallback={<LoadingSpinner />}><ProfessorEvents /></Suspense>,
@@ -326,40 +339,52 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><StudentProfile /></Suspense>,
       },
       {
-        icon: <InformationCircleIcon {...icon} />,
+        icon: <BellAlertIcon {...icon} />,
         name: "Student notifications",
         path: "/student/notifications",
         element: <Suspense fallback={<LoadingSpinner />}><StudentNotifications /></Suspense>,
       },
       {
-        icon: <InformationCircleIcon {...icon} />,
+        icon: <PencilSquareIcon {...icon} />,
         name: "Exams",
         path: "/student/exams",
         element: <Suspense fallback={<LoadingSpinner />}><Exams /></Suspense>,
       },
       {
-        icon: <TableCellsIcon {...icon} />,
+        icon: <ChartBarIcon {...icon} />,
         name: "Results",
         path: "/student/result",
         element: <Suspense fallback={<LoadingSpinner />}><StudentResult /></Suspense>,
       },
       {
-        icon: <TableCellsIcon {...icon} />,
+        icon: <ClipboardDocumentCheckIcon {...icon} />,
+        name: "Attendance",
+        path: "/student/Attendance",
+        element: <Suspense fallback={<LoadingSpinner />}><Attendance/></Suspense>,
+      },
+      {
+        icon: <ArchiveBoxIcon {...icon} />,
         name: "Archived Notifications",
         path: "/student/archived-notifications",
         element: <Suspense fallback={<LoadingSpinner />}><ArchivedNotifications /></Suspense>,
       },
       {
-        icon: <TableCellsIcon {...icon} />,
-        name: "Student Semester Table",
-        path: "/student/semestertable",
-        element: <Suspense fallback={<LoadingSpinner />}><StudentSemesterTable /></Suspense>,
-      },
-      {
-        icon: <TableCellsIcon {...icon} />,
+        icon: <CalendarDaysIcon {...icon} />,
         name: "Events",
         path: "/student/events",
         element: <Suspense fallback={<LoadingSpinner />}><StudentEvents /></Suspense>,
+      },
+      // {
+      //   icon: <CalendarDaysIcon {...icon} />,
+      //   name: "Live Class",
+      //   path: "/student/live-class",
+      //   element: <Suspense fallback={<LoadingSpinner />}><LiveClass /></Suspense>,
+      // },
+      {
+        icon: <CurrencyRupeeIcon {...icon} />,
+        name: "Payment",
+        path: "/student/student-fee",
+        element: <Suspense fallback={<LoadingSpinner />}><StudentFee /></Suspense>,
       },
     ],
   },

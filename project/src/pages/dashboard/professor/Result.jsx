@@ -27,6 +27,15 @@ const Result = () => {
     .catch(err => console.log(err));
   }, [teacherId]);
 
+
+
+
+  const getClassName = (id) => {
+  const cls = classes.find(c => c.id === id);
+  return cls ? cls.className : id;
+  };
+
+
   // 🔥 LOAD CLASSES
   useEffect(() => {
     axios.get("http://localhost:8080/api/classes")
@@ -152,7 +161,7 @@ const Result = () => {
 
           <p className="text-sm mt-1">📘 Subject: {r.subjects?.[0]}</p>
 
-          <p className="text-sm">🏫 Class: {r.classId}</p>
+         <p>📝 Class: {getClassName(r.classId)}</p>
 
           <p className="text-sm">📝 Exam: {r.examType}</p>
 
