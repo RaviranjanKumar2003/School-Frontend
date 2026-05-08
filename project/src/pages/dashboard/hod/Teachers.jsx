@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:8080/api/professors";
@@ -15,21 +15,30 @@ export default function Teachers() {
     const [preview, setPreview] = useState(null);
 
     // ================= FETCH =================
-    const fetchTeachers = async () => {
-        const res = await axios.get(BASE_URL);
-        setTeachers(res.data);
-    };
+    const fetchTeachers = useCallback(async () => {
+        try {
+            const res = await axios.get(BASE_URL);
+            setTeachers(res.data);
+        } catch (err) {
+            console.log("Fetch error:", err);
+        }
+    }, []);
 
     useEffect(() => {
         fetchTeachers();
-    }, []);
+    }, [fetchTeachers]);
 
     // ================= DELETE =================
     const deleteTeacher = async (id) => {
-        if (!window.confirm("Delete teacher?")) return;
+        if (!window.confirm("Delete this teacher?")) return;
 
-        await axios.delete(`${BASE_URL}/delete/${id}`);
-        fetchTeachers();
+        try {
+            await axios.delete(`${BASE_URL}/${id}`);
+            fetchTeachers();
+        } catch (err) {
+            console.log(err);
+            alert("Delete failed");
+        }
     };
 
     // ================= PROFILE =================
@@ -45,8 +54,6 @@ export default function Teachers() {
             name: teacher.name || "",
             email: teacher.email || "",
             phone: teacher.phone || "",
-            department: teacher.departmentName || "",
-            subject: teacher.subject || "",
             designation: teacher.designation || "",
             qualification: teacher.qualification || "",
             experience: teacher.experience || "",
@@ -76,48 +83,52 @@ export default function Teachers() {
 
     // ================= UPDATE =================
     const updateTeacher = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
-            const formData = new FormData();
+    try {
+        const formData = new FormData();
 
-            formData.append("name", editingTeacher.name);
-            formData.append("email", editingTeacher.email);
-            formData.append("phone", editingTeacher.phone);
-            formData.append("department", editingTeacher.department);
-            formData.append("subject", editingTeacher.subject);
-            formData.append("designation", editingTeacher.designation);
-            formData.append("qualification", editingTeacher.qualification);
-            formData.append("experience", editingTeacher.experience);
-            formData.append("joiningDate", editingTeacher.joiningDate);
+        // ✅ REQUIRED FIELDS (VERY IMPORTANT)
+        formData.append("schoolCode", editingTeacher.schoolCode || "SCHOOL-1");
 
-            if (image) {
-                formData.append("image", image);
-            }
+        formData.append("name", editingTeacher.name);
+        formData.append("email", editingTeacher.email);
+        formData.append("phone", editingTeacher.phone);
+        formData.append("designation", editingTeacher.designation);
+        formData.append("qualification", editingTeacher.qualification);
+        formData.append("experience", editingTeacher.experience);
+        formData.append("joiningDate", editingTeacher.joiningDate);
 
-            await axios.put(
-                `${BASE_URL}/update/${editingTeacher.id}`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    }
-                }
-            );
+        // ✅ IMPORTANT FIX FOR 400 ERROR
+        formData.append(
+            "assignments",
+            JSON.stringify(editingTeacher.assignments || [])
+        );
 
-            alert("✅ Teacher updated successfully");
-
-            setEditingTeacher(null);
-            setImage(null);
-            setPreview(null);
-
-            fetchTeachers();
-
-        } catch (err) {
-            console.log(err);
-            alert("❌ Update failed");
+        // image optional
+        if (image) {
+            formData.append("image", image);
         }
-    };
+
+        await axios.put(`${BASE_URL}/${editingTeacher.id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
+
+        alert("✅ Updated Successfully");
+
+        setEditingTeacher(null);
+        setImage(null);
+        setPreview(null);
+
+        fetchTeachers();
+
+    } catch (err) {
+        console.log(err);
+        alert("❌ Update failed");
+    }
+};
 
     // ================= SEARCH =================
     const filteredTeachers = teachers.filter(
@@ -127,9 +138,10 @@ export default function Teachers() {
     );
 
     return (
-        <div className="p-6">
+        <div className="p-3 md:p-6">
 
-            <h2 className="text-2xl font-bold mb-4">
+            {/* HEADER */}
+            <h2 className="text-xl md:text-2xl font-bold mb-3">
                 Teachers ({teachers.length})
             </h2>
 
@@ -137,36 +149,37 @@ export default function Teachers() {
             <input
                 type="text"
                 placeholder="Search teacher..."
-                className="border p-2 mb-4 w-64"
+                className="border p-2 mb-4 w-full md:w-80 rounded"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
             />
 
-            {/* ================= PROFILE ================= */}
+            {/* ================= PROFILE CARD ================= */}
             {selectedTeacher && (
-                <div className="bg-white p-6 rounded shadow mb-4">
+                <div className="bg-white p-4 rounded shadow mb-4">
 
-                    <div className="flex gap-6">
+                    <div className="flex flex-col md:flex-row gap-4">
 
                         <img
                             src={`${BASE_URL}/image/get/${selectedTeacher.id}`}
-                            className="w-32 h-32 rounded-full object-cover border"
+                            className="w-28 h-28 md:w-32 md:h-32 rounded-full object-cover border mx-auto md:mx-0"
+                            onError={(e) => {
+                                e.target.src = "https://via.placeholder.com/150";
+                            }}
                         />
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm md:text-base">
                             <p><b>Name:</b> {selectedTeacher.name}</p>
                             <p><b>Email:</b> {selectedTeacher.email}</p>
                             <p><b>Phone:</b> {selectedTeacher.phone}</p>
-                            <p><b>Department:</b> {selectedTeacher.departmentName}</p>
-                            <p><b>Subject:</b> {selectedTeacher.subject}</p>
                             <p><b>Designation:</b> {selectedTeacher.designation}</p>
                             <p><b>Qualification:</b> {selectedTeacher.qualification}</p>
                             <p><b>Experience:</b> {selectedTeacher.experience}</p>
-                            <p><b>Joining Date:</b> {selectedTeacher.joiningDate}</p>
+                            <p><b>Joining:</b> {selectedTeacher.joiningDate}</p>
                         </div>
                     </div>
 
-                    <div className="mt-4 space-x-2">
+                    <div className="mt-3 flex gap-2">
                         <button
                             onClick={() => handleEdit(selectedTeacher)}
                             className="bg-yellow-500 text-white px-3 py-1 rounded"
@@ -181,7 +194,6 @@ export default function Teachers() {
                             Close
                         </button>
                     </div>
-
                 </div>
             )}
 
@@ -189,32 +201,39 @@ export default function Teachers() {
             {editingTeacher && (
                 <form
                     onSubmit={updateTeacher}
-                    className="bg-white p-6 rounded shadow mb-4 grid grid-cols-2 gap-4"
+                    className="bg-white p-4 rounded shadow mb-4 grid grid-cols-1 md:grid-cols-2 gap-3"
                 >
 
-                    <input name="name" value={editingTeacher.name} onChange={handleChange} className="border p-2" placeholder="Name" />
-                    <input name="email" value={editingTeacher.email} onChange={handleChange} className="border p-2" placeholder="Email" />
-                    <input name="phone" value={editingTeacher.phone} onChange={handleChange} className="border p-2" placeholder="Phone" />
-                    <input name="department" value={editingTeacher.department} onChange={handleChange} className="border p-2" placeholder="Department" />
-                    <input name="subject" value={editingTeacher.subject} onChange={handleChange} className="border p-2" placeholder="Subject" />
-                    <input name="designation" value={editingTeacher.designation} onChange={handleChange} className="border p-2" placeholder="Designation" />
-                    <input name="qualification" value={editingTeacher.qualification} onChange={handleChange} className="border p-2" placeholder="Qualification" />
-                    <input name="experience" value={editingTeacher.experience} onChange={handleChange} className="border p-2" placeholder="Experience" />
-                    <input type="date" name="joiningDate" value={editingTeacher.joiningDate} onChange={handleChange} className="border p-2" />
+                    {Object.keys(editingTeacher).map((key) => (
+                        key !== "id" && (
+                            <input
+                                key={key}
+                                name={key}
+                                value={editingTeacher[key]}
+                                onChange={handleChange}
+                                className="border p-2 rounded"
+                                placeholder={key}
+                            />
+                        )
+                    ))}
 
-                    {/* IMAGE */}
-                    <input type="file" onChange={handleImageChange} className="col-span-2" />
+                    <input type="file" onChange={handleImageChange} className="md:col-span-2" />
 
-                    {preview ? (
-                        <img src={preview} className="w-24 h-24 rounded-full" />
-                    ) : (
+                    <div className="md:col-span-2 flex justify-center">
                         <img
-                            src={`${BASE_URL}/image/get/${editingTeacher.id}`}
-                            className="w-24 h-24 rounded-full"
+                            src={
+                                preview
+                                    ? preview
+                                    : `${BASE_URL}/image/get/${editingTeacher.id}`
+                            }
+                            className="w-24 h-24 rounded-full border"
+                            onError={(e) => {
+                                e.target.src = "https://via.placeholder.com/150";
+                            }}
                         />
-                    )}
+                    </div>
 
-                    <button className="bg-blue-600 text-white py-2 col-span-2 rounded">
+                    <button className="bg-blue-600 text-white py-2 rounded md:col-span-2">
                         Update Teacher
                     </button>
 
@@ -222,58 +241,71 @@ export default function Teachers() {
             )}
 
             {/* ================= TABLE ================= */}
-            <table className="w-full border text-center">
-                <thead>
-                    <tr className="bg-gray-200">
-                        <th>#</th>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+            <div className="overflow-x-auto">
 
-                <tbody>
-                    {filteredTeachers.map((t, i) => (
-                        <tr key={t.id}>
-                            <td>{i + 1}</td>
+                <table className="w-full border text-center text-sm md:text-base">
 
-                            <td>
-                                <img
-                                    src={`${BASE_URL}/image/get/${t.id}`}
-                                    className="w-10 h-10 rounded-full mx-auto object-cover"
-                                />
-                            </td>
-
-                            <td>{t.name}</td>
-                            <td>{t.email}</td>
-
-                            <td className="space-x-2">
-                                <button
-                                    onClick={() => handleProfile(t)}
-                                    className="bg-blue-500 text-white px-2 py-1 rounded"
-                                >
-                                    Profile
-                                </button>
-
-                                <button
-                                    onClick={() => handleEdit(t)}
-                                    className="bg-yellow-500 text-white px-2 py-1 rounded"
-                                >
-                                    Edit
-                                </button>
-
-                                <button
-                                    onClick={() => deleteTeacher(t.id)}
-                                    className="bg-red-500 text-white px-2 py-1 rounded"
-                                >
-                                    Delete
-                                </button>
-                            </td>
+                    <thead>
+                        <tr className="bg-gray-200">
+                            <th>#</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+
+                    <tbody>
+                        {filteredTeachers.map((t, i) => (
+                            <tr key={t.id} className="border">
+
+                                <td>{i + 1}</td>
+
+                                {/* IMAGE FIXED */}
+                                <td>
+                                    <img
+                                        src={`${BASE_URL}/image/get/${t.id}`}
+                                        className="w-10 h-10 rounded-full mx-auto object-cover"
+                                        onError={(e) => {
+                                            e.target.src = "https://via.placeholder.com/100";
+                                        }}
+                                    />
+                                </td>
+
+                                <td>{t.name}</td>
+                                <td>{t.email}</td>
+
+                                <td className="space-x-1 md:space-x-2">
+
+                                    <button
+                                        onClick={() => handleProfile(t)}
+                                        className="bg-blue-500 text-white px-2 py-1 rounded text-xs md:text-sm"
+                                    >
+                                        Profile
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleEdit(t)}
+                                        className="bg-yellow-500 text-white px-2 py-1 rounded text-xs md:text-sm"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        onClick={() => deleteTeacher(t.id)}
+                                        className="bg-red-500 text-white px-2 py-1 rounded text-xs md:text-sm"
+                                    >
+                                        Delete
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                        ))}
+                    </tbody>
+
+                </table>
+            </div>
 
         </div>
     );

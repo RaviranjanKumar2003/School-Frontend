@@ -4,7 +4,7 @@ import ForgotPasswordFlow from "./pages/forgotPassword/ForgotPasswordFlow";
 import { Auth } from "./layouts/auth";
 import LoginTypeSelection from "./pages/auth/LoginTypeSelection";
 import SignUpTypeSelection from "./pages/auth/SignUpTypeSelection";
-import AttendanceFlow from "./pages/dashboard/professor/Attendance/AttendanceFlow";
+import AttendanceFlow from "./pages/dashboard/professor/PAttendance/AttendanceFlow";
 
 function App() {
   return (

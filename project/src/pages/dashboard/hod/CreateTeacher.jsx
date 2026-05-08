@@ -1,209 +1,280 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 export default function CreateTeacher() {
 
-    const fileRef = useRef(null);
+  const fileRef = useRef(null);
 
-    const [form, setForm] = useState({
+  const [form, setForm] = useState({
+    schoolCode: "",
+    name: "",
+    email: "",
+    phone: "",
+    designation: "",
+    qualification: "",
+    experience: "",
+    joiningDate: ""
+  });
+
+  const [classes, setClasses] = useState([]);
+
+  // ✅ NEW STRUCTURE
+  const [selectedData, setSelectedData] = useState({});
+
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // ================= LOAD CLASSES =================
+  useEffect(() => {
+    axios.get("http://localhost:8080/api/classes")
+      .then(res => setClasses(res.data))
+      .catch(err => console.log(err));
+  }, []);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+    if (file) setPreview(URL.createObjectURL(file));
+  };
+
+  // ================= CLASS TOGGLE =================
+  const toggleClass = (className) => {
+    setSelectedData(prev => {
+      if (prev[className]) {
+        // remove class
+        const updated = { ...prev };
+        delete updated[className];
+        return updated;
+      } else {
+        return { ...prev, [className]: [] };
+      }
+    });
+  };
+
+  // ================= SUBJECT TOGGLE =================
+  const toggleSubject = (className, subject) => {
+    setSelectedData(prev => {
+      const subjects = prev[className] || [];
+
+      if (subjects.includes(subject)) {
+        return {
+          ...prev,
+          [className]: subjects.filter(s => s !== subject)
+        };
+      } else {
+        return {
+          ...prev,
+          [className]: [...subjects, subject]
+        };
+      }
+    });
+  };
+
+  // ================= CREATE =================
+  const createTeacher = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+
+      // ✅ BUILD FINAL ASSIGNMENTS
+      let finalAssignments = [];
+
+Object.entries(selectedData).forEach(([className, subjects]) => {
+
+  // ❌ skip empty subjects
+  if (!subjects || subjects.length === 0) return;
+
+  subjects.forEach(subject => {
+    finalAssignments.push({
+      className,
+      subjectName: subject
+    });
+  });
+
+});
+
+// 🔥 DEBUG (VERY IMPORTANT)
+console.log("FINAL ASSIGNMENTS => ", finalAssignments);
+
+      const formData = new FormData();
+
+      Object.keys(form).forEach(k => formData.append(k, form[k]));
+      formData.append("assignments", JSON.stringify(finalAssignments));
+
+      if (image) formData.append("image", image);
+
+      const res = await axios.post(
+        "http://localhost:8080/api/professors",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      setCredentials(res.data);
+      setShowPopup(true);
+
+      // RESET
+      setForm({
         schoolCode: "",
         name: "",
         email: "",
         phone: "",
-        department: "",
-        subject: "",
         designation: "",
         qualification: "",
         experience: "",
         joiningDate: ""
-    });
+      });
 
-    const [image, setImage] = useState(null);
-    const [preview, setPreview] = useState(null);
+      setSelectedData({});
+      setImage(null);
+      setPreview(null);
 
-    const [showPopup, setShowPopup] = useState(false);
+      if (fileRef.current) fileRef.current.value = "";
 
-    const [credentials, setCredentials] = useState({
-        username: "",
-        password: ""
-    });
+    } catch (err) {
+      setErrorMessage("Teacher creation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const [errorMessage, setErrorMessage] = useState("");
-    const [loading, setLoading] = useState(false);
+  return (
+    <div className="p-3 sm:p-6 bg-gray-50 min-h-screen">
 
-    // ================= HANDLE INPUT =================
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+      <h2 className="text-2xl font-bold text-blue-600 mb-4">
+        Create Teacher 👨‍🏫
+      </h2>
 
-    // ================= HANDLE IMAGE =================
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        setImage(file);
+      {errorMessage && (
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-3">
+          {errorMessage}
+        </div>
+      )}
 
-        if (file) {
-            setPreview(URL.createObjectURL(file));
-        }
-    };
+      <form
+        onSubmit={createTeacher}
+        className="bg-white p-5 rounded-xl shadow space-y-4"
+      >
 
-    // ================= CREATE TEACHER =================
-    const createTeacher = async (e) => {
+        {/* BASIC DETAILS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.keys(form).map(key => (
+            <input
+              key={key}
+              name={key}
+              type={key === "joiningDate" ? "date" : "text"}
+              value={form[key]}
+              onChange={handleChange}
+              placeholder={key}
+              className="border p-2 rounded"
+              required
+            />
+          ))}
+        </div>
 
-        e.preventDefault();
-        setLoading(true);
+        {/* ================= CLASS + SUBJECT ================= */}
+        <div>
+          <h3 className="font-semibold mb-2">Assign Classes & Subjects</h3>
 
-        try {
+          <div className="space-y-3">
 
-            const formData = new FormData();
+            {classes.map(cls => (
+              <div key={cls.id} className="border rounded p-3">
 
-            Object.keys(form).forEach(key => {
-                formData.append(key, form[key]);
-            });
+                {/* CLASS CHECK */}
+                <label className="flex items-center gap-2 font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={!!selectedData[cls.className]}
+                    onChange={() => toggleClass(cls.className)}
+                  />
+                  {cls.className}
+                </label>
 
-            if (image) {
-                formData.append("image", image);
-            }
+                {/* SUBJECTS */}
+                {selectedData[cls.className] && (
+                  <div className="flex flex-wrap gap-2 mt-2">
 
-            const res = await axios.post(
-                "http://localhost:8080/api/professors/createTeacher",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    }
-                }
-            );
-
-            setCredentials({
-                username: res.data.username,
-                password: res.data.password
-            });
-
-            setShowPopup(true);
-            setErrorMessage("");
-
-            // RESET FORM
-            setForm({
-                schoolCode: "",
-                name: "",
-                email: "",
-                phone: "",
-                department: "",
-                subject: "",
-                designation: "",
-                qualification: "",
-                experience: "",
-                joiningDate: ""
-            });
-
-            setImage(null);
-            setPreview(null);
-
-            if (fileRef.current) {
-                fileRef.current.value = "";
-            }
-
-        } catch (err) {
-            console.log(err);
-            setErrorMessage("❌ Teacher creation failed. Check backend or API.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-
-        <div className="p-4 md:p-6">
-
-            <h2 className="text-2xl font-bold mb-6 text-blue-600">
-                Create Teacher 👨‍🏫
-            </h2>
-
-            {errorMessage && (
-                <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">
-                    {errorMessage}
-                </div>
-            )}
-
-            <form
-                onSubmit={createTeacher}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-xl shadow"
-            >
-
-                {Object.keys(form).map((key) => (
-                    <input
-                        key={key}
-                        name={key}
-                        type={key === "joiningDate" ? "date" : "text"}
-                        placeholder={key}
-                        className="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        value={form[key]}
-                        onChange={handleChange}
-                        required
-                    />
-                ))}
-
-                {/* IMAGE INPUT */}
-                <div className="md:col-span-2">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        ref={fileRef}
-                        className="border p-2 rounded w-full"
-                        onChange={handleImageChange}
-                    />
-                </div>
-
-                {/* IMAGE PREVIEW */}
-                {preview && (
-                    <div className="md:col-span-2 flex justify-center">
-                        <img
-                            src={preview}
-                            alt="preview"
-                            className="w-32 h-32 object-cover rounded-full border shadow"
+                    {cls.subjects.map(sub => (
+                      <label
+                        key={sub.id}
+                        className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedData[cls.className]?.includes(sub.subjectName)}
+                          onChange={() =>
+                            toggleSubject(cls.className, sub.subjectName)
+                          }
                         />
-                    </div>
+                        {sub.subjectName}
+                      </label>
+                    ))}
+
+                  </div>
                 )}
 
-                {/* BUTTON */}
-                <button
-                    disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded md:col-span-2 transition"
-                >
-                    {loading ? "Creating..." : "Create Teacher"}
-                </button>
+              </div>
+            ))}
 
-            </form>
+          </div>
+        </div>
 
-            {/* SUCCESS POPUP */}
-            {showPopup && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
+        {/* IMAGE */}
+        <input type="file" ref={fileRef} onChange={handleImage} />
 
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-80 md:w-96 animate-scaleIn">
+        {preview && (
+          <div className="flex justify-center">
+            <img
+              src={preview}
+              className="w-24 h-24 rounded-full object-cover"
+            />
+          </div>
+        )}
 
-                        <h3 className="text-xl font-bold text-green-600 mb-4 text-center">
-                            🎉 Teacher Created Successfully
-                        </h3>
+        {/* SUBMIT */}
+        <button
+          disabled={loading}
+          className="bg-blue-600 text-white py-2 rounded w-full"
+        >
+          {loading ? "Creating..." : "Create Teacher"}
+        </button>
 
-                        <div className="bg-gray-100 p-4 rounded mb-4 text-sm">
+      </form>
 
-                            <p><strong>User ID :</strong> {credentials.username}</p>
-                            <p><strong>Password :</strong> {credentials.password}</p>
+      {/* POPUP */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
 
-                        </div>
+          <div className="bg-white p-5 rounded text-center">
 
-                        <button
-                            onClick={() => setShowPopup(false)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full"
-                        >
-                            OK
-                        </button>
+            <h3 className="text-green-600 font-bold mb-2">
+              Success 🎉
+            </h3>
 
-                    </div>
+            <p>User: {credentials.username}</p>
+            <p>Pass: {credentials.password}</p>
 
-                </div>
-            )}
+            <button
+              onClick={() => setShowPopup(false)}
+              className="mt-3 bg-green-600 text-white px-4 py-2 rounded"
+            >
+              OK
+            </button>
+
+          </div>
 
         </div>
-    );
+      )}
+    </div>
+  );
 }

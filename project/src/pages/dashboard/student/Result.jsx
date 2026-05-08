@@ -815,5 +815,4 @@ const Result = () => {
     </div>
   );
 };
-
 export default Result;

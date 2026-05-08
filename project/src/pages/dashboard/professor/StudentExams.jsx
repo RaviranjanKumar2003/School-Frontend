@@ -25,6 +25,7 @@ const StudentExams = () => {
   const [isUpdate, setIsUpdate] = useState(false);
   const [id, setId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
 
   const [examTypes, setExamTypes] = useState([]);
 
@@ -128,7 +129,7 @@ const StudentExams = () => {
 
       await axios.post("http://localhost:8080/api/exam-schedule", {
        ...form,
-       subjectName: teacher?.subject || "Unknown", // 🔥 FIX
+       subjectName: form.subjectName, // 🔥 FIX
        teacherId: teacher?.id || teacherId        // 🔥 FIX
       });
 
@@ -152,7 +153,7 @@ const StudentExams = () => {
      `http://localhost:8080/api/exam-schedule/${id}`,
      {
     ...form,
-    subjectName: teacher?.subject || "Unknown",
+    subjectName: form.subjectName,
     teacherId: teacher?.id || teacherId
     }
     );
@@ -188,7 +189,6 @@ const StudentExams = () => {
   // ✅ DELETE
   const deleteExam = async (id) => {
     if (!window.confirm("Delete this exam?")) return;
-
     try {
       await axios.delete(
         `http://localhost:8080/api/exam-schedule/${id}`
@@ -271,13 +271,19 @@ const StudentExams = () => {
               <Select
               label="Select Class"
               value={form.classId}
-              onChange={(v) => 
-              setForm({ 
-              ...form, 
-              classId: v,
-              subjectName: teacher?.subject?.trim() || ""
-             })
-             }
+              onChange={async (v) => {
+              setForm((prev) => ({
+              ...prev, classId: v, subjectName: "",}));
+
+             try {
+             const res = await axios.get(
+            `http://localhost:8080/api/subjects/class/${v}`
+              );
+             setSubjects(res.data);
+              } catch (err) {
+               console.log(err);
+              }
+              }}
               >
               {classes.map((c) => (
               <Option key={c.id} value={c.id}>
@@ -302,11 +308,30 @@ const StudentExams = () => {
          )}
         </Select>
 
-            <Input
-             label="Subject"
-             value={form.subjectName || "No Subject"}
-             disabled
-             />
+       <div>
+<label className="text-sm text-gray-700">
+Select Subject
+</label>
+
+<select
+className="w-full border rounded-lg p-3 mt-1"
+value={form.subjectName}
+onChange={(e) =>
+setForm((prev) => ({
+...prev,
+subjectName: e.target.value,
+}))
+}
+>
+<option value="">Select Subject</option>
+
+{subjects.map((s) => (
+<option key={s.id} value={s.subjectName}>
+{s.subjectName}
+</option>
+))}
+</select>
+</div>
 
               <Input type="date"
                 value={form.examDate}
@@ -371,7 +396,6 @@ const StudentExams = () => {
                   Close
                 </Button>
               </div>
-
             </CardBody>
           </Card>
         </div>
