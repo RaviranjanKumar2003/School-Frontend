@@ -85,15 +85,26 @@ export default function CreateTeacher() {
       let finalAssignments = [];
 
       Object.entries(selectedData).forEach(([className, subjects]) => {
-        if (!subjects || subjects.length === 0) return;
 
-        subjects.forEach(subject => {
-          finalAssignments.push({
-            className,
-            subjectName: subject
-          });
-        });
-      });
+  if (!subjects || subjects.length === 0) return;
+
+  // 🔥 FIND CLASS OBJECT
+  const classObj = classes.find(c => c.className === className);
+
+  if (!classObj) {
+    console.error("❌ Class not found:", className);
+    return;
+  }
+
+  subjects.forEach(subject => {
+    finalAssignments.push({
+      classId: classObj.id,       // ✅ MOST IMPORTANT
+      className: className,
+      subjectName: subject
+    });
+  });
+
+});
 
       console.log("FINAL ASSIGNMENTS => ", finalAssignments);
 

@@ -1,158 +1,388 @@
 import PropTypes from "prop-types";
 import { Link, NavLink } from "react-router-dom";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  XMarkIcon,
+  AcademicCapIcon,
+} from "@heroicons/react/24/outline";
+
 import {
   Button,
   IconButton,
   Typography,
+  Avatar,
 } from "@material-tailwind/react";
+
 import {
   useMaterialTailwindController,
   setOpenSidenav,
 } from "@/context";
+
 import { useEffect, useState } from "react";
 
 export function Sidenav({ brandImg, brandName, routes }) {
-  const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavColor, sidenavType, openSidenav } = controller;
 
-  const [userRole, setUserRole] = useState("student");
+  const [controller, dispatch] =
+    useMaterialTailwindController();
+
+  const {
+    sidenavColor,
+    sidenavType,
+    openSidenav,
+  } = controller;
+
+  const [userRole, setUserRole] =
+    useState("student");
+
+  const [userData, setUserData] =
+    useState(null);
 
   const sidenavTypes = {
-    dark: "bg-gradient-to-br from-gray-800 to-gray-900",
-    white: "bg-white shadow-sm",
-    transparent: "bg-transparent",
+    dark: "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
+    white: "bg-white shadow-xl",
+    transparent: "bg-white/90 backdrop-blur-lg shadow-xl",
   };
 
-  // 🔥 ROLE SET
+  // ================= USER DATA =================
   useEffect(() => {
-    const storedUserRole = localStorage.getItem("userRole") || "student";
+
+    const storedUserRole =
+      localStorage.getItem("userRole") || "student";
+
     setUserRole(storedUserRole.toUpperCase());
+
+    // 🔥 HOD DATA
+    if (storedUserRole.toLowerCase() === "hod") {
+
+      const hodData =
+        JSON.parse(localStorage.getItem("hodData"));
+
+      setUserData(hodData);
+
+    } else {
+
+      // 🔥 OTHER USER DATA
+      const data =
+        JSON.parse(localStorage.getItem("userData"));
+
+      setUserData(data);
+    }
+
   }, []);
 
-  // 🔥 BODY SCROLL LOCK
+  // ================= BODY SCROLL LOCK =================
   useEffect(() => {
+
     if (openSidenav) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "auto";
     }
+
   }, [openSidenav]);
 
   const closeSidebar = () => {
     setOpenSidenav(dispatch, false);
   };
 
+  // ================= IMAGE =================
+  const profileImage =
+    userRole === "HOD" && userData?.id
+      ? `http://localhost:8080/api/hods/image/get/${userData.id}`
+      : brandImg;
+
   return (
     <>
-      {/* 🔥 BACKDROP (Mobile) */}
+      {/* ================= MOBILE BACKDROP ================= */}
       {openSidenav && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 xl:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden"
           onClick={closeSidebar}
         />
       )}
 
+      {/* ================= SIDENAV ================= */}
       <aside
-        className={`${sidenavTypes[sidenavType]} ${
-          openSidenav ? "translate-x-0" : "-translate-x-80"
-        } fixed top-0 left-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 
-        rounded-xl transition-transform duration-300 
-        xl:translate-x-0 border border-blue-gray-100 flex flex-col`}
+        className={`
+          ${sidenavTypes[sidenavType]}
+          ${
+            openSidenav
+              ? "translate-x-0"
+              : "-translate-x-80"
+          }
+          
+          fixed top-0 left-0 z-50
+          my-4 ml-4
+          h-[calc(100vh-32px)]
+          w-72
+          rounded-3xl
+          transition-all duration-300
+          xl:translate-x-0
+          border border-blue-gray-100
+          flex flex-col
+          overflow-hidden
+        `}
       >
-        {/* HEADER */}
-        <div className="relative">
-          <Link to="/dashboard" className="py-6 px-8 text-center block">
-            <Typography
-              variant="h6"
-              color={sidenavType === "dark" ? "white" : "blue-gray"}
-            >
-              {`YOUR ${userRole} Dashboard`}
-            </Typography>
-          </Link>
+
+        {/* ================= TOP HEADER ================= */}
+        <div
+          className="
+            relative
+            bg-gradient-to-r
+            from-blue-700
+            via-indigo-700
+            to-purple-700
+            p-6
+            text-white
+          "
+        >
 
           {/* CLOSE BUTTON */}
           <IconButton
             variant="text"
             size="sm"
             ripple={false}
-            className="absolute right-2 top-2 grid xl:hidden"
+            className="
+              absolute
+              right-2
+              top-2
+              grid
+              xl:hidden
+              text-white
+            "
             onClick={closeSidebar}
           >
             <XMarkIcon
               strokeWidth={2.5}
-              className={`h-6 w-6 ${
-                sidenavType === "dark" ? "text-white" : "text-black"
-              }`}
+              className="h-6 w-6"
             />
           </IconButton>
+
+          {/* PROFILE */}
+          <div className="flex flex-col items-center text-center">
+
+            <Avatar
+              src={profileImage}
+              alt="profile"
+              size="xxl"
+              className="
+                border-4 border-white
+                shadow-2xl
+                object-cover
+              "
+              onError={(e) => {
+                e.target.src = "/img/logo-ct.png";
+              }}
+            />
+
+            {/* SCHOOL NAME */}
+            <Typography
+              variant="h5"
+              className="
+                mt-4
+                font-extrabold
+                tracking-wide
+                text-white
+              "
+            >
+              {userData?.schoolName ||
+                "YOUR SCHOOL"}
+            </Typography>
+
+            {/* ROLE */}
+            <div
+              className="
+                mt-2
+                bg-white/20
+                px-4 py-1
+                rounded-full
+                flex items-center gap-2
+                backdrop-blur-md
+              "
+            >
+              <AcademicCapIcon className="h-4 w-4" />
+
+              <Typography
+                variant="small"
+                className="
+                  font-semibold
+                  uppercase
+                  tracking-widest
+                "
+              >
+                {userRole}
+              </Typography>
+            </div>
+
+            {/* NAME */}
+            <Typography
+              variant="small"
+              className="
+                mt-4
+                text-blue-100
+                font-medium
+                text-base
+              "
+            >
+              {userData?.name || "User"}
+            </Typography>
+
+            {/* DASHBOARD TEXT */}
+            <Typography
+              variant="small"
+              className="
+                text-xs
+                tracking-[4px]
+                uppercase
+                text-white/70
+                mt-1
+              "
+            >
+              Dashboard Panel
+            </Typography>
+
+          </div>
+
         </div>
 
-        {/* MENU (SCROLL AREA) */}
-        <div className="flex-1 overflow-y-auto px-3 pb-4 custom-scrollbar">
-          {routes.map(({ layout, title, pages }, key) => (
-            <ul key={key} className="mb-4 flex flex-col gap-1">
-              
-              {/* SECTION TITLE */}
-              {title && (
-                <li className="mx-3.5 mt-4 mb-2">
-                  <Typography
-                    variant="small"
-                    color={sidenavType === "dark" ? "white" : "blue-gray"}
-                    className="font-black uppercase opacity-75"
-                  >
-                    {title}
-                  </Typography>
-                </li>
-              )}
+        {/* ================= MENU ================= */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
 
-              {/* PAGES */}
-              {pages.map(({ icon, name, path }) => (
-                <li key={name}>
-                  <NavLink to={`/${layout}${path}`} onClick={closeSidebar}>
-                    {({ isActive }) => {
-                      const validColors = [
-                        "white","blue-gray","gray","brown","deep-orange",
-                        "orange","amber","yellow","lime","light-green",
-                        "green","teal","cyan","light-blue","blue",
-                        "indigo","deep-purple","purple","pink","red",
-                      ];
+          {routes.map(
+            ({ layout, title, pages }, key) => (
 
-                      const resolvedColor = isActive
-                        ? validColors.includes(sidenavColor)
-                          ? sidenavColor
+              <ul
+                key={key}
+                className="mb-5 flex flex-col gap-1"
+              >
+
+                {/* SECTION TITLE */}
+                {title && (
+                  <li className="mx-3.5 mt-3 mb-2">
+
+                    <Typography
+                      variant="small"
+                      color={
+                        sidenavType === "dark"
+                          ? "white"
                           : "blue-gray"
-                        : sidenavType === "dark"
-                        ? "white"
-                        : "blue-gray";
+                      }
+                      className="
+                        font-black
+                        uppercase
+                        opacity-60
+                        tracking-widest
+                        text-[11px]
+                      "
+                    >
+                      {title}
+                    </Typography>
 
-                      return (
-                        <Button
-                          variant={isActive ? "gradient" : "text"}
-                          color={resolvedColor}
-                          className="flex items-center gap-4 px-4 capitalize"
-                          fullWidth
-                        >
-                          {icon}
-                          <Typography
-                            color="inherit"
-                            className="font-medium capitalize"
-                          >
-                            {name}
-                          </Typography>
-                        </Button>
-                      );
-                    }}
-                  </NavLink>
-                </li>
-              ))}
+                  </li>
+                )}
 
-            </ul>
-          ))}
+                {/* PAGES */}
+                {pages.map(
+                  ({ icon, name, path }) => (
+
+                    <li key={name}>
+
+                      <NavLink
+                        to={`/${layout}${path}`}
+                        onClick={closeSidebar}
+                      >
+                        {({ isActive }) => {
+
+                          const validColors = [
+                            "white",
+                            "blue-gray",
+                            "gray",
+                            "brown",
+                            "deep-orange",
+                            "orange",
+                            "amber",
+                            "yellow",
+                            "lime",
+                            "light-green",
+                            "green",
+                            "teal",
+                            "cyan",
+                            "light-blue",
+                            "blue",
+                            "indigo",
+                            "deep-purple",
+                            "purple",
+                            "pink",
+                            "red",
+                          ];
+
+                          const resolvedColor =
+                            isActive
+                              ? validColors.includes(
+                                  sidenavColor
+                                )
+                                ? sidenavColor
+                                : "blue"
+                              : sidenavType === "dark"
+                              ? "white"
+                              : "blue-gray";
+
+                          return (
+                            <Button
+                              variant={
+                                isActive
+                                  ? "gradient"
+                                  : "text"
+                              }
+                              color={resolvedColor}
+                              className={`
+                                flex items-center gap-4
+                                px-4 py-3
+                                capitalize
+                                rounded-2xl
+                                transition-all
+                                duration-300
+                                ${
+                                  isActive
+                                    ? "shadow-lg scale-[1.02]"
+                                    : "hover:bg-blue-gray-50"
+                                }
+                              `}
+                              fullWidth
+                            >
+
+                              <div className="text-lg">
+                                {icon}
+                              </div>
+
+                              <Typography
+                                color="inherit"
+                                className="
+                                  font-semibold
+                                  capitalize
+                                  text-sm
+                                "
+                              >
+                                {name}
+                              </Typography>
+
+                            </Button>
+                          );
+                        }}
+                      </NavLink>
+
+                    </li>
+                  )
+                )}
+
+              </ul>
+            )
+          )}
+
         </div>
+
       </aside>
 
-      {/* 🔥 CUSTOM SCROLLBAR STYLE */}
+      {/* ================= CUSTOM SCROLLBAR ================= */}
       <style>
         {`
           .custom-scrollbar::-webkit-scrollbar {
@@ -165,7 +395,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
           .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #94a3b8;
-            border-radius: 10px;
+            border-radius: 20px;
           }
 
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -179,7 +409,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
 Sidenav.defaultProps = {
   brandImg: "/img/logo-ct.png",
-  brandName: "Your school",
+  brandName: "Your School",
 };
 
 Sidenav.propTypes = {
