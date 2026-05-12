@@ -50,6 +50,13 @@ export default function AdminPanel() {
       .then(res => setRequests(res.data));
   };
 
+
+  const getClassName = (id) => {
+  const cls = classes.find(c => c.id === id);
+  return cls ? cls.className : id;
+  };
+
+
   // 🔥 APPROVE / REJECT
   const approve = async (id) => {
     await axios.put(`http://localhost:8080/api/recheck/approve/${id}`);
@@ -211,7 +218,7 @@ export default function AdminPanel() {
     {/* DETAILS */}
     <div className="text-sm space-y-1">
 
-      <p>📝 Class: {r.classId}</p>
+      <p>📝 Class: {getClassName(r.classId)}</p>
       <p>📊 Old Marks: {r.oldMarks} / {r.totalMarks}</p>
       <p>📝 Exam: {r.examType}</p>
 

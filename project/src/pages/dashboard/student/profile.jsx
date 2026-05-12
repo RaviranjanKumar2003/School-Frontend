@@ -7,14 +7,14 @@ import {
   Tabs,
   TabsHeader,
   Tab,
-  Tooltip,
 } from "@material-tailwind/react";
+
 import {
   HomeIcon,
-  ChatBubbleLeftEllipsisIcon,
   Cog6ToothIcon,
   PencilIcon,
 } from "@heroicons/react/24/solid";
+
 import { ProfileInfoCard } from "@/widgets/cards";
 
 export function Profile() {
@@ -24,98 +24,121 @@ export function Profile() {
   const [activeTab, setActiveTab] = useState("info");
 
   useEffect(() => {
-  const id = localStorage.getItem("id");
+    const id = localStorage.getItem("id");
 
-  fetch(`http://localhost:8080/api/students/by-id/${id}`)
-
-    .then((res) => res.json())
-    .then((data) => setStudent(data))
-    .catch((err) => console.log(err));
+    fetch(`http://localhost:8080/api/students/by-id/${id}`)
+      .then((res) => res.json())
+      .then((data) => setStudent(data))
+      .catch((err) => console.log(err));
   }, []);
 
- const uploadImage = async () => {
-  if (!selectedImage) {
-    alert("❌ Please select image");
-    return;
-  }
-
-  const id = student.id;
-
-  const formData = new FormData();
-  formData.append("image", selectedImage);
-
-  const res = await fetch(
-    `http://localhost:8080/api/students/image/upload/${id}`,
-    {
-      method: "POST",
-      body: formData,
+  const uploadImage = async () => {
+    if (!selectedImage) {
+      alert("❌ Please select image");
+      return;
     }
-  );
 
-  if (res.ok) {
-    alert("✅ Image Updated");
-    setOpenEdit(false);
+    const id = student.id;
 
-    const updated = await fetch(
-      `http://localhost:8080/api/students/by-id/${id}`
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+
+    const res = await fetch(
+      `http://localhost:8080/api/students/image/upload/${id}`,
+      {
+        method: "POST",
+        body: formData,
+      }
     );
-    const data = await updated.json();
-    setStudent(data);
-  } else {
-    alert("❌ Upload failed");
-  }
+
+    if (res.ok) {
+      alert("✅ Image Updated");
+      setOpenEdit(false);
+
+      const updated = await fetch(
+        `http://localhost:8080/api/students/by-id/${id}`
+      );
+
+      const data = await updated.json();
+      setStudent(data);
+    } else {
+      alert("❌ Upload failed");
+    }
+  };
+
+  const handleImageChange = (e) => {
+    setSelectedImage(e.target.files[0]);
   };
 
   if (!student) {
     return <div>Loading...</div>;
   }
 
-  const handleImageChange = (e) => {
-  setSelectedImage(e.target.files[0]);
-  };
-
   return (
     <>
+      {/* Background Banner */}
       <div className="relative mt-8 h-72 w-full overflow-hidden rounded-xl bg-[url('/img/student-background.png')] bg-cover bg-center">
         <div className="absolute inset-0 h-full w-full bg-gray-900/75" />
       </div>
-      <Card className="mx-3 -mt-16 mb-6 lg:mx-4 border border-blue-gray-100">
-        <CardBody className="p-4">
-          <div className="mb-10 flex items-center justify-between flex-wrap gap-6">
+
+      {/* Main Card */}
+      <Card className="mx-3 -mt-16 mb-6 border border-blue-gray-100 shadow-lg lg:mx-4">
+        <CardBody className="p-6">
+
+          {/* Header Section */}
+          <div className="mb-10 flex flex-wrap items-center justify-between gap-6">
+
+            {/* Profile Section */}
             <div className="flex items-center gap-6">
-              <Avatar
-               src={
-                 student.imageUrl
-                  ? `http://localhost:8080/api/students/image/get/${student.id}`
-                  : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-               }
-               alt={student.studName}
-               size="xl"
-               variant="rounded"
-              />
-              <div>
-                <Typography variant="h5" color="blue-gray" className="mb-1">
-                  {`${student.studName} ${student.studLastName}`}
-                </Typography>
-                <Typography
-                  variant="small"
-                  className="font-normal text-blue-gray-600"
+
+              {/* Avatar with Hover Effect */}
+              <div className="relative group">
+
+                <Avatar
+                  src={
+                    student.imageUrl
+                      ? `http://localhost:8080/api/students/image/get/${student.id}`
+                      : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                  }
+                  alt={student.studName}
+                  size="xxl"
+                  variant="rounded"
+                  className="cursor-pointer rounded-2xl shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:opacity-80"
+                  onClick={() => setOpenEdit(true)}
+                />
+
+                {/* Hover Overlay */}
+                <div
+                  onClick={() => setOpenEdit(true)}
+                  className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition-all duration-300 group-hover:opacity-100 cursor-pointer"
                 >
-                  {student.major} - Year {student.classNumber}
+                  <div className="rounded-full bg-white p-2 shadow-md">
+                    <PencilIcon className="h-5 w-5 text-blue-gray-700" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Info */}
+              <div>
+                <Typography
+                  variant="h4"
+                  color="blue-gray"
+                  className="mb-1 font-bold"
+                >
+                  {`${student.studName} ${student.studLastName}`}
                 </Typography>
               </div>
             </div>
-            <div className="w-96">
+
+            {/* Tabs */}
+            <div className="w-full md:w-96">
               <Tabs value="info">
                 <TabsHeader>
                   <Tab value="info">
                     <HomeIcon className="-mt-1 mr-2 inline-block h-5 w-5" />
                     Info
                   </Tab>
-                  {/* <Tab value="semesters">
-                    <ChatBubbleLeftEllipsisIcon className="-mt-0.5 mr-2 inline-block h-5 w-5" />
-                    Semesters
-                  </Tab> */}
+
                   <Tab value="settings">
                     <Cog6ToothIcon className="-mt-1 mr-2 inline-block h-5 w-5" />
                     Settings
@@ -124,98 +147,185 @@ export function Profile() {
               </Tabs>
             </div>
           </div>
-          <div className="grid-cols-1 mb-12 grid gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3">
+
+          {/* Content Section */}
+          <div className="grid grid-cols-1 gap-12 px-4 lg:grid-cols-2 xl:grid-cols-3">
+
+            {/* Personal Info */}
             <div>
               <h3
-                className={`cursor-pointer ${
-                activeTab === "info" ? "text-blue-600 font-bold" : ""
+                className={`mb-4 cursor-pointer text-lg transition-all duration-200 ${
+                  activeTab === "info"
+                    ? "font-bold text-blue-600"
+                    : "text-blue-gray-700"
                 }`}
-                onClick={() => setActiveTab("info")}>
-                 Personal Information
-               </h3>
-             {activeTab === "info" && (
-               <ProfileInfoCard
-               title="Student Details"
-               description="Here are the student's personal and academic details."
-               details={{
-               "Full Name": `${student.studName} ${student.studLastName}`,
-               "Father's Name": student.studFatherName,
-               "Roll Number": student.studRollNo,
-               "Date of Birth": student.studentDob,
-               Age: student.studentAge,
-               "Phone Number": student.studPhoneNumber,
-                Email: student.email,
-                Category: student.studCategory,
-                Caste: student.studCaste,
-                }}
-                action={
-                <Tooltip content="Edit Profile">
-                <PencilIcon
-                className="h-4 w-4 cursor-pointer text-blue-gray-500"
-                onClick={() => setOpenEdit(true)}
-                />
-               </Tooltip>
-                 }
-              />
-             )}
-           </div>
-            <div>
-              <h3
-               className={`cursor-pointer ${
-               activeTab === "academic" ? "text-blue-600 font-bold" : ""
-                }`}
-               onClick={() => setActiveTab("academic")}>
-               Academic Information
+                onClick={() => setActiveTab("info")}
+              >
+                Personal Information
               </h3>
+
+              {activeTab === "info" && (
+                <ProfileInfoCard
+                  title="Student Details"
+                  description="Here are the student's personal and academic details."
+                  details={{
+                    "Full Name": `${student.studName} ${student.studLastName}`,
+                    "Father's Name": student.studFatherName,
+                    "Roll Number": student.studRollNo,
+                    "Date of Birth": student.studentDob,
+                    "Phone Number": student.studPhoneNumber,
+                    Email: student.email,
+                    Category: student.studCategory,
+                    Caste: student.studCaste,
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Academic Info */}
+            <div>
+              <h3
+                className={`mb-4 cursor-pointer text-lg transition-all duration-200 ${
+                  activeTab === "academic"
+                    ? "font-bold text-blue-600"
+                    : "text-blue-gray-700"
+                }`}
+                onClick={() => setActiveTab("academic")}
+              >
+                Academic Information
+              </h3>
+
               {activeTab === "academic" && (
-             <ul className="flex flex-col gap-6">
-             {student.semesters?.map((semester) => (
-             <li key={semester.id} className="flex items-center">
-             <Typography className="flex-1">
-             {semester.semester}
-             </Typography>
-             <Typography className="flex-1">
-             {semester.name}
-             </Typography>
-             <Typography className="flex-1">
-             Credits: {semester.credits}
-             </Typography>
-             <Typography className="flex-1">
-             Grade: {semester.grade}
-             </Typography>
-             </li>
-             ))}
-            </ul>
-             )}
+  <div className="space-y-8">
+
+    {/* Academic Header */}
+    <div className="rounded-[30px] bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 p-8 shadow-2xl">
+
+      <div className="mb-8 text-center">
+
+        <Typography
+          variant="h4"
+          className="font-extrabold tracking-wide text-white"
+        >
+          Academic Information
+        </Typography>
+
+        <Typography className="mt-2 text-sm text-white/80">
+          Student class details and academic overview
+        </Typography>
+
+      </div>
+
+      {/* Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+        {/* Roll Number */}
+        <div className="group rounded-3xl bg-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-2 hover:bg-white/20 hover:shadow-2xl">
+
+          <div className="mb-3 flex items-center justify-between">
+
+            <Typography className="text-sm font-medium uppercase tracking-wider text-white/70">
+              Roll Number
+            </Typography>
+
+            <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
+              ID
+            </div>
+          </div>
+
+          <Typography className="text-3xl font-extrabold text-white">
+            {student.studRollNo}
+          </Typography>
+
+        </div>
+
+        {/* Class Name */}
+        <div className="group rounded-3xl bg-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-2 hover:bg-white/20 hover:shadow-2xl">
+
+          <div className="mb-3 flex items-center justify-between">
+
+            <Typography className="text-sm font-medium uppercase tracking-wider text-white/70">
+              Class Name
+            </Typography>
+
+            <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
+              CLASS
+            </div>
+          </div>
+
+          <Typography className="text-3xl font-extrabold text-white">
+            {student.className}
+          </Typography>
+
+        </div>
+
+        {/* Category */}
+        <div className="group rounded-3xl bg-white/10 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-2 hover:bg-white/20 hover:shadow-2xl">
+
+          <div className="mb-3 flex items-center justify-between">
+
+            <Typography className="text-sm font-medium uppercase tracking-wider text-white/70">
+              Category
+            </Typography>
+
+            <div className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
+              INFO
+            </div>
+          </div>
+
+          <Typography className="text-3xl font-extrabold text-white">
+            {student.studCategory}
+          </Typography>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
             </div>
           </div>
         </CardBody>
       </Card>
 
+      {/* Edit Modal */}
       {openEdit && (
-       <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-xl w-80 space-y-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
 
-      <h2 className="font-bold">Update Profile Image</h2>
+          <div className="w-80 rounded-2xl bg-white p-6 shadow-2xl">
 
-      <input type="file" onChange={handleImageChange} />
+            <h2 className="mb-4 text-xl font-bold text-blue-gray-800">
+              Update Profile Image
+            </h2>
 
-      <div className="flex justify-end gap-2">
-        <button onClick={() => setOpenEdit(false)}>Cancel</button>
+            <input
+              type="file"
+              onChange={handleImageChange}
+              className="mb-6 w-full rounded-lg border border-gray-300 p-2"
+            />
 
-        <button
-          onClick={uploadImage}
-          className="bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          Upload
-        </button>
-      </div>
+            <div className="flex justify-end gap-3">
 
-    </div>
-   </div>
-   )}
-  </>
-);
+              <button
+                onClick={() => setOpenEdit(false)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={uploadImage}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-md transition hover:bg-blue-700"
+              >
+                Upload
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default Profile;

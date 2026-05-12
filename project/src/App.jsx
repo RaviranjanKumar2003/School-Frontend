@@ -30,5 +30,3 @@ export default App;
       <Route path="*" element={<Navigate to="/dashboard/home" replace />} />
     </Routes> */
 }
-
-
