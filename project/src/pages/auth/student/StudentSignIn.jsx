@@ -4,12 +4,16 @@ import {
   Typography,
 } from "@material-tailwind/react";
 
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
 
 import { useState } from "react";
 
 export function StudentSignIn() {
 
+  // ================= STATES =================
   const [username, setUsername] =
     useState("");
 
@@ -19,6 +23,9 @@ export function StudentSignIn() {
   const [error, setError] =
     useState("");
 
+  const [loading, setLoading] =
+    useState(false);
+
   const navigate = useNavigate();
 
   // ================= LOGIN =================
@@ -26,6 +33,9 @@ export function StudentSignIn() {
 
     e.preventDefault();
 
+    setError("");
+
+    // ================= VALIDATION =================
     if (!username || !password) {
 
       setError(
@@ -37,15 +47,19 @@ export function StudentSignIn() {
 
     try {
 
+      setLoading(true);
+
       // ================= LOGIN API =================
       const response = await fetch(
         "http://localhost:8080/api/students/login",
         {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             username,
             password,
@@ -53,23 +67,28 @@ export function StudentSignIn() {
         }
       );
 
+      // ================= LOGIN FAILED =================
       if (!response.ok) {
 
+        const errText =
+          await response.text();
+
         throw new Error(
+          errText ||
           "Invalid username or password"
         );
       }
 
-      // 🔥 LOGIN DATA
-      const studentData =
+      // ================= LOGIN RESPONSE =================
+      const loginData =
         await response.json();
 
       console.log(
-        "Login Response:",
-        studentData
+        "STUDENT LOGIN RESPONSE:",
+        loginData
       );
 
-      // ================= SAVE LOCAL STORAGE =================
+      // ================= SAVE BASIC =================
       localStorage.setItem(
         "userRole",
         "student"
@@ -77,27 +96,70 @@ export function StudentSignIn() {
 
       localStorage.setItem(
         "studentId",
-        studentData.studentId
+        loginData.studentId || ""
       );
 
       localStorage.setItem(
         "id",
-        studentData.id
+        loginData.id
       );
 
+      localStorage.setItem(
+        "schoolId",
+        loginData.schoolId
+      );
+
+      // ================= FETCH FULL STUDENT =================
+      const studentResponse =
+        await fetch(
+          `http://localhost:8080/api/students/${loginData.id}`
+        );
+
+      if (!studentResponse.ok) {
+
+        throw new Error(
+          "Failed to fetch student data"
+        );
+      }
+
+      // ================= FULL DATA =================
+      const studentData =
+        await studentResponse.json();
+
+      console.log(
+        "FULL STUDENT DATA:",
+        studentData
+      );
+
+      // ================= SAVE FULL DATA =================
       localStorage.setItem(
         "studentData",
         JSON.stringify(studentData)
       );
 
-      // ✅ SCHOOL NAME
+      // ================= SCHOOL INFO =================
       localStorage.setItem(
         "schoolName",
-        studentData.schoolName ||
-          "EduNova International School"
+        loginData.schoolName ||
+        "EduNova International School"
       );
 
-      alert("Login Successful ✅");
+      localStorage.setItem(
+        "school",
+        JSON.stringify({
+          id: loginData.schoolId,
+          name:
+            loginData.schoolName ||
+            "School",
+          code:
+            loginData.schoolCode || "",
+        })
+      );
+
+      // ================= SUCCESS =================
+      console.log(
+        "Student Login Success"
+      );
 
       // ================= REDIRECT =================
       navigate(
@@ -112,8 +174,13 @@ export function StudentSignIn() {
       );
 
       setError(
+        error.message ||
         "Login failed. Please check username or password."
       );
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
@@ -164,22 +231,28 @@ export function StudentSignIn() {
 
           <div className="flex flex-col gap-6">
 
+            {/* USERNAME */}
             <Input
               size="lg"
               label="Username"
               value={username}
               onChange={(e) =>
-                setUsername(e.target.value)
+                setUsername(
+                  e.target.value
+                )
               }
             />
 
+            {/* PASSWORD */}
             <Input
               type="password"
               size="lg"
               label="Password"
               value={password}
               onChange={(e) =>
-                setPassword(e.target.value)
+                setPassword(
+                  e.target.value
+                )
               }
             />
 
@@ -193,8 +266,13 @@ export function StudentSignIn() {
             "
             fullWidth
             type="submit"
+            disabled={loading}
           >
-            Sign In
+            {
+              loading
+                ? "Signing In..."
+                : "Sign In"
+            }
           </Button>
 
           {/* ================= ERROR ================= */}

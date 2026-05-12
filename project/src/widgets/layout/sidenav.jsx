@@ -121,6 +121,35 @@ export function Sidenav({ brandImg, routes }) {
       }
     }
 
+        // ================= SUPER ADMIN =================
+else if (role.toLowerCase() === "superadmin") {
+
+  const adminData = getParsed("adminData");
+
+  data = Array.isArray(adminData)
+    ? adminData.find(a => String(a.id) === String(userId))
+    : adminData;
+
+  if (data?.id) {
+    setProfileImage("/img/logo-ct.png");
+  }
+}
+
+
+// ================= SCHOOL ADMIN =================
+else if (role.toLowerCase() === "schooladmin") {
+
+  const schoolAdminData = getParsed("schoolAdminData");
+
+  data = Array.isArray(schoolAdminData)
+    ? schoolAdminData.find(a => String(a.id) === String(userId))
+    : schoolAdminData;
+
+  if (data?.id) {
+    setProfileImage("/img/school-admin.png"); // optional
+  }
+}
+
     setUserData(data || null);
 
   }, []);
@@ -181,7 +210,7 @@ export function Sidenav({ brandImg, routes }) {
             from-blue-700
             via-indigo-700
             to-purple-700
-            p-6
+            p-2
             text-white
           "
         >
@@ -229,9 +258,13 @@ export function Sidenav({ brandImg, routes }) {
                 text-white
               "
             >
-              {userData?.schoolName ||
-                userData?.school?.schoolName ||
-                "Your School"}
+              {
+                userRole?.toLowerCase() === "superadmin"
+                ? "System Administration"
+                : userData?.school?.schoolName ||
+                userData?.schoolName ||
+                "School Dashboard"
+              }
             </Typography>
 
             {/* ROLE */}

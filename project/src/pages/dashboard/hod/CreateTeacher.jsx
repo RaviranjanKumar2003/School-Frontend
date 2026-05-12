@@ -5,6 +5,11 @@ export default function CreateTeacher() {
 
   const fileRef = useRef(null);
 
+  // ================= HOD DATA =================
+  const storedHod = JSON.parse(localStorage.getItem("hodData"));
+  const schoolCodeFromHod = storedHod?.school?.schoolCode || "";
+  const schoolIdFromHod = storedHod?.school?.id || null;
+
   const [form, setForm] = useState({
     schoolCode: "",
     name: "",
@@ -26,6 +31,16 @@ export default function CreateTeacher() {
   const [showPopup, setShowPopup] = useState(false);
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [errorMessage, setErrorMessage] = useState("");
+
+  // ================= AUTO FILL =================
+  useEffect(() => {
+    if (schoolCodeFromHod) {
+      setForm(prev => ({
+        ...prev,
+        schoolCode: schoolCodeFromHod
+      }));
+    }
+  }, [schoolCodeFromHod]);
 
   // ================= LOAD CLASSES =================
   useEffect(() => {
@@ -79,6 +94,7 @@ export default function CreateTeacher() {
   const createTeacher = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
 
@@ -86,38 +102,45 @@ export default function CreateTeacher() {
 
       Object.entries(selectedData).forEach(([className, subjects]) => {
 
-  if (!subjects || subjects.length === 0) return;
+        if (!subjects || subjects.length === 0) return;
 
-  // 🔥 FIND CLASS OBJECT
-  const classObj = classes.find(c => c.className === className);
+        const classObj = classes.find(c => c.className === className);
+        if (!classObj) return;
 
-  if (!classObj) {
-    console.error("❌ Class not found:", className);
-    return;
-  }
+        subjects.forEach(subject => {
+          finalAssignments.push({
+            classId: classObj.id,
+            className,
+            subjectName: subject
+          });
+        });
 
-  subjects.forEach(subject => {
-    finalAssignments.push({
-      classId: classObj.id,       // ✅ MOST IMPORTANT
-      className: className,
-      subjectName: subject
-    });
-  });
+      });
 
-});
+      const hodId = localStorage.getItem("hodId");
 
-      console.log("FINAL ASSIGNMENTS => ", finalAssignments);
-
-      const hodId = localStorage.getItem("hodId"); // 🔥 IMPORTANT FIX
+      if (!hodId || !schoolIdFromHod) {
+        setErrorMessage("HOD / School not found. Please login again.");
+        setLoading(false);
+        return;
+      }
 
       const formData = new FormData();
 
-      Object.keys(form).forEach(k => formData.append(k, form[k]));
+      formData.append("name", form.name || "");
+      formData.append("email", form.email || "");
+      formData.append("phone", form.phone || "");
+      formData.append("designation", form.designation || "");
+      formData.append("qualification", form.qualification || "");
+      formData.append("experience", form.experience || "");
+      formData.append("joiningDate", form.joiningDate || "");
 
-      formData.append("assignments", JSON.stringify(finalAssignments));
-
-      // 🔥 ADD HOD ID
+      // 🔥 IMPORTANT FIX
+      formData.append("schoolId", schoolIdFromHod);
+      formData.append("schoolCode", schoolCodeFromHod);
       formData.append("hodId", hodId);
+
+      formData.append("assignments", JSON.stringify(finalAssignments || []));
 
       if (image) formData.append("image", image);
 
@@ -132,7 +155,7 @@ export default function CreateTeacher() {
 
       // RESET
       setForm({
-        schoolCode: "",
+        schoolCode: schoolCodeFromHod,
         name: "",
         email: "",
         phone: "",
@@ -150,7 +173,9 @@ export default function CreateTeacher() {
 
     } catch (err) {
       console.log(err);
-      setErrorMessage("Teacher creation failed");
+      setErrorMessage(
+        err?.response?.data?.message || "Teacher creation failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -169,19 +194,15 @@ export default function CreateTeacher() {
         </div>
       )}
 
-      <form
-        onSubmit={createTeacher}
-        className="bg-white p-5 rounded-xl shadow space-y-4"
-      >
+      <form onSubmit={createTeacher} className="bg-white p-5 rounded-xl shadow space-y-4">
 
         {/* BASIC DETAILS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
           {Object.keys(form).map(key => (
             <div key={key} className="flex flex-col">
 
-              <label className="text-sm text-gray-600 mb-1">
-                {key === "joiningDate" ? "Joining Date" : key}
-              </label>
+              <label className="text-sm text-gray-600 mb-1">{key}</label>
 
               <input
                 name={key}
@@ -190,71 +211,63 @@ export default function CreateTeacher() {
                 onChange={handleChange}
                 className="border p-2 rounded"
                 required
+                readOnly={key === "schoolCode"}
               />
 
             </div>
           ))}
+
         </div>
 
         {/* CLASS + SUBJECT */}
         <div>
           <h3 className="font-semibold mb-2">Assign Classes & Subjects</h3>
 
-          <div className="space-y-3">
+          {classes.map(cls => (
+            <div key={cls.id} className="border rounded p-3 mb-2">
 
-            {classes.map(cls => (
-              <div key={cls.id} className="border rounded p-3">
+              <label className="flex gap-2 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={!!selectedData[cls.className]}
+                  onChange={() => toggleClass(cls.className)}
+                />
+                {cls.className}
+              </label>
 
-                <label className="flex items-center gap-2 font-semibold">
-                  <input
-                    type="checkbox"
-                    checked={!!selectedData[cls.className]}
-                    onChange={() => toggleClass(cls.className)}
-                  />
-                  {cls.className}
-                </label>
+              {selectedData[cls.className] && (
+                <div className="flex flex-wrap gap-2 mt-2">
 
-                {selectedData[cls.className] && (
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  {cls.subjects.map(sub => (
+                    <label key={sub.id} className="flex gap-1 bg-gray-100 px-2 py-1 rounded">
 
-                    {cls.subjects.map(sub => (
-                      <label
-                        key={sub.id}
-                        className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedData[cls.className]?.includes(sub.subjectName)}
-                          onChange={() =>
-                            toggleSubject(cls.className, sub.subjectName)
-                          }
-                        />
-                        {sub.subjectName}
-                      </label>
-                    ))}
+                      <input
+                        type="checkbox"
+                        checked={selectedData[cls.className]?.includes(sub.subjectName)}
+                        onChange={() =>
+                          toggleSubject(cls.className, sub.subjectName)
+                        }
+                      />
 
-                  </div>
-                )}
+                      {sub.subjectName}
 
-              </div>
-            ))}
+                    </label>
+                  ))}
 
-          </div>
+                </div>
+              )}
+
+            </div>
+          ))}
         </div>
 
         {/* IMAGE */}
         <input type="file" ref={fileRef} onChange={handleImage} />
 
         {preview && (
-          <div className="flex justify-center">
-            <img
-              src={preview}
-              className="w-24 h-24 rounded-full object-cover"
-            />
-          </div>
+          <img src={preview} className="w-24 h-24 rounded-full object-cover" />
         )}
 
-        {/* SUBMIT */}
         <button
           disabled={loading}
           className="bg-blue-600 text-white py-2 rounded w-full"
@@ -264,25 +277,48 @@ export default function CreateTeacher() {
 
       </form>
 
-      {/* POPUP */}
+      {/* ================= POPUP (UNCHANGED UI) ================= */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 
-          <div className="bg-white p-5 rounded text-center">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-[popup_0.3s_ease]">
 
-            <h3 className="text-green-600 font-bold mb-2">
-              Success 🎉
-            </h3>
+            <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-center text-white">
 
-            <p>User: {credentials.username}</p>
-            <p>Pass: {credentials.password}</p>
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
+                <span className="text-4xl">🎉</span>
+              </div>
 
-            <button
-              onClick={() => setShowPopup(false)}
-              className="mt-3 bg-green-600 text-white px-4 py-2 rounded"
-            >
-              OK
-            </button>
+              <h2 className="text-2xl font-extrabold">
+                Teacher Created Successfully
+              </h2>
+
+              <p className="text-blue-100 mt-2 text-sm">
+                Login credentials generated successfully
+              </p>
+
+            </div>
+
+            <div className="p-6">
+
+              <div className="bg-blue-50 p-4 rounded-xl mb-4">
+                <p className="text-xs text-blue-500 font-bold">Username</p>
+                <p className="font-bold">{credentials.username}</p>
+              </div>
+
+              <div className="bg-purple-50 p-4 rounded-xl">
+                <p className="text-xs text-purple-500 font-bold">Password</p>
+                <p className="font-bold">{credentials.password}</p>
+              </div>
+
+              <button
+                onClick={() => setShowPopup(false)}
+                className="mt-6 w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"
+              >
+                Continue
+              </button>
+
+            </div>
 
           </div>
 

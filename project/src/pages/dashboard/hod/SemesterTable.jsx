@@ -1,3 +1,272 @@
+// import React, { useState, useEffect } from "react";
+// import axios from "axios";
+
+// import {
+//   Card,
+//   CardHeader,
+//   CardBody,
+//   Typography,
+//   Chip,
+//   Button,
+//   Input,
+//   Dialog,
+//   DialogHeader,
+//   DialogBody,
+//   DialogFooter,
+//   IconButton,
+// } from "@material-tailwind/react";
+
+// import { TrashIcon } from "@heroicons/react/24/solid";
+
+// const BASE_URL = "http://localhost:8080/api";
+
+// export default function SchoolDashboard() {
+//   const [classes, setClasses] = useState([]);
+//   const [openIndex, setOpenIndex] = useState(null);
+
+//   const [openClassDialog, setOpenClassDialog] = useState(false);
+//   const [newClassName, setNewClassName] = useState("");
+
+//   const [openSubjectDialog, setOpenSubjectDialog] = useState(false);
+//   const [currentClass, setCurrentClass] = useState(null);
+//   const [newSubject, setNewSubject] = useState("");
+
+//   // ================= LOAD DATA =================
+//   useEffect(() => {
+//     fetchClasses();
+//   }, []);
+
+//   const fetchClasses = async () => {
+//     try {
+//       const res = await axios.get(`${BASE_URL}/classes`);
+//       setClasses(res.data);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   // ================= ADD CLASS =================
+//   const handleAddClass = async () => {
+//     if (!newClassName) return;
+
+//     try {
+//       await axios.post(`${BASE_URL}/classes`, {
+//         className: newClassName,
+//       });
+
+//       fetchClasses();
+//       setNewClassName("");
+//       setOpenClassDialog(false);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   // ================= DELETE CLASS =================
+//   const handleDeleteClass = async (id) => {
+//     try {
+//       await axios.delete(`${BASE_URL}/classes/${id}`);
+//       fetchClasses();
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   // ================= ADD SUBJECT =================
+//   const handleAddSubject = async () => {
+//     if (!newSubject || !currentClass) return;
+
+//     try {
+//       await axios.post(
+//         `${BASE_URL}/classes/${currentClass.id}/subject`,
+//         null,
+//         {
+//           params: { subjectName: newSubject },
+//         }
+//       );
+
+//       fetchClasses();
+//       setNewSubject("");
+//       setOpenSubjectDialog(false);
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
+
+//   // ================= DELETE SUBJECT =================
+//   const handleDeleteSubject = async (id) => {
+//   console.log("Deleting subject:", id);
+
+//   try {
+//     await axios.delete(`${BASE_URL}/subjects/${id}`);
+//     fetchClasses();
+//   } catch (err) {
+//     console.error(err);
+//   }
+// };
+
+//   // ================= TOGGLE =================
+//   const toggleDetails = (index) => {
+//     setOpenIndex(openIndex === index ? null : index);
+//   };
+
+//   return (
+//     <div className="p-6 flex flex-col gap-6">
+
+//       {/* TOP */}
+//       <Card>
+//         <CardBody className="flex justify-between items-center">
+//           <Typography variant="h5">
+//             Total Classes: {classes.length}
+//           </Typography>
+
+//           <Button size="sm" onClick={() => setOpenClassDialog(true)}>
+//             + Add Class
+//           </Button>
+//         </CardBody>
+//       </Card>
+
+//       {/* LIST */}
+//       {classes.map((cls, index) => {
+//        const hasComputer = cls.subjects?.some(
+//   (s) =>
+//     s?.subjectName?.toLowerCase() === "computer science"
+// );
+
+//         return (
+//           <Card key={cls.id}>
+//             <CardHeader className="p-4 flex justify-between items-center bg-blue-500">
+//               <Typography color="white">{cls.className}</Typography>
+
+//               <div className="flex gap-3">
+//                 <Chip
+//                   value={`${cls.subjects?.length || 0} Subjects`}
+//                 />
+
+//                 <IconButton
+//                   color="red"
+//                   size="sm"
+//                   onClick={() => handleDeleteClass(cls.id)}
+//                 >
+//                   <TrashIcon className="h-4 w-4" />
+//                 </IconButton>
+//               </div>
+//             </CardHeader>
+
+//             <CardBody>
+
+//               <div className="flex justify-between">
+//                 <Typography>
+//                   Subjects in {cls.className}
+//                 </Typography>
+
+//                 <div className="flex gap-2">
+//                   <Button size="sm" onClick={() => toggleDetails(index)}>
+//                     {openIndex === index ? "Hide" : "View"}
+//                   </Button>
+
+//                   <Button
+//                     size="sm"
+//                     color="green"
+//                     onClick={() => {
+//                       setCurrentClass(cls);
+//                       setOpenSubjectDialog(true);
+//                     }}
+//                   >
+//                     + Add Subject
+//                   </Button>
+//                 </div>
+//               </div>
+
+//               {/* SUBJECTS */}
+//               {openIndex === index && (
+//                 <div className="mt-4 flex flex-wrap gap-2">
+//                   {cls.subjects?.length === 0 ? (
+//                     <Typography>No subjects</Typography>
+//                   ) : (
+//                     cls.subjects.map((sub) => (
+//   <div key={sub.id} className="flex gap-1">
+//     <Chip value={sub.subjectName} />
+
+//     <IconButton
+//       size="sm"
+//       color="red"
+//       onClick={() => handleDeleteSubject(sub.id)}
+//     >
+//       <TrashIcon className="h-3 w-3" />
+//     </IconButton>
+//   </div>
+// ))
+//                   )}
+//                 </div>
+//               )}
+
+//               {/* FEATURES */}
+//               <div className="mt-4 flex gap-2 flex-wrap">
+//                 <Chip value="✔ Exams" color="green" />
+//                 <Chip value="✔ Practical" color="blue" />
+
+//                 {hasComputer && (
+//                   <Chip value="✔ Computer Lab" color="purple" />
+//                 )}
+//               </div>
+
+//             </CardBody>
+//           </Card>
+//         );
+//       })}
+
+//       {/* ADD CLASS */}
+//       <Dialog open={openClassDialog} handler={setOpenClassDialog}>
+//         <DialogHeader>Add Class</DialogHeader>
+
+//         <DialogBody>
+//           <Input
+//             label="Class Name"
+//             value={newClassName}
+//             onChange={(e) => setNewClassName(e.target.value)}
+//           />
+//         </DialogBody>
+
+//         <DialogFooter>
+//           <Button onClick={() => setOpenClassDialog(false)}>
+//             Cancel
+//           </Button>
+//           <Button onClick={handleAddClass}>
+//             Add
+//           </Button>
+//         </DialogFooter>
+//       </Dialog>
+
+//       {/* ADD SUBJECT */}
+//       <Dialog open={openSubjectDialog} handler={setOpenSubjectDialog}>
+//         <DialogHeader>Add Subject</DialogHeader>
+
+//         <DialogBody>
+//           <Input
+//             label="Subject Name"
+//             value={newSubject}
+//             onChange={(e) => setNewSubject(e.target.value)}
+//           />
+//         </DialogBody>
+
+//         <DialogFooter>
+//           <Button onClick={() => setOpenSubjectDialog(false)}>
+//             Cancel
+//           </Button>
+//           <Button color="green" onClick={handleAddSubject}>
+//             Add
+//           </Button>
+//         </DialogFooter>
+//       </Dialog>
+
+//     </div>
+//   );
+// }
+
+
+
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -21,6 +290,17 @@ import { TrashIcon } from "@heroicons/react/24/solid";
 const BASE_URL = "http://localhost:8080/api";
 
 export default function SchoolDashboard() {
+
+  // ================= GET SCHOOL =================
+  const hodData = JSON.parse(localStorage.getItem("hodData"));
+
+  console.log("School HOD Data : "+hodData);
+
+  const schoolId = hodData?.school?.id;
+  
+  
+
+
   const [classes, setClasses] = useState([]);
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -33,112 +313,186 @@ export default function SchoolDashboard() {
 
   // ================= LOAD DATA =================
   useEffect(() => {
-    fetchClasses();
-  }, []);
 
+    if (schoolId) {
+      fetchClasses();
+    }
+
+  }, [schoolId]);
+
+  // ================= FETCH CLASSES =================
   const fetchClasses = async () => {
+
     try {
-      const res = await axios.get(`${BASE_URL}/classes`);
-      setClasses(res.data);
+
+      // 🔥 ONLY CURRENT SCHOOL CLASSES
+      const res = await axios.get(
+        `${BASE_URL}/classes/by-school/${schoolId}`
+      );
+
+      setClasses(res.data || []);
+
     } catch (err) {
-      console.error(err);
+
+      console.error("Fetch Classes Error:", err);
+
     }
   };
 
   // ================= ADD CLASS =================
   const handleAddClass = async () => {
-    if (!newClassName) return;
+
+    if (!newClassName.trim()) return;
 
     try {
-      await axios.post(`${BASE_URL}/classes`, {
-        className: newClassName,
-      });
+
+      // 🔥 SCHOOL ID REQUIRED
+      await axios.post(
+        `${BASE_URL}/classes/${schoolId}`,
+        {
+          className: newClassName,
+        }
+      );
 
       fetchClasses();
+
       setNewClassName("");
+
       setOpenClassDialog(false);
+
     } catch (err) {
-      console.error(err);
+
+      console.error("Add Class Error:", err);
+
     }
   };
 
   // ================= DELETE CLASS =================
-  const handleDeleteClass = async (id) => {
+  const handleDeleteClass = async (classId) => {
+
     try {
-      await axios.delete(`${BASE_URL}/classes/${id}`);
+
+      // 🔥 SCHOOL + CLASS ID
+      await axios.delete(
+        `${BASE_URL}/classes/${schoolId}/${classId}`
+      );
+
       fetchClasses();
+
     } catch (err) {
-      console.error(err);
+
+      console.error("Delete Class Error:", err);
+
     }
   };
 
   // ================= ADD SUBJECT =================
   const handleAddSubject = async () => {
-    if (!newSubject || !currentClass) return;
+
+    if (!newSubject.trim() || !currentClass) return;
 
     try {
+
+      // 🔥 SCHOOL + CLASS
       await axios.post(
-        `${BASE_URL}/classes/${currentClass.id}/subject`,
+        `${BASE_URL}/classes/${schoolId}/${currentClass.id}/subject`,
         null,
         {
-          params: { subjectName: newSubject },
+          params: {
+            subjectName: newSubject,
+          },
         }
       );
 
       fetchClasses();
+
       setNewSubject("");
+
       setOpenSubjectDialog(false);
+
     } catch (err) {
-      console.error(err);
+
+      console.error("Add Subject Error:", err);
+
     }
   };
 
   // ================= DELETE SUBJECT =================
-  const handleDeleteSubject = async (id) => {
-  console.log("Deleting subject:", id);
+  const handleDeleteSubject = async (classId, subjectName) => {
 
-  try {
-    await axios.delete(`${BASE_URL}/subjects/${id}`);
-    fetchClasses();
-  } catch (err) {
-    console.error(err);
-  }
-};
+    try {
+
+      // 🔥 YOUR BACKEND API
+      await axios.delete(
+        `${BASE_URL}/classes/${schoolId}/${classId}/subject`,
+        {
+          params: {
+            subjectName,
+          },
+        }
+      );
+
+      fetchClasses();
+
+    } catch (err) {
+
+      console.error("Delete Subject Error:", err);
+
+    }
+  };
 
   // ================= TOGGLE =================
   const toggleDetails = (index) => {
+
     setOpenIndex(openIndex === index ? null : index);
+
   };
 
   return (
+
     <div className="p-6 flex flex-col gap-6">
 
       {/* TOP */}
       <Card>
+
         <CardBody className="flex justify-between items-center">
+
           <Typography variant="h5">
             Total Classes: {classes.length}
           </Typography>
 
-          <Button size="sm" onClick={() => setOpenClassDialog(true)}>
+          <Button
+            size="sm"
+            onClick={() => setOpenClassDialog(true)}
+          >
             + Add Class
           </Button>
+
         </CardBody>
+
       </Card>
 
-      {/* LIST */}
+      {/* CLASS LIST */}
       {classes.map((cls, index) => {
-       const hasComputer = cls.subjects?.some(
-  (s) =>
-    s?.subjectName?.toLowerCase() === "computer science"
-);
+
+        const hasComputer = cls.subjects?.some(
+          (s) =>
+            s?.subjectName?.toLowerCase() === "computer science"
+        );
 
         return (
+
           <Card key={cls.id}>
+
+            {/* HEADER */}
             <CardHeader className="p-4 flex justify-between items-center bg-blue-500">
-              <Typography color="white">{cls.className}</Typography>
+
+              <Typography color="white">
+                {cls.className}
+              </Typography>
 
               <div className="flex gap-3">
+
                 <Chip
                   value={`${cls.subjects?.length || 0} Subjects`}
                 />
@@ -150,18 +504,26 @@ export default function SchoolDashboard() {
                 >
                   <TrashIcon className="h-4 w-4" />
                 </IconButton>
+
               </div>
+
             </CardHeader>
 
+            {/* BODY */}
             <CardBody>
 
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+
                 <Typography>
                   Subjects in {cls.className}
                 </Typography>
 
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => toggleDetails(index)}>
+
+                  <Button
+                    size="sm"
+                    onClick={() => toggleDetails(index)}
+                  >
                     {openIndex === index ? "Hide" : "View"}
                   </Button>
 
@@ -169,95 +531,165 @@ export default function SchoolDashboard() {
                     size="sm"
                     color="green"
                     onClick={() => {
+
                       setCurrentClass(cls);
+
                       setOpenSubjectDialog(true);
+
                     }}
                   >
                     + Add Subject
                   </Button>
+
                 </div>
+
               </div>
 
               {/* SUBJECTS */}
               {openIndex === index && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {cls.subjects?.length === 0 ? (
-                    <Typography>No subjects</Typography>
-                  ) : (
-                    cls.subjects.map((sub) => (
-  <div key={sub.id} className="flex gap-1">
-    <Chip value={sub.subjectName} />
 
-    <IconButton
-      size="sm"
-      color="red"
-      onClick={() => handleDeleteSubject(sub.id)}
-    >
-      <TrashIcon className="h-3 w-3" />
-    </IconButton>
-  </div>
-))
+                <div className="mt-4 flex flex-wrap gap-2">
+
+                  {cls.subjects?.length === 0 ? (
+
+                    <Typography>No subjects</Typography>
+
+                  ) : (
+
+                    cls.subjects.map((sub, i) => (
+
+                      <div
+                        key={i}
+                        className="flex items-center gap-1"
+                      >
+
+                        <Chip value={sub.subjectName} />
+
+                        <IconButton
+                          size="sm"
+                          color="red"
+                          onClick={() =>
+                            handleDeleteSubject(
+                              cls.id,
+                              sub.subjectName
+                            )
+                          }
+                        >
+                          <TrashIcon className="h-3 w-3" />
+                        </IconButton>
+
+                      </div>
+
+                    ))
+
                   )}
+
                 </div>
+
               )}
 
               {/* FEATURES */}
               <div className="mt-4 flex gap-2 flex-wrap">
+
                 <Chip value="✔ Exams" color="green" />
+
                 <Chip value="✔ Practical" color="blue" />
 
                 {hasComputer && (
-                  <Chip value="✔ Computer Lab" color="purple" />
+                  <Chip
+                    value="✔ Computer Lab"
+                    color="purple"
+                  />
                 )}
+
               </div>
 
             </CardBody>
+
           </Card>
+
         );
       })}
 
-      {/* ADD CLASS */}
-      <Dialog open={openClassDialog} handler={setOpenClassDialog}>
-        <DialogHeader>Add Class</DialogHeader>
+      {/* ADD CLASS DIALOG */}
+      <Dialog
+        open={openClassDialog}
+        handler={setOpenClassDialog}
+      >
+
+        <DialogHeader>
+          Add Class
+        </DialogHeader>
 
         <DialogBody>
+
           <Input
             label="Class Name"
             value={newClassName}
-            onChange={(e) => setNewClassName(e.target.value)}
+            onChange={(e) =>
+              setNewClassName(e.target.value)
+            }
           />
+
         </DialogBody>
 
         <DialogFooter>
-          <Button onClick={() => setOpenClassDialog(false)}>
+
+          <Button
+            variant="text"
+            onClick={() => setOpenClassDialog(false)}
+          >
             Cancel
           </Button>
+
           <Button onClick={handleAddClass}>
             Add
           </Button>
+
         </DialogFooter>
+
       </Dialog>
 
-      {/* ADD SUBJECT */}
-      <Dialog open={openSubjectDialog} handler={setOpenSubjectDialog}>
-        <DialogHeader>Add Subject</DialogHeader>
+      {/* ADD SUBJECT DIALOG */}
+      <Dialog
+        open={openSubjectDialog}
+        handler={setOpenSubjectDialog}
+      >
+
+        <DialogHeader>
+          Add Subject
+        </DialogHeader>
 
         <DialogBody>
+
           <Input
             label="Subject Name"
             value={newSubject}
-            onChange={(e) => setNewSubject(e.target.value)}
+            onChange={(e) =>
+              setNewSubject(e.target.value)
+            }
           />
+
         </DialogBody>
 
         <DialogFooter>
-          <Button onClick={() => setOpenSubjectDialog(false)}>
+
+          <Button
+            variant="text"
+            onClick={() => setOpenSubjectDialog(false)}
+          >
             Cancel
           </Button>
-          <Button color="green" onClick={handleAddSubject}>
+
+          <Button
+            color="green"
+            onClick={handleAddSubject}
+          >
             Add
           </Button>
+
         </DialogFooter>
+
       </Dialog>
 
     </div>
