@@ -25,8 +25,12 @@ export function Profile() {
 
   // ================= STATES =================
   const [hod, setHod] = useState(null);
+
   const [open, setOpen] = useState(false);
+
   const [hover, setHover] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,7 +50,9 @@ export function Profile() {
 
   const [newImages, setNewImages] = useState([]);
 
-  const storedHod = JSON.parse(localStorage.getItem("hodData"));
+  const storedHod = JSON.parse(
+    localStorage.getItem("hodData")
+  );
 
   const hodId = storedHod?.id;
 
@@ -55,29 +61,45 @@ export function Profile() {
 
     try {
 
+      setLoading(true);
+
       const res = await axios.get(
         `http://localhost:8080/api/hods/${hodId}`
       );
+
+      console.log("HOD DATA =", res.data);
 
       setHod(res.data);
 
       setFormData({
         name: res.data.name || "",
         department: res.data.department || "",
-        schoolName: res.data.schoolName || "",
+        schoolName:
+          res.data.school?.schoolName || "",
         username: res.data.username || "",
         password: res.data.password || "",
         email: res.data.email || "",
         phone: res.data.phone || "",
       });
 
-      setCoverImages(res.data.coverImages || []);
+      setCoverImages(
+        Array.isArray(res.data.coverImages)
+          ? res.data.coverImages
+          : []
+      );
 
       setCurrentIndex(0);
 
     } catch (err) {
 
-      console.error("Fetch HOD error:", err);
+      console.error(
+        "Fetch HOD error:",
+        err.response?.data || err.message
+      );
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
@@ -108,7 +130,9 @@ export function Profile() {
 
   }, [coverImages]);
 
-  if (!hod) {
+  // ================= LOADING =================
+  if (loading || !hod) {
+
     return (
       <div className="text-center mt-10">
         Loading...
@@ -116,18 +140,19 @@ export function Profile() {
     );
   }
 
-  // ================= IMAGE URL =================
+  // ================= PROFILE IMAGE URL =================
   const imageUrl =
-    `http://localhost:8080/api/hods/image/get/${hodId}`;
+  `http://localhost:8080/api/hods/image/get/${hodId}`;
 
   // ================= COVER URL =================
   const coverUrl = (fileName) =>
     `http://localhost:8080/api/hods/cover/get-file/${hodId}/${fileName}`;
 
+  // ================= CURRENT COVER =================
   const currentCover =
     coverImages.length > 0
       ? coverUrl(coverImages[currentIndex])
-      : "/img/default-cover.jpg";
+      : "/default-cover.jpg";
 
   // ================= UPDATE PROFILE =================
   const handleUpdate = async () => {
@@ -136,9 +161,19 @@ export function Profile() {
 
       const data = new FormData();
 
-      Object.keys(formData).forEach((key) => {
-        data.append(key, formData[key]);
-      });
+      data.append(
+        "data",
+        new Blob(
+          [
+            JSON.stringify({
+              ...formData,
+            }),
+          ],
+          {
+            type: "application/json",
+          }
+        )
+      );
 
       if (image) {
         data.append("file", image);
@@ -149,7 +184,8 @@ export function Profile() {
         data,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type":
+              "multipart/form-data",
           },
         }
       );
@@ -160,7 +196,10 @@ export function Profile() {
 
     } catch (err) {
 
-      console.error("Update error:", err);
+      console.error(
+        "Update error:",
+        err.response?.data || err.message
+      );
     }
   };
 
@@ -182,7 +221,8 @@ export function Profile() {
         data,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type":
+              "multipart/form-data",
           },
         }
       );
@@ -193,7 +233,10 @@ export function Profile() {
 
     } catch (err) {
 
-      console.error("Cover upload error:", err);
+      console.error(
+        "Cover upload error:",
+        err.response?.data || err.message
+      );
     }
   };
 
@@ -207,14 +250,19 @@ export function Profile() {
         onMouseLeave={() => setHover(false)}
       >
 
-        {/* IMAGE */}
+        {/* COVER IMAGE */}
         <img
-          src={currentCover}
-          className="w-full h-full object-cover transition-all duration-700"
-          onError={(e) => {
-            e.target.src = "/img/default-cover.jpg";
-          }}
-        />
+  src={currentCover}
+  alt="cover"
+  className="w-full h-full object-cover transition-all duration-700"
+  onError={(e) => {
+
+    e.target.onerror = null;
+
+    e.target.src =
+      "https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1200";
+  }}
+/>
 
         {/* OVERLAY */}
         <div className="absolute inset-0 bg-black/40" />
@@ -233,7 +281,9 @@ export function Profile() {
                 multiple
                 hidden
                 onChange={(e) =>
-                  setNewImages(Array.from(e.target.files))
+                  setNewImages(
+                    Array.from(e.target.files)
+                  )
                 }
               />
 
@@ -284,13 +334,18 @@ export function Profile() {
           <div className="flex flex-col md:flex-row items-center gap-6">
 
             <Avatar
-              src={imageUrl}
-              size="xxl"
-              className="border-4 border-white shadow-xl"
-              onError={(e) => {
-                e.target.src = "/img/user.png";
-              }}
-            />
+  src={imageUrl}
+  size="xxl"
+  className="border-4 border-white shadow-xl"
+  alt="profile"
+  onError={(e) => {
+
+    e.target.onerror = null;
+
+    e.target.src =
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  }}
+/>
 
             <div className="text-center md:text-left">
 
@@ -299,7 +354,7 @@ export function Profile() {
                 variant="small"
                 className="mt-2 text-blue-600 font-semibold"
               >
-                {hod.schoolName}
+                {hod.school?.schoolName}
               </Typography>
 
               <Typography
@@ -326,9 +381,10 @@ export function Profile() {
             <ProfileInfoCard
               title="HOD Details"
               details={{
-                School: hod.schoolName,
-                Name: hod.name,
-                Department: hod.department,
+                School:
+                  hod.school?.schoolName,
+                Department:
+                  hod.department,
                 Email: hod.email,
                 Phone: hod.phone,
                 Username: hod.username,
@@ -390,16 +446,11 @@ export function Profile() {
             }
           />
 
-          {/* SCHOOL NAME */}
+          {/* SCHOOL */}
           <Input
             label="School Name"
             value={formData.schoolName}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                schoolName: e.target.value,
-              })
-            }
+            disabled
           />
 
           {/* USERNAME */}

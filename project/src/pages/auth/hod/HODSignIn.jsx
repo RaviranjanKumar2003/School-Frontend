@@ -21,7 +21,6 @@ export function HODSignIn() {
   const handleSignIn = async (e) => {
 
     e.preventDefault();
-
     setError("");
 
     try {
@@ -33,7 +32,6 @@ export function HODSignIn() {
           headers: {
             "Content-Type": "application/json",
           },
-
           body: JSON.stringify({
             username,
             password,
@@ -41,7 +39,7 @@ export function HODSignIn() {
         }
       );
 
-      // ================= LOGIN SUCCESS =================
+      // ================= SUCCESS =================
       if (response.ok) {
 
         const data = await response.json();
@@ -50,10 +48,8 @@ export function HODSignIn() {
 
         const hodId = data.id;
 
-        // SAVE ROLE
+        // ================= BASIC STORAGE =================
         localStorage.setItem("userRole", "hod");
-
-        // SAVE HOD ID
         localStorage.setItem("hodId", hodId);
 
         // ================= FETCH FULL HOD =================
@@ -67,27 +63,36 @@ export function HODSignIn() {
 
           console.log("FULL HOD DATA:", hodData);
 
-          // ================= SAVE FULL DATA =================
+          // ================= SAVE HOD DATA =================
           localStorage.setItem(
             "hodData",
             JSON.stringify(hodData)
           );
 
-          /*
-            IMPORTANT:
-            schoolName yaha save hoga
-          */
+          // ================= IMPORTANT FIX (🔥 SCHOOL FIX) =================
 
-          console.log(
-            "SCHOOL NAME:",
-            hodData.schoolName
-          );
+          if (hodData.schoolId) {
 
-          // ================= REDIRECT =================
+            localStorage.setItem("schoolId", hodData.schoolId);
+
+            localStorage.setItem(
+              "school",
+              JSON.stringify({
+                id: hodData.schoolId,
+                name: hodData.schoolName || "School"
+              })
+            );
+
+          } else {
+            console.error("❌ School ID missing in HOD data");
+          }
+
+          console.log("SCHOOL NAME:", hodData.schoolName);
+
+          // ================= NAVIGATE =================
           navigate("/dashboard/hod/home");
 
         } else {
-
           throw new Error(
             `Failed to fetch HOD data: ${hodResponse.statusText}`
           );
@@ -96,7 +101,6 @@ export function HODSignIn() {
       } else {
 
         const errorData = await response.text();
-
         setError(errorData || "Login failed");
       }
 
@@ -116,7 +120,7 @@ export function HODSignIn() {
 
       <div className="w-full lg:w-3/5 mt-18">
 
-        {/* ================= TITLE ================= */}
+        {/* TITLE */}
         <div className="text-center">
 
           <Typography
@@ -136,12 +140,9 @@ export function HODSignIn() {
 
         </div>
 
-        {/* ================= FORM ================= */}
+        {/* FORM */}
         <form
-          className="
-            mt-8 mb-2 mx-auto
-            w-80 max-w-screen-lg lg:w-1/2
-          "
+          className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2"
           onSubmit={handleSignIn}
         >
 
@@ -163,14 +164,6 @@ export function HODSignIn() {
               onChange={(e) =>
                 setUsername(e.target.value)
               }
-              className="
-                !border-t-blue-gray-200
-                focus:!border-t-gray-900
-              "
-              labelProps={{
-                className:
-                  "before:content-none after:content-none",
-              }}
             />
 
             {/* PASSWORD */}
@@ -190,14 +183,6 @@ export function HODSignIn() {
               onChange={(e) =>
                 setPassword(e.target.value)
               }
-              className="
-                !border-t-blue-gray-200
-                focus:!border-t-gray-900
-              "
-              labelProps={{
-                className:
-                  "before:content-none after:content-none",
-              }}
             />
 
           </div>
@@ -208,25 +193,15 @@ export function HODSignIn() {
               <Typography
                 variant="small"
                 color="gray"
-                className="
-                  flex items-center justify-start
-                  font-medium
-                "
+                className="flex items-center justify-start font-medium"
               >
                 I agree to the&nbsp;
-
                 <a
                   href="#"
-                  className="
-                    font-normal text-black
-                    transition-colors
-                    hover:text-gray-900
-                    underline
-                  "
+                  className="font-normal text-black underline"
                 >
                   Terms and Conditions
                 </a>
-
               </Typography>
             }
             containerProps={{
@@ -234,7 +209,7 @@ export function HODSignIn() {
             }}
           />
 
-          {/* LOGIN BUTTON */}
+          {/* BUTTON */}
           <Button
             className="mt-6"
             fullWidth
@@ -245,7 +220,6 @@ export function HODSignIn() {
 
           {/* ERROR */}
           {error && (
-
             <Typography
               variant="small"
               color="red"
@@ -253,10 +227,9 @@ export function HODSignIn() {
             >
               {error}
             </Typography>
-
           )}
 
-          {/* FORGOT PASSWORD */}
+          {/* FORGOT */}
           <div className="flex items-center justify-between gap-2 mt-6">
 
             <Typography
@@ -273,20 +246,15 @@ export function HODSignIn() {
           {/* SIGNUP */}
           <Typography
             variant="paragraph"
-            className="
-              text-center text-blue-gray-500
-              font-medium mt-4
-            "
+            className="text-center text-blue-gray-500 font-medium mt-4"
           >
             Not registered?
-
             <Link
               to="/auth/hod/sign-up"
               className="text-gray-900 ml-1"
             >
               Create account
             </Link>
-
           </Typography>
 
         </form>
