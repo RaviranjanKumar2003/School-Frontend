@@ -231,7 +231,7 @@ export function Sidenav({ brandImg, routes }) {
             >
               {userData?.schoolName ||
                 userData?.school?.schoolName ||
-                "EduNova International School"}
+                "Your School"}
             </Typography>
 
             {/* ROLE */}

@@ -479,8 +479,8 @@ export function Home() {
               </button>
 
               <button
-               onClick={() => navigate("/dashboard/student/notifications")}
-               className="bg-gradient-to-r from-green-400 to-emerald-600 text-white p-5 rounded-2xl shadow hover:scale-105 transition-all duration-300">Leave
+               onClick={() => navigate("/dashboard/student/Attendance")}
+               className="bg-gradient-to-r from-green-400 to-emerald-600 text-white p-5 rounded-2xl shadow hover:scale-105 transition-all duration-300">Attendance
               </button>
 
               <button
