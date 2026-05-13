@@ -9,44 +9,47 @@ export default function ArchivedStudents() {
     const [currentPage, setCurrentPage] = useState(1);
     const studentsPerPage = 5;
 
-    const [loading, setLoading] = useState(false); // ✅ NEW
+    const [loading, setLoading] = useState(false);
 
+    // ================= SCHOOL ID =================
+    const hodData = JSON.parse(localStorage.getItem("hodData"));
+    const schoolId = hodData?.school?.id;
 
-    // ✅ FETCH DELETED STUDENTS (MORE SAFE)
+    // ================= FETCH DELETED STUDENTS =================
     const fetchStudents = async () => {
         setLoading(true);
         try {
-            const res = await axios.get("http://localhost:8080/api/students/deleted");
+            const res = await axios.get(
+                `http://localhost:8080/api/students/deleted?schoolId=${schoolId}`
+            );
 
             console.log("Deleted Students:", res.data);
 
-            if (Array.isArray(res.data)) {
-                setStudents(res.data);
-            } else {
-                setStudents([]);
-            }
+            setStudents(Array.isArray(res.data) ? res.data : []);
 
         } catch (err) {
             console.log("Fetch Error:", err);
-            setStudents([]); // ✅ avoid crash
+            setStudents([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchStudents();
-    }, []);
+        if (schoolId) {
+            fetchStudents();
+        }
+    }, [schoolId]);
 
-
-    // ✅ RESTORE STUDENT
+    // ================= RESTORE =================
     const restoreStudent = async (id) => {
 
         if (!window.confirm("Restore this student?")) return;
 
         try {
-
-            await axios.put(`http://localhost:8080/api/students/restore/${id}`);
+            await axios.put(
+                `http://localhost:8080/api/students/restore/${id}`
+            );
 
             alert("Student Restored Successfully");
 
@@ -57,15 +60,15 @@ export default function ArchivedStudents() {
         }
     };
 
-
-    // ❌ PERMANENT DELETE
+    // ================= PERMANENT DELETE =================
     const deletePermanently = async (id) => {
 
         if (!window.confirm("Permanently delete this student?")) return;
 
         try {
-
-            await axios.delete(`http://localhost:8080/api/students/permanent/${id}`);
+            await axios.delete(
+                `http://localhost:8080/api/students/permanent/${id}`
+            );
 
             alert("Student Permanently Deleted");
 
@@ -76,22 +79,17 @@ export default function ArchivedStudents() {
         }
     };
 
-
-    // 🔍 SEARCH
+    // ================= SEARCH =================
     const filteredStudents = students.filter((s) =>
         s.studName?.toLowerCase().includes(search.toLowerCase()) ||
         s.email?.toLowerCase().includes(search.toLowerCase())
     );
 
-
-    // 📄 PAGINATION
+    // ================= PAGINATION =================
     const indexOfLast = currentPage * studentsPerPage;
     const indexOfFirst = indexOfLast - studentsPerPage;
-
     const currentStudents = filteredStudents.slice(indexOfFirst, indexOfLast);
-
     const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-
 
     return (
 
@@ -101,12 +99,10 @@ export default function ArchivedStudents() {
                 Archived Students ({students.length})
             </h2>
 
-
-            {/* ✅ LOADING */}
+            {/* LOADING */}
             {loading && (
                 <p className="text-blue-500 mb-4">Loading...</p>
             )}
-
 
             {/* SEARCH */}
             <input
@@ -116,7 +112,6 @@ export default function ArchivedStudents() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
             />
-
 
             {/* TABLE */}
             <div className="overflow-x-auto">
@@ -130,7 +125,6 @@ export default function ArchivedStudents() {
                             <th className="border p-2">Email</th>
                             <th className="border p-2">Phone</th>
                             <th className="border p-2">Roll</th>
-                            <th className="border p-2">Department</th>
                             <th className="border p-2">Class</th>
                             <th className="border p-2">Actions</th>
                         </tr>
@@ -140,7 +134,7 @@ export default function ArchivedStudents() {
 
                         {currentStudents.length === 0 ? (
                             <tr>
-                                <td colSpan="8" className="text-center p-4">
+                                <td colSpan="7" className="text-center p-4">
                                     No Archived Students Found
                                 </td>
                             </tr>
@@ -158,9 +152,7 @@ export default function ArchivedStudents() {
                                     <td className="border p-2">{s.email}</td>
                                     <td className="border p-2">{s.studPhoneNumber}</td>
                                     <td className="border p-2">{s.studRollNo}</td>
-                                    <td className="border p-2">{s.major}</td>
 
-                                    {/* ✅ CLASS SAFE FIX */}
                                     <td className="border p-2">
                                         {s.classNumber || "N/A"}
                                     </td>
@@ -178,7 +170,7 @@ export default function ArchivedStudents() {
                                             onClick={() => deletePermanently(s.id)}
                                             className="bg-red-600 text-white px-2 py-1 rounded"
                                         >
-                                            Delete Permanently
+                                            Delete
                                         </button>
 
                                     </td>
@@ -195,7 +187,6 @@ export default function ArchivedStudents() {
 
             </div>
 
-
             {/* PAGINATION */}
             <div className="mt-4 flex gap-2">
 
@@ -204,7 +195,11 @@ export default function ArchivedStudents() {
                     <button
                         key={i}
                         onClick={() => setCurrentPage(i + 1)}
-                        className={`border px-3 py-1 ${currentPage === i + 1 ? "bg-blue-500 text-white" : ""}`}
+                        className={`border px-3 py-1 ${
+                            currentPage === i + 1
+                                ? "bg-blue-500 text-white"
+                                : ""
+                        }`}
                     >
                         {i + 1}
                     </button>

@@ -22,42 +22,121 @@ export default function Students() {
 
     const studentsPerPage = 5;
 
-    // ================= FETCH =================
-    const fetchStudents = async () => {
+    // ================= FETCH STUDENTS =================
+const fetchStudents = async () => {
 
-        try {
+    try {
 
-            const res = await axios.get(
-                "http://localhost:8080/api/students"
+        const role =
+            localStorage.getItem("userRole");
+
+        let schoolId = null;
+
+        // ================= HOD =================
+        if (role?.toLowerCase() === "hod") {
+
+            const hodData = JSON.parse(
+                localStorage.getItem("hodData")
             );
 
-            const fixedData = res.data.map((s) => ({
-                ...s,
-                classNumber: Number(s.classNumber || 0),
-            }));
-
-            setStudents(fixedData);
-
-        } catch (err) {
-            console.log(err);
+            schoolId =
+                hodData?.school?.id;
         }
-    };
+
+        // ================= PROFESSOR =================
+        else if (
+            role?.toLowerCase() === "professor"
+        ) {
+
+            const professorData = JSON.parse(
+                localStorage.getItem("professorData")
+            );
+
+            schoolId =
+                professorData?.school?.id;
+        }
+
+        // ================= SCHOOL ADMIN =================
+        else if (
+            role?.toLowerCase() === "schooladmin"
+        ) {
+
+            const schoolData = JSON.parse(
+                localStorage.getItem("schoolAdminData")
+            );
+
+            schoolId =
+                schoolData?.school?.id;
+        }
+
+        console.log("FETCH SCHOOL ID :", schoolId);
+
+        // ================= UPDATED API =================
+        const res = await axios.get(
+            `http://localhost:8080/api/students/school/${schoolId}`
+        );
+
+        const fixedData = res.data.map((s) => ({
+            ...s,
+
+            classNumber: Number(
+                s.classNumber || 0
+            ),
+
+            studRollNo: Number(
+                s.studRollNo || 0
+            ),
+        }));
+
+        console.log(
+            "STUDENT API RESPONSE :",
+            fixedData
+        );
+
+        setStudents(fixedData);
+
+    } catch (err) {
+
+        console.log(
+            "FETCH STUDENT ERROR :",
+            err
+        );
+    }
+};
 
     useEffect(() => {
         fetchStudents();
     }, []);
 
     // ================= DELETE =================
-    const deleteStudent = async (id) => {
+    // ================= DELETE =================
+const deleteStudent = async (id) => {
 
-        if (!window.confirm("Delete this student?")) return;
+    if (
+        !window.confirm(
+            "Delete this student?"
+        )
+    ) return;
+
+    try {
 
         await axios.delete(
             `http://localhost:8080/api/students/${id}`
         );
 
+        alert(
+            "✅ Student Deleted Successfully"
+        );
+
         fetchStudents();
-    };
+
+    } catch (err) {
+
+        console.log(err);
+
+        alert("❌ Delete Failed");
+    }
+};
 
     // ================= PROFILE =================
     const handleProfile = (student) => {
@@ -94,16 +173,27 @@ export default function Students() {
 
     // ============================================= Use Effect 
        
-       useEffect(() => {
+      // ================= USE EFFECT =================
+useEffect(() => {
 
     const role =
         localStorage.getItem("userRole");
 
-    // ================= HOD =================
-    if (role?.toLowerCase() === "hod") {
+    console.log("ROLE :", role);
 
-        const hodData =
-            JSON.parse(localStorage.getItem("hodData"));
+    // ================= HOD =================
+    if (
+        role?.toLowerCase() === "hod"
+    ) {
+
+        const hodData = JSON.parse(
+            localStorage.getItem("hodData")
+        );
+
+        console.log(
+            "HOD DATA :",
+            hodData
+        );
 
         setUserData(hodData);
     }
@@ -113,10 +203,16 @@ export default function Students() {
         role?.toLowerCase() === "professor"
     ) {
 
-        const professorData =
-            JSON.parse(
-                localStorage.getItem("professorData")
-            );
+        const professorData = JSON.parse(
+            localStorage.getItem(
+                "professorData"
+            )
+        );
+
+        console.log(
+            "PROFESSOR DATA :",
+            professorData
+        );
 
         setUserData(professorData);
     }
@@ -126,94 +222,184 @@ export default function Students() {
         role?.toLowerCase() === "student"
     ) {
 
-        const studentData =
-            JSON.parse(
-                localStorage.getItem("studentData")
-            );
+        const studentData = JSON.parse(
+            localStorage.getItem(
+                "studentData"
+            )
+        );
+
+        console.log(
+            "STUDENT DATA :",
+            studentData
+        );
 
         setUserData(studentData);
     }
 
+    // ================= SCHOOL ADMIN =================
+    else if (
+        role?.toLowerCase() ===
+        "schooladmin"
+    ) {
+
+        const schoolAdminData =
+            JSON.parse(
+                localStorage.getItem(
+                    "schoolAdminData"
+                )
+            );
+
+        console.log(
+            "SCHOOL ADMIN DATA :",
+            schoolAdminData
+        );
+
+        setUserData(
+            schoolAdminData
+        );
+    }
+
+    // ================= FETCH =================
+    fetchStudents();
+
 }, []);
-
     // ================= UPDATE =================
-    const updateStudent = async (e) => {
+const updateStudent = async (e) => {
 
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
+    try {
 
-            const formData = new FormData();
+        const formData = new FormData();
+
+        // ================= REQUIRED =================
+
+        formData.append(
+            "studName",
+            editingStudent?.studName || ""
+        );
+
+        formData.append(
+            "studLastName",
+            editingStudent?.studLastName || ""
+        );
+
+        formData.append(
+            "email",
+            editingStudent?.email || ""
+        );
+
+        formData.append(
+            "studPhoneNumber",
+            editingStudent?.studPhoneNumber || ""
+        );
+
+        formData.append(
+            "classNumber",
+            Number(editingStudent?.classNumber || 0)
+        );
+
+        formData.append(
+            "studRollNo",
+            Number(editingStudent?.studRollNo || 0)
+        );
+
+        // ================= IMAGE =================
+
+        if (
+            editingStudent?.image instanceof File
+        ) {
 
             formData.append(
-                "studName",
-                editingStudent.studName || ""
+                "image",
+                editingStudent.image
             );
-
-            formData.append(
-                "email",
-                editingStudent.email || ""
-            );
-
-            formData.append(
-                "phone",
-                editingStudent.studPhoneNumber || ""
-            );
-
-            formData.append(
-                "classNumber",
-                Number(editingStudent.classNumber || 0)
-            );
-
-            formData.append(
-                "rollNo",
-                Number(editingStudent.studRollNo || 0)
-            );
-
-            if (editingStudent.image instanceof File) {
-
-                formData.append(
-                    "image",
-                    editingStudent.image
-                );
-            }
-
-            await axios.put(
-                `http://localhost:8080/api/students/update/${editingStudent.id}`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type":
-                            "multipart/form-data",
-                    },
-                }
-            );
-
-            alert("✅ Student Updated Successfully");
-
-            setEditingStudent(null);
-
-            fetchStudents();
-
-        } catch (err) {
-
-            console.error(err);
-
-            alert("❌ Update failed");
         }
-    };
 
-    // ================= SEARCH =================
-    const filteredStudents = students.filter(
-        (s) =>
-            s.studName
-                ?.toLowerCase()
-                .includes(search.toLowerCase()) ||
+        // ================= DEBUG =================
+
+        for (let pair of formData.entries()) {
+
+            console.log(
+                pair[0],
+                pair[1]
+            );
+        }
+
+        // ================= API =================
+
+        const response = await axios.put(
+
+            `http://localhost:8080/api/students/update/${editingStudent.id}`,
+
+            formData,
+
+            {
+                headers: {
+                    "Content-Type":
+                        "multipart/form-data",
+                },
+            }
+        );
+
+        console.log(
+            "UPDATE RESPONSE :",
+            response.data
+        );
+
+        alert(
+            "✅ Student Updated Successfully"
+        );
+
+        setEditingStudent(null);
+
+        fetchStudents();
+
+    } catch (err) {
+
+        console.error(
+            "UPDATE ERROR :",
+            err.response?.data || err
+        );
+
+        alert(
+            err.response?.data ||
+            "❌ Update failed"
+        );
+    }
+};
+
+// ==================================== SEARCH ==================================
+const filteredStudents =
+    students.filter((s) => {
+
+        const fullName =
+            `${s.studName || ""} ${s.studLastName || ""}`
+                .toLowerCase();
+
+        return (
+
+            fullName.includes(
+                search.toLowerCase()
+            ) ||
 
             s.email
                 ?.toLowerCase()
-                .includes(search.toLowerCase())
-    );
+                .includes(
+                    search.toLowerCase()
+                ) ||
+
+            s.studentId
+                ?.toLowerCase()
+                .includes(
+                    search.toLowerCase()
+                ) ||
+
+            String(
+                s.studRollNo || ""
+            ).includes(search)
+        );
+    });
 
     // ================= PAGINATION =================
     const indexOfLast =
@@ -242,11 +428,13 @@ export default function Students() {
     };
 
     // ================= DOWNLOAD ID CARD =================
-    const downloadIDCard = async () => {
+    // ================= DOWNLOAD ID CARD =================
+const downloadIDCard = async () => {
 
-        try {
+    try {
 
-            const canvas = await html2canvas(
+        const canvas =
+            await html2canvas(
                 cardRef.current,
                 {
                     useCORS: true,
@@ -256,35 +444,40 @@ export default function Students() {
                 }
             );
 
-            const imgData =
-                canvas.toDataURL("image/png");
-
-            const pdf = new jsPDF(
-                "landscape",
-                "mm",
-                [86, 54]
+        const imgData =
+            canvas.toDataURL(
+                "image/png"
             );
 
-            pdf.addImage(
-                imgData,
-                "PNG",
-                0,
-                0,
-                86,
-                54
-            );
+        const pdf = new jsPDF(
+            "landscape",
+            "mm",
+            [86, 54]
+        );
 
-            pdf.save(
-                `${cardStudent.studName, cardStudent.studLastName}_ID_Card.pdf`
-            );
+        pdf.addImage(
+            imgData,
+            "PNG",
+            0,
+            0,
+            86,
+            54
+        );
 
-        } catch (error) {
+        // ✅ FIXED
+        pdf.save(
+            `${cardStudent.studName}_${cardStudent.studentId}.pdf`
+        );
 
-            console.log(error);
+    } catch (error) {
 
-            alert("Failed to download ID Card");
-        }
-    };
+        console.log(error);
+
+        alert(
+            "Failed to download ID Card"
+        );
+    }
+};
 
     return (
 
@@ -321,14 +514,19 @@ export default function Students() {
                     <div className="flex flex-col md:flex-row gap-8 items-center">
 
                         <img
-                            crossOrigin="anonymous"
-                            src={
-                                selectedStudent.imageUrl
-                                    ? `http://localhost:8080/api/students/image/get/${selectedStudent.id}`
-                                    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                            }
-                            className="w-40 h-40 rounded-full border-4 border-blue-600 shadow-lg object-cover"
-                        />
+  crossOrigin="anonymous"
+  src={
+    selectedStudent?.imageUrl
+      ? `http://localhost:8080/api/students/image/get/${selectedStudent.id}`
+      : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  }
+  alt={selectedStudent?.studName || "Student"}
+  onError={(e) => {
+    e.target.src =
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  }}
+  className="w-40 h-40 rounded-full border-4 border-blue-600 shadow-lg object-cover"
+/>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm md:text-base w-full">
 
@@ -503,14 +701,19 @@ export default function Students() {
                                 <td className="p-3">
 
                                     <img
-                                        crossOrigin="anonymous"
-                                        src={
-                                            s.imageUrl
-                                                ? `http://localhost:8080/api/students/image/get/${s.id}`
-                                                : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                        }
-                                        className="w-14 h-14 rounded-full mx-auto border-2 border-blue-400 object-cover"
-                                    />
+  crossOrigin="anonymous"
+  src={
+    s?.imageUrl
+      ? `http://localhost:8080/api/students/image/get/${s.id}`
+      : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  }
+  alt={s?.studName || "Student"}
+  onError={(e) => {
+    e.target.src =
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  }}
+  className="w-14 h-14 rounded-full mx-auto border-2 border-blue-400 object-cover"
+/>
 
                                 </td>
 
@@ -641,14 +844,19 @@ export default function Students() {
 
                                 {/* IMAGE */}
                                 <img
-                                    crossOrigin="anonymous"
-                                    src={
-                                        cardStudent.imageUrl
-                                            ? `http://localhost:8080/api/students/image/get/${cardStudent.id}`
-                                            : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                                    }
-                                    className="w-24 h-24 rounded-2xl border-4 border-white object-cover shadow-lg"
-                                />
+  crossOrigin="anonymous"
+  src={
+    cardStudent?.imageUrl
+      ? `http://localhost:8080/api/students/image/get/${cardStudent.id}`
+      : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  }
+  alt={cardStudent?.studName || "Student"}
+  onError={(e) => {
+    e.target.src =
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+  }}
+  className="w-24 h-24 rounded-2xl border-4 border-white object-cover shadow-lg"
+/>
 
                                 {/* DETAILS */}
                                 <div className="text-white text-sm leading-6">
