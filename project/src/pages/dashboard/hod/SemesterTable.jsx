@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -9,15 +8,7 @@ import {
   Typography,
   Chip,
   Button,
-  Input,
-  Dialog,
-  DialogHeader,
-  DialogBody,
-  DialogFooter,
-  IconButton,
 } from "@material-tailwind/react";
-
-import { TrashIcon } from "@heroicons/react/24/solid";
 
 const BASE_URL = "http://localhost:8080/api";
 
@@ -26,23 +17,13 @@ export default function SchoolDashboard() {
   // ================= GET SCHOOL =================
   const hodData = JSON.parse(localStorage.getItem("hodData"));
 
-  console.log("School HOD Data : "+hodData);
+  console.log("School HOD Data :", hodData);
 
   const schoolId = hodData?.school?.id;
-  
-  
 
-
+  // ================= STATES =================
   const [classes, setClasses] = useState([]);
   const [openIndex, setOpenIndex] = useState(null);
-
-  const [openClassDialog, setOpenClassDialog] = useState(false);
-  const [newClassName, setNewClassName] = useState("");
-  const [newClassNumber, setNewClassNumber] = useState("");
-
-  const [openSubjectDialog, setOpenSubjectDialog] = useState(false);
-  const [currentClass, setCurrentClass] = useState(null);
-  const [newSubject, setNewSubject] = useState("");
 
   // ================= LOAD DATA =================
   useEffect(() => {
@@ -58,7 +39,7 @@ export default function SchoolDashboard() {
 
     try {
 
-      // 🔥 ONLY CURRENT SCHOOL CLASSES
+      // ONLY CURRENT SCHOOL CLASSES
       const res = await axios.get(
         `${BASE_URL}/classes/by-school/${schoolId}`
       );
@@ -72,109 +53,6 @@ export default function SchoolDashboard() {
     }
   };
 
-  // ================= ADD CLASS =================
-  const handleAddClass = async () => {
-
-  if (!newClassName.trim() || !newClassNumber) return;
-
-  try {
-
-    await axios.post(
-      `${BASE_URL}/classes/${schoolId}`,
-      {
-        className: newClassName,
-        classNumber: Number(newClassNumber),
-      }
-    );
-
-    fetchClasses();
-
-    setNewClassName("");
-    setNewClassNumber("");
-
-    setOpenClassDialog(false);
-
-  } catch (err) {
-
-    console.error("Add Class Error:", err);
-
-  }
-};
-
-  // ================= DELETE CLASS =================
-  const handleDeleteClass = async (classId) => {
-
-    try {
-
-      // 🔥 SCHOOL + CLASS ID
-      await axios.delete(
-        `${BASE_URL}/classes/${schoolId}/${classId}`
-      );
-
-      fetchClasses();
-
-    } catch (err) {
-
-      console.error("Delete Class Error:", err);
-
-    }
-  };
-
-  // ================= ADD SUBJECT =================
-  const handleAddSubject = async () => {
-
-    if (!newSubject.trim() || !currentClass) return;
-
-    try {
-
-      // 🔥 SCHOOL + CLASS
-      await axios.post(
-        `${BASE_URL}/classes/${schoolId}/${currentClass.id}/subject`,
-        null,
-        {
-          params: {
-            subjectName: newSubject,
-          },
-        }
-      );
-
-      fetchClasses();
-
-      setNewSubject("");
-
-      setOpenSubjectDialog(false);
-
-    } catch (err) {
-
-      console.error("Add Subject Error:", err);
-
-    }
-  };
-
-  // ================= DELETE SUBJECT =================
-  const handleDeleteSubject = async (classId, subjectName) => {
-
-    try {
-
-      // 🔥 YOUR BACKEND API
-      await axios.delete(
-        `${BASE_URL}/classes/${schoolId}/${classId}/subject`,
-        {
-          params: {
-            subjectName,
-          },
-        }
-      );
-
-      fetchClasses();
-
-    } catch (err) {
-
-      console.error("Delete Subject Error:", err);
-
-    }
-  };
-
   // ================= TOGGLE =================
   const toggleDetails = (index) => {
 
@@ -184,23 +62,37 @@ export default function SchoolDashboard() {
 
   return (
 
-    <div className="p-6 flex flex-col gap-6">
+    <div className="p-6 flex flex-col gap-6 bg-gray-100 min-h-screen">
 
-      {/* TOP */}
-      <Card>
+      {/* TOP DASHBOARD CARD */}
+      <Card className="shadow-lg border border-blue-gray-100">
 
-        <CardBody className="flex justify-between items-center">
+        <CardBody className="flex flex-col md:flex-row justify-between items-center gap-4">
 
-          <Typography variant="h5">
-            Total Classes: {classes.length}
-          </Typography>
+          <div>
 
-          <Button
-            size="sm"
-            onClick={() => setOpenClassDialog(true)}
-          >
-            + Add Class
-          </Button>
+            <Typography
+              variant="h4"
+              className="font-bold text-blue-gray-900"
+            >
+              Academic Dashboard
+            </Typography>
+
+            <Typography className="text-gray-600 mt-1">
+              Principal / HOD can only monitor classes & subjects
+            </Typography>
+
+          </div>
+
+          <div className="flex gap-3 flex-wrap">
+
+            <Chip
+              value={`Total Classes : ${classes.length}`}
+              color="blue"
+              className="text-sm"
+            />
+
+          </div>
 
         </CardBody>
 
@@ -216,105 +108,110 @@ export default function SchoolDashboard() {
 
         return (
 
-          <Card key={cls.id}>
+          <Card
+            key={cls.id}
+            className="shadow-md border border-blue-gray-50"
+          >
 
             {/* HEADER */}
-            <CardHeader className="p-4 flex justify-between items-center bg-blue-500">
+            <CardHeader
+              floated={false}
+              shadow={false}
+              className="m-0 rounded-none bg-gradient-to-r from-blue-600 to-indigo-600 p-5 flex justify-between items-center"
+            >
 
-              <Typography color="white">
-                {cls.className}
-              </Typography>
+              <div>
 
-              <div className="flex gap-3">
-
-                <Chip
-                  value={`${cls.subjects?.length || 0} Subjects`}
-                />
-
-                <IconButton
-                  color="red"
-                  size="sm"
-                  onClick={() => handleDeleteClass(cls.id)}
+                <Typography
+                  variant="h6"
+                  color="white"
+                  className="font-bold"
                 >
-                  <TrashIcon className="h-4 w-4" />
-                </IconButton>
+                  {cls.className}
+                </Typography>
+
+                <Typography
+                  color="white"
+                  className="text-sm opacity-80"
+                >
+                  Class Number : {cls.classNumber}
+                </Typography>
 
               </div>
+
+              <Chip
+                value={`${cls.subjects?.length || 0} Subjects`}
+                className="bg-white text-blue-700"
+              />
 
             </CardHeader>
 
             {/* BODY */}
             <CardBody>
 
-              <div className="flex justify-between items-center flex-wrap gap-2">
+              {/* TOP SECTION */}
+              <div className="flex justify-between items-center flex-wrap gap-3">
 
-                <Typography>
-                  Subjects in {cls.className}
-                </Typography>
+                <div>
 
-                <div className="flex gap-2">
-
-                  <Button
-                    size="sm"
-                    onClick={() => toggleDetails(index)}
+                  <Typography
+                    variant="small"
+                    className="font-semibold text-blue-gray-700"
                   >
-                    {openIndex === index ? "Hide" : "View"}
-                  </Button>
+                    Subject Management
+                  </Typography>
 
-                  <Button
-                    size="sm"
-                    color="green"
-                    onClick={() => {
-
-                      setCurrentClass(cls);
-
-                      setOpenSubjectDialog(true);
-
-                    }}
+                  <Typography
+                    variant="small"
+                    className="text-gray-500"
                   >
-                    + Add Subject
-                  </Button>
+                    View all assigned subjects
+                  </Typography>
 
                 </div>
+
+                <Button
+                  size="sm"
+                  color="blue"
+                  variant="gradient"
+                  onClick={() => toggleDetails(index)}
+                >
+                  {openIndex === index ? "Hide Subjects" : "View Subjects"}
+                </Button>
 
               </div>
 
               {/* SUBJECTS */}
               {openIndex === index && (
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-5">
 
                   {cls.subjects?.length === 0 ? (
 
-                    <Typography>No subjects</Typography>
+                    <div className="bg-gray-100 rounded-lg p-4">
+
+                      <Typography className="text-gray-500">
+                        No subjects assigned
+                      </Typography>
+
+                    </div>
 
                   ) : (
 
-                    cls.subjects.map((sub, i) => (
+                    <div className="flex flex-wrap gap-3">
 
-                      <div
-                        key={i}
-                        className="flex items-center gap-1"
-                      >
+                      {cls.subjects.map((sub, i) => (
 
-                        <Chip value={sub.subjectName} />
+                        <Chip
+                          key={i}
+                          value={sub.subjectName}
+                          color="blue"
+                          className="rounded-full"
+                        />
 
-                        <IconButton
-                          size="sm"
-                          color="red"
-                          onClick={() =>
-                            handleDeleteSubject(
-                              cls.id,
-                              sub.subjectName
-                            )
-                          }
-                        >
-                          <TrashIcon className="h-3 w-3" />
-                        </IconButton>
+                      ))}
 
-                      </div>
-
-                    ))
+                    </div>
 
                   )}
 
@@ -323,17 +220,25 @@ export default function SchoolDashboard() {
               )}
 
               {/* FEATURES */}
-              <div className="mt-4 flex gap-2 flex-wrap">
+              <div className="mt-6 flex gap-3 flex-wrap">
 
-                <Chip value="✔ Exams" color="green" />
+                <Chip
+                  value="✔ Exams Enabled"
+                  color="green"
+                />
 
-                <Chip value="✔ Practical" color="blue" />
+                <Chip
+                  value="✔ Practical Classes"
+                  color="blue"
+                />
 
                 {hasComputer && (
+
                   <Chip
                     value="✔ Computer Lab"
                     color="purple"
                   />
+
                 )}
 
               </div>
@@ -345,99 +250,29 @@ export default function SchoolDashboard() {
         );
       })}
 
-      {/* ADD CLASS DIALOG */}
-      <Dialog
-        open={openClassDialog}
-        handler={setOpenClassDialog}
-      >
+      {/* EMPTY STATE */}
+      {classes.length === 0 && (
 
-        <DialogHeader>
-          Add Class
-        </DialogHeader>
+        <Card className="shadow-md">
 
-        <DialogBody>
+          <CardBody className="text-center py-10">
 
-          <div className="flex flex-col gap-4">
+            <Typography
+              variant="h6"
+              className="text-gray-500"
+            >
+              No Classes Available
+            </Typography>
 
-  <Input
-    label="Class Name"
-    value={newClassName}
-    onChange={(e) =>
-      setNewClassName(e.target.value)
-    }
-  />
+            <Typography className="text-gray-400 mt-2">
+              School Admin has not created any classes yet
+            </Typography>
 
-  <Input
-    type="number"
-    label="Class Number"
-    value={newClassNumber}
-    onChange={(e) =>
-      setNewClassNumber(e.target.value)
-    }
-  />
+          </CardBody>
 
-</div>
+        </Card>
 
-        </DialogBody>
-
-        <DialogFooter>
-
-          <Button
-            variant="text"
-            onClick={() => setOpenClassDialog(false)}
-          >
-            Cancel
-          </Button>
-
-          <Button onClick={handleAddClass}>
-            Add
-          </Button>
-
-        </DialogFooter>
-
-      </Dialog>
-
-      {/* ADD SUBJECT DIALOG */}
-      <Dialog
-        open={openSubjectDialog}
-        handler={setOpenSubjectDialog}
-      >
-
-        <DialogHeader>
-          Add Subject
-        </DialogHeader>
-
-        <DialogBody>
-
-          <Input
-            label="Subject Name"
-            value={newSubject}
-            onChange={(e) =>
-              setNewSubject(e.target.value)
-            }
-          />
-
-        </DialogBody>
-
-        <DialogFooter>
-
-          <Button
-            variant="text"
-            onClick={() => setOpenSubjectDialog(false)}
-          >
-            Cancel
-          </Button>
-
-          <Button
-            color="green"
-            onClick={handleAddSubject}
-          >
-            Add
-          </Button>
-
-        </DialogFooter>
-
-      </Dialog>
+      )}
 
     </div>
   );

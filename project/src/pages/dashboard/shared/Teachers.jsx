@@ -198,20 +198,40 @@ const isChecked = (classId, subjectName) => {  // cls
 
         setUserData({
             id: hodData?.id,
-            schoolId: hodData?.school?.id,   // 🔥 MUST BE LIKE THIS
+            schoolId: hodData?.school?.id,
+            schoolName: hodData?.school?.schoolName
+        });
+    }
+
+    else if (role === "schooladmin") {
+
+        const schoolAdminData = JSON.parse(
+            localStorage.getItem("schoolAdminData")
+        );
+
+        console.log("🔥 SCHOOL ADMIN DATA:", schoolAdminData);
+
+        setUserData({
+            id: schoolAdminData?.id,
+            schoolId: schoolAdminData?.schoolId,
+            schoolName: schoolAdminData?.schoolName
         });
     }
 
     else if (role === "professor") {
 
-        const professorData = JSON.parse(localStorage.getItem("professorData"));
+        const professorData = JSON.parse(
+            localStorage.getItem("professorData")
+        );
 
         setUserData(professorData);
     }
 
     else if (role === "student") {
 
-        const studentData = JSON.parse(localStorage.getItem("studentData"));
+        const studentData = JSON.parse(
+            localStorage.getItem("studentData")
+        );
 
         setUserData(studentData);
     }

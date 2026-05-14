@@ -31,6 +31,14 @@ const SchoolAdminHome = lazy(() =>
   import("@/pages/dashboard/schooladmin/Home")
 );
 
+const SchoolAdminInfo = lazy(() =>
+  import("@/pages/dashboard/schooladmin/Information")
+);
+
+const AdminCreatClassSubject = lazy(() =>
+  import("@/pages/dashboard/schooladmin/CreatClassAndSubject")
+);
+
 const SchoolTeachers = lazy(() =>
   import("@/pages/dashboard/schooladmin/Teachers")
 );
@@ -74,17 +82,12 @@ const EventScheduler = lazy(() =>
 );
 
 const CreateTeacher = lazy(() =>
-  import("@/pages/dashboard/hod/CreateTeacher")
+  import("@/pages/dashboard/SchoolAdmin/CreateTeacher")
 );
 const CreateStudent = lazy(() =>
-  import("@/pages/dashboard/hod/CreateStudent")
+  import("@/pages/dashboard/SchoolAdmin/CreateStudent")
 );
-const Teachers = lazy(() =>
-  import("@/pages/dashboard/hod/Teachers")
-);
-const Students = lazy(() =>
-  import("@/pages/dashboard/hod/Students")
-);
+
 const ArchivedStudents = lazy(() =>
   import("@/pages/dashboard/hod/ArchivedStudents")
 );
@@ -164,16 +167,13 @@ const ProfessorSignUp = lazy(() =>
 const StudentSignIn = lazy(() => import("@/pages/auth/student/StudentSignIn"));
 const StudentSignUp = lazy(() => import("@/pages/auth/student/StudentSignUp"));
 
-//===========================================================================================
+//============================================================================
 /* ================= SUPER ADMIN AUTH ================= */
 
 const SuperAdminSignIn = lazy(() =>
   import("@/pages/auth/superadmin/SuperAdminSignIn")
 );
 
-// const SuperAdminSignUp = lazy(() =>
-//   import("@/pages/auth/superadmin/SuperAdminSignUp")
-// );
 
 /* ================= SCHOOL ADMIN AUTH ================= */
 
@@ -193,6 +193,16 @@ const icon = {
   className: "w-5 h-5 text-inherit",
 };
 
+//======================================== COMMEN IMPORT
+
+const Teachers = lazy(() =>
+  import("@/pages/dashboard/shared/Teachers")
+);
+
+const Students = lazy(() =>
+  import("@/pages/dashboard/shared/Students")
+);
+
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="relative">
@@ -203,6 +213,8 @@ const LoadingSpinner = () => (
 );
 
 export const routes = [
+
+//============================================================== PRINCIPLE/HOD DASHBOADR
   {
     layout: "dashboard",
     pages: [
@@ -261,18 +273,6 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><EventScheduler /></Suspense>,
       },
       {
-        icon: <PencilIcon {...icon} />,
-        name: "Create Teacher",
-        path: "/hod/create-teacher",
-        element: <Suspense fallback={<LoadingSpinner />}><CreateTeacher /></Suspense>,
-      },
-      {
-        icon: <PencilIcon {...icon} />,
-        name: "Create Student",
-        path: "/hod/create-student",
-        element: <Suspense fallback={<LoadingSpinner />}><CreateStudent /></Suspense>,
-      },
-      {
         icon: <TableCellsIcon {...icon} />,
         name: "Teachers List",
         path: "/hod/teachers",
@@ -305,6 +305,7 @@ export const routes = [
     ],
   },
 
+//================================================================= PROFESSOR DASHBOARD 
   {
     layout: "dashboard",
     pages: [
@@ -467,51 +468,51 @@ export const routes = [
       },
 
       {
-  icon: <ServerStackIcon {...icon} />,
-  name: "Super Admin sign-in",
-  path: "superadmin/sign-in",
-  element: (
-    <Suspense fallback={<LoadingSpinner />}>
-      <SuperAdminSignIn />
-    </Suspense>
-  ),
-},
+        icon: <ServerStackIcon {...icon} />,
+        name: "Super Admin sign-in",
+        path: "superadmin/sign-in",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SuperAdminSignIn />
+          </Suspense>
+        ),
+      },
 
-{
-  icon: <RectangleStackIcon {...icon} />,
-  name: "Super Admin sign-up",
-  path: "superadmin/sign-up",
-  element: (
-    <Suspense fallback={<LoadingSpinner />}>
-    </Suspense>
-  ),
-},
+      {
+        icon: <RectangleStackIcon {...icon} />,
+        name: "Super Admin sign-up",
+        path: "superadmin/sign-up",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+          </Suspense>
+        ),
+      },
 
-{
-  icon: <ServerStackIcon {...icon} />,
-  name: "School Admin sign-in",
-  path: "schooladmin/sign-in",
-  element: (
-    <Suspense fallback={<LoadingSpinner />}>
-      <SchoolAdminSignIn />
-    </Suspense>
-  ),
-},
+      {
+        icon: <ServerStackIcon {...icon} />,
+        name: "School Admin sign-in",
+        path: "schooladmin/sign-in",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <SchoolAdminSignIn />
+          </Suspense>
+        ),
+       },
 
-{
-  icon: <RectangleStackIcon {...icon} />,
-  name: "School Admin sign-up",
-  path: "schooladmin/sign-up",
-  element: (
-    <Suspense fallback={<LoadingSpinner />}>
-      <SchoolAdminSignUp />
-    </Suspense>
-  ),
-},
+       {
+        icon: <RectangleStackIcon {...icon} />,
+        name: "School Admin sign-up",
+        path: "schooladmin/sign-up",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+           <SchoolAdminSignUp />
+          </Suspense>
+        ),
+      },
     ],
   },
 
-
+//=================================================== SUPER ADMIN DASHBOAR
   {
   layout: "dashboard",
   pages: [
@@ -548,54 +549,88 @@ export const routes = [
   ],
 },
 
+//============================================= SCHOOL ADMIN DASHBOAR
 
 {
   layout: "dashboard",
   pages: [
+
     {
       icon: <HomeIcon {...icon} />,
-      name: "School Admin Dashboard",
+      name: "Admin Dashboard",
       path: "/schooladmin/home",
-      element: (
-        <Suspense fallback={<LoadingSpinner />}>
-          <SchoolAdminHome />
-        </Suspense>
-      ),
+      element: 
+      <Suspense fallback={<LoadingSpinner />}>
+        <SchoolAdminHome />
+      </Suspense>,
     },
-
+    {
+      icon: <UserCircleIcon {...icon} />,
+      name: "Admin Information",
+      path: "/schooladmin/information",
+      element: 
+      <Suspense fallback={<LoadingSpinner />}>
+        <SchoolAdminInfo />
+      </Suspense>,
+    },
     {
       icon: <TableCellsIcon {...icon} />,
-      name: "Teachers",
-      path: "/schooladmin/teachers",
+      name: "Our Classes",
+      path: "/schooladmin/CreatClassAndSubject",
+      element: 
+      <Suspense fallback={<LoadingSpinner />}>
+        <AdminCreatClassSubject />
+      </Suspense>,
+    },
+    {
+      icon: <UserCircleIcon {...icon} />,
+      name: "Our Principle",
+      path: "/schooladmin/hods",
       element: (
         <Suspense fallback={<LoadingSpinner />}>
-          <SchoolTeachers />
+          <HODs />
         </Suspense>
       ),
     },
-
     {
-      icon: <TableCellsIcon {...icon} />,
-      name: "Students",
-      path: "/schooladmin/students",
-      element: (
+        icon: <PencilIcon {...icon} />,
+        name: "Create Teacher",
+        path: "/schooladmin/create-teacher",
+        element:
         <Suspense fallback={<LoadingSpinner />}>
-          <SchoolStudents />
-        </Suspense>
-      ),
-    },
+          <CreateTeacher />
+        </Suspense>,
+      },
+      {
+        icon: <PencilIcon {...icon} />,
+        name: "Create Student",
+        path: "/schooladmin/create-student",
+        element: 
+        <Suspense fallback={<LoadingSpinner />}>
+          <CreateStudent />
+        </Suspense>,
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Teachers List",
+        path: "/schooladmin/teachers",
+        element: 
+        <Suspense fallback={<LoadingSpinner />}>
+          <Teachers />
+        </Suspense>,
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Students List",
+        path: "/schooladmin/students",
+        element: 
+        <Suspense fallback={<LoadingSpinner />}>
+          <Students />
+        </Suspense>,
+      },
 
-    {
-  icon: <UserCircleIcon {...icon} />,
-  name: "HODs",
-  path: "/schooladmin/hods",
-  element: (
-    <Suspense fallback={<LoadingSpinner />}>
-      <HODs />
-    </Suspense>
-  ),
-},
-
+    
+  
   ],
 },
 
