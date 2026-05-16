@@ -1,26 +1,65 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaPlus, FaEye } from "react-icons/fa";
+
+import {
+  FaPlus,
+  FaEye,
+  FaQrcode,
+  FaArrowLeft,
+  FaCheckCircle,
+  FaUsers,
+} from "react-icons/fa";
+
+const BASE_URL =
+  "http://localhost:8080/api";
 
 function StuAttendance() {
 
-  const [takenInfo, setTakenInfo] = useState(null);
+  // =========================================================
+  // STATES
+  // =========================================================
 
-  const [classes, setClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [classes, setClasses] =
+    useState([]);
 
-  const [mode, setMode] = useState("");
+  const [sections, setSections] =
+    useState([]);
 
-  const [students, setStudents] = useState([]);
+  const [selectedClass, setSelectedClass] =
+    useState(null);
 
-  const [date, setDate] = useState("");
+  const [selectedSection, setSelectedSection] =
+    useState("");
 
-  const [attendance, setAttendance] = useState({});
+  const [mode, setMode] =
+    useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [students, setStudents] =
+    useState([]);
+
+  const [attendance, setAttendance] =
+    useState({});
+
+  const [attendanceDate, setAttendanceDate] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [takenInfo, setTakenInfo] =
+    useState(null);
+
+  const [showQrBox, setShowQrBox] =
+    useState(false);
+
+  const [qrStudentId, setQrStudentId] =
+    useState("");
+
+  const [searchText, setSearchText] =
+    useState("");
 
   // =========================================================
-  // USER
+  // USER INFO
   // =========================================================
 
   const role =
@@ -28,14 +67,15 @@ function StuAttendance() {
 
   let user = null;
 
-  // ================= HOD =================
+  // =========================================================
+  // HOD
+  // =========================================================
+
   if (role?.toLowerCase() === "hod") {
 
     const hodData = JSON.parse(
       localStorage.getItem("hodData")
     );
-
-    console.log("HOD DATA => ", hodData);
 
     user = {
 
@@ -48,77 +88,73 @@ function StuAttendance() {
 
       role: "HOD",
 
-      // ✅ FIXED
       schoolId:
+        hodData?.schoolId ||
         hodData?.school?.id,
     };
   }
 
-  // ================= PROFESSOR =================
+  // =========================================================
+  // TEACHER
+  // =========================================================
+
   else if (
+    role?.toLowerCase() === "teacher" ||
     role?.toLowerCase() === "professor"
   ) {
 
-    const professorData = JSON.parse(
+    const teacherData = JSON.parse(
       localStorage.getItem("professorData")
-    );
-
-    console.log(
-      "PROFESSOR DATA => ",
-      professorData
     );
 
     user = {
 
-      id: professorData?.id,
+      id: teacherData?.id,
 
       name:
-        professorData?.name ||
-        professorData?.professorName ||
-        "Professor",
+        teacherData?.name ||
+        teacherData?.professorName ||
+        "Teacher",
 
-      role: "Professor",
+      role: "Teacher",
 
-      // ✅ FIXED
       schoolId:
-        professorData?.school?.id,
+        teacherData?.schoolId ||
+        teacherData?.school?.id,
     };
   }
 
-  // ================= SCHOOL ADMIN =================
+  // =========================================================
+  // SCHOOL ADMIN
+  // =========================================================
+
   else if (
     role?.toLowerCase() === "schooladmin"
   ) {
 
-    const schoolAdminData = JSON.parse(
+    const adminData = JSON.parse(
       localStorage.getItem("schoolAdminData")
-    );
-
-    console.log(
-      "SCHOOL ADMIN DATA => ",
-      schoolAdminData
     );
 
     user = {
 
-      id: schoolAdminData?.id,
+      id: adminData?.id,
 
       name:
-        schoolAdminData?.name ||
-        schoolAdminData?.schoolName ||
-        "Admin",
+        adminData?.name ||
+        adminData?.schoolName ||
+        "School Admin",
 
       role: "SchoolAdmin",
 
-      // ✅ FIXED
       schoolId:
-        schoolAdminData?.school?.id,
+        adminData?.schoolId ||
+        adminData?.school?.id,
     };
   }
 
-  console.log("FINAL USER => ", user);
-
-  const schoolId = user?.schoolId;
+  const schoolId =
+    user?.schoolId;
 
   // =========================================================
   // LOAD CLASSES
@@ -126,16 +162,10 @@ function StuAttendance() {
 
   useEffect(() => {
 
-    if (!schoolId) {
+    if (schoolId) {
 
-      console.log(
-        "❌ SCHOOL ID NOT FOUND"
-      );
-
-      return;
+      loadClasses();
     }
-
-    loadClasses();
 
   }, [schoolId]);
 
@@ -143,80 +173,141 @@ function StuAttendance() {
 
     try {
 
-      console.log(
-        "LOADING CLASSES FOR SCHOOL => ",
-        schoolId
-      );
-
       const res = await axios.get(
-        `http://localhost:8080/api/classes/by-school/${schoolId}`
-      );
 
-      console.log(
-        "CLASSES RESPONSE => ",
-        res.data
+        `${BASE_URL}/classes/by-school/${schoolId}`
       );
 
       setClasses(res.data);
 
     } catch (err) {
 
-      console.error(
-        "CLASS LOAD ERROR => ",
-        err
-      );
+      console.error(err);
 
-      alert("Error loading classes");
+      alert("Failed to load classes");
     }
   };
 
   // =========================================================
-  // LOAD STUDENTS
+  // LOAD SECTIONS
+  // =========================================================
+
+  const loadSections = async (
+    classId
+  ) => {
+
+    try {
+
+      const res = await axios.get(
+
+        `${BASE_URL}/sections/${schoolId}/${classId}`
+      );
+
+      setSections(res.data);
+
+    } catch (err) {
+
+      console.error(err);
+
+      setSections([]);
+    }
+  };
+
+  // =========================================================
+  // SELECT CLASS
   // =========================================================
 
   const loadStudents = async (
-    classNumber,
+    cls,
     type
   ) => {
 
     setMode(type);
 
-    setSelectedClass(classNumber);
-    console.log("Class Number : ",classNumber);
-    
+    setSelectedClass(cls);
 
     setStudents([]);
 
     setAttendance({});
 
-    setDate("");
-
     setTakenInfo(null);
 
-    // ================= TAKE MODE =================
-    if (type === "take") {
+    setAttendanceDate("");
+
+    setSelectedSection("");
+
+    setSections([]);
+
+    setShowQrBox(false);
+
+    await loadSections(cls.id);
+  };
+
+  // =========================================================
+  // FETCH STUDENTS FOR TAKE MODE
+  // =========================================================
+
+  const fetchStudentsBySection =
+    async (sectionName) => {
+
+      if (!selectedClass) return;
 
       try {
 
-        console.log(
-          "CLASS NUMBER => ",
-          classNumber
-        );
-
         const res = await axios.get(
-          `http://localhost:8080/api/students/school/${schoolId}/class/${classNumber}`
+
+          `${BASE_URL}/students/school/${schoolId}/class/${selectedClass.className}`
         );
 
-        console.log(
-          "STUDENTS => ",
-          res.data
-        );
+        const filtered =
+          res.data.filter(
+            (s) =>
+              s.section
+                ?.toLowerCase()
+                ===
+              sectionName
+                ?.toLowerCase()
+          );
 
-        setStudents(res.data);
+        const mappedStudents =
+          filtered.map((s) => ({
+
+            id: s.id,
+
+            studentId:
+              s.studentId,
+
+            studName:
+              s.studName,
+
+            studLastName:
+              s.studLastName,
+
+            fullName:
+              s.fullName,
+
+            email:
+              s.email,
+
+            section:
+              s.section,
+
+            profileImage:
+              s.profileImage
+                ? `${BASE_URL}/students/image/get/${s.id}`
+                : null,
+
+            studRollNo:
+              s.studRollNo,
+          }));
+
+        setStudents(mappedStudents);
+
+        // DEFAULT PRESENT
 
         const initial = {};
 
-        res.data.forEach((s) => {
+        mappedStudents.forEach((s) => {
 
           initial[s.id] = "P";
         });
@@ -225,40 +316,81 @@ function StuAttendance() {
 
       } catch (err) {
 
-        console.error(
-          "LOAD STUDENT ERROR => ",
-          err
-        );
+        console.error(err);
 
-        alert("Error loading students");
+        alert("Failed to load students");
       }
-    }
+    };
+
+  // =========================================================
+  // SECTION CHANGE
+  // =========================================================
+
+  const handleSectionChange =
+    async (value) => {
+
+      setSelectedSection(value);
+
+      setStudents([]);
+
+      setAttendance({});
+
+      setTakenInfo(null);
+
+      // TAKE MODE => AUTO LOAD
+      if (
+        value &&
+        mode === "take"
+      ) {
+
+        await fetchStudentsBySection(
+          value
+        );
+      }
+    };
+
+  // =========================================================
+  // CHANGE ATTENDANCE
+  // =========================================================
+
+  const handleChange = (
+    studentId,
+    value
+  ) => {
+
+    setAttendance((prev) => ({
+
+      ...prev,
+
+      [studentId]: value,
+    }));
   };
 
   // =========================================================
   // LOAD ATTENDANCE
   // =========================================================
 
-  const loadAttendanceByDate = async () => {
+  const loadAttendance = async () => {
 
-    if (!date) {
+    if (
+      !attendanceDate ||
+      !selectedSection
+    ) {
 
-      alert("Select Date");
+      alert(
+        "Please select date & section"
+      );
 
       return;
     }
 
-    setLoading(true);
-
     try {
 
-      const res = await axios.get(
-        `http://localhost:8080/api/stu-attendance?schoolId=${schoolId}&classId=${selectedClass}&date=${date}`
-      );
+      setLoading(true);
 
-      console.log(
-        "ATTENDANCE => ",
-        res.data
+      const res = await axios.get(
+
+        `${BASE_URL}/stu-attendance?schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}`
       );
 
       if (
@@ -266,25 +398,42 @@ function StuAttendance() {
         res.data.length === 0
       ) {
 
-        alert("No attendance found");
+        alert(
+          "No attendance found"
+        );
 
         setStudents([]);
 
         return;
       }
 
-      // ================= STUDENTS =================
       const mappedStudents =
         res.data.map((s) => ({
 
           id: s.studentId,
 
-          studName: s.studentName,
+          studentId:
+            s.studentUniqueId,
+
+          studName:
+            s.studentName,
 
           studLastName:
             s.studentLastName,
 
-          email: s.email,
+          fullName:
+            s.fullName,
+
+          email:
+            s.email,
+
+          section:
+            s.section,
+
+          profileImage:
+            s.profileImage
+              ? `${BASE_URL}/students/image/get/${s.studentId}`
+              : null,
 
           studRollNo:
             s.studRollNo,
@@ -292,7 +441,6 @@ function StuAttendance() {
 
       setStudents(mappedStudents);
 
-      // ================= ATT MAP =================
       const attMap = {};
 
       res.data.forEach((s) => {
@@ -303,24 +451,25 @@ function StuAttendance() {
 
       setAttendance(attMap);
 
-      // ================= TAKEN INFO =================
       setTakenInfo({
 
-        name:
-          res.data[0]?.takenByName,
+        takenBy:
+          res.data[0]
+            ?.takenByName,
 
         role:
-          res.data[0]?.takenByRole,
+          res.data[0]
+            ?.takenByRole,
       });
 
     } catch (err) {
 
-      console.error(
-        "ATTENDANCE ERROR => ",
-        err
-      );
+      console.error(err);
 
-      alert("Error loading attendance");
+      alert(
+        err?.response?.data ||
+        "Failed to load attendance"
+      );
 
     } finally {
 
@@ -329,74 +478,99 @@ function StuAttendance() {
   };
 
   // =========================================================
-  // HANDLE CHANGE
-  // =========================================================
-
-  const handleChange = (
-    id,
-    value
-  ) => {
-
-    setAttendance((prev) => ({
-
-      ...prev,
-
-      [id]: value,
-    }));
-  };
-
-  // =========================================================
-  // SAVE
+  // SAVE ATTENDANCE
   // =========================================================
 
   const handleSubmit = async () => {
 
-    if (!date) {
+    if (
+      !attendanceDate ||
+      !selectedSection
+    ) {
 
-      alert("Select Date");
+      alert(
+        "Please select date & section"
+      );
 
       return;
     }
 
-    const payload =
-      students.map((s) => ({
-
-        studentId: s.id,
-
-        status:
-          attendance[s.id],
-      }));
-
-    console.log(
-      "SAVE PAYLOAD => ",
-      payload
-    );
-
-    setLoading(true);
-
     try {
+
+      setLoading(true);
+
+      let alreadyExists = false;
+
+      let existingData = null;
+
+      try {
+
+        const checkRes =
+          await axios.get(
+
+            `${BASE_URL}/stu-attendance?schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}`
+          );
+
+        if (
+          checkRes.data &&
+          checkRes.data.length > 0
+        ) {
+
+          alreadyExists = true;
+
+          existingData =
+            checkRes.data[0];
+        }
+
+      } catch {}
+
+      if (alreadyExists) {
+
+        const confirmUpdate =
+          window.confirm(
+
+            `Attendance already created by ${existingData?.takenByName} (${existingData?.takenByRole}).
+Do you want to update attendance ?`
+          );
+
+        if (!confirmUpdate) {
+
+          setLoading(false);
+
+          return;
+        }
+      }
+
+      const payload =
+        students.map((s) => ({
+
+          studentId: s.id,
+
+          status:
+            attendance[s.id],
+        }));
 
       await axios.post(
 
-        `http://localhost:8080/api/stu-attendance/save?schoolId=${schoolId}&classId=${selectedClass}&date=${date}&takenById=${user.id}&takenByName=${encodeURIComponent(user.name)}&takenByRole=${user.role}`,
+        `${BASE_URL}/stu-attendance/save?schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}&takenById=${user.id}&takenByName=${encodeURIComponent(user.name)}&takenByRole=${user.role}`,
 
         payload
       );
 
       alert(
-        "Attendance Saved"
+
+        alreadyExists
+          ? "Attendance Updated Successfully"
+          : "Attendance Saved Successfully"
       );
 
     } catch (err) {
 
-      console.error(
-        "SAVE ERROR => ",
-        err
-      );
+      console.error(err);
 
       alert(
         err?.response?.data ||
-        "Save Failed"
+        "Attendance save failed"
       );
 
     } finally {
@@ -404,6 +578,72 @@ function StuAttendance() {
       setLoading(false);
     }
   };
+
+  // =========================================================
+  // QR ATTENDANCE
+  // =========================================================
+
+  const handleQrAttendance =
+    async () => {
+
+      if (
+        !qrStudentId ||
+        !attendanceDate ||
+        !selectedSection
+      ) {
+
+        alert(
+          "Enter Student ID + Date + Section"
+        );
+
+        return;
+      }
+
+      try {
+
+        setLoading(true);
+
+        const res =
+          await axios.post(
+
+            `${BASE_URL}/stu-attendance/scan-qr?studentId=${qrStudentId}&schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}&takenById=${user.id}&takenByName=${encodeURIComponent(user.name)}&takenByRole=${user.role}`
+          );
+
+        alert(res.data);
+
+        const found =
+          students.find(
+            (s) =>
+              s.studentId ===
+              qrStudentId
+          );
+
+        if (found) {
+
+          setAttendance((prev) => ({
+
+            ...prev,
+
+            [found.id]: "P",
+          }));
+        }
+
+        setQrStudentId("");
+
+      } catch (err) {
+
+        console.error(err);
+
+        alert(
+          err?.response?.data ||
+          "QR Attendance Failed"
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
+    };
 
   // =========================================================
   // BACK
@@ -413,228 +653,548 @@ function StuAttendance() {
 
     setSelectedClass(null);
 
-    setMode("");
+    setSelectedSection("");
+
+    setSections([]);
 
     setStudents([]);
 
     setAttendance({});
 
-    setDate("");
+    setMode("");
+
+    setAttendanceDate("");
 
     setTakenInfo(null);
+
+    setShowQrBox(false);
   };
+
+  // =========================================================
+  // FILTER STUDENTS
+  // =========================================================
+
+  const filteredStudents =
+    students.filter((s) => {
+
+      const keyword =
+        searchText.toLowerCase();
+
+      return (
+
+        s.fullName
+          ?.toLowerCase()
+          .includes(keyword) ||
+
+        s.studName
+          ?.toLowerCase()
+          .includes(keyword) ||
+
+        s.studentId
+          ?.toLowerCase()
+          .includes(keyword) ||
+
+        String(
+          s.studRollNo
+        ).includes(keyword)
+      );
+    });
+
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
 
-    <div className="min-h-screen p-4 bg-gray-100">
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-4">
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="max-w-7xl mx-auto">
 
-        {/* HEADER */}
-        <div className="bg-blue-600 text-white text-center py-4 text-xl font-bold">
-          Student Attendance
-        </div>
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden">
 
-        {/* CLASS LIST */}
-        {!selectedClass && (
+          {/* HEADER */}
 
-          <div className="p-4 space-y-3">
+          <div className="bg-blue-600 text-white px-4 py-5 sm:px-6 sm:py-6 text-center">
 
-            {classes.length === 0 && (
+            <h1 className="text-2xl sm:text-3xl font-bold">
 
-              <div className="text-center text-red-500">
-                No Classes Found
-              </div>
-            )}
+              Student Attendance
 
-            {classes.map((cls) => (
+            </h1>
 
-              <div
-                key={cls.id}
-                className="bg-gray-50 p-4 rounded-xl shadow flex justify-between items-center"
-              >
+            <p className="text-xs sm:text-sm mt-2">
 
-                <h3 className="font-semibold">
-                  {cls.className}
-                </h3>
+              Logged in as :
+              {" "}
+              {user?.name}
+              {" "}
+              (
+              {user?.role}
+              )
 
-                <div className="flex gap-2">
-
-                  <button
-                    onClick={() =>
-                      loadStudents(
-                        cls.id,
-                        "take"
-                      )
-                    }
-                    className="bg-blue-500 text-white px-3 py-2 rounded flex items-center gap-1"
-                  >
-                    <FaPlus />
-                    Take
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      loadStudents(
-                        cls.id,
-                        "view"
-                      )
-                    }
-                    className="bg-purple-500 text-white px-3 py-2 rounded flex items-center gap-1"
-                  >
-                    <FaEye />
-                    View
-                  </button>
-
-                </div>
-
-              </div>
-            ))}
+            </p>
 
           </div>
-        )}
 
-        {/* ATTENDANCE */}
-        {selectedClass && (
+          {/* CLASS LIST */}
 
-          <div className="p-4">
+          {!selectedClass && (
 
-            <button
-              onClick={goBack}
-              className="mb-4 bg-gray-600 text-white px-4 py-2 rounded"
-            >
-              Back
-            </button>
+            <div className="p-3 sm:p-6 space-y-4">
 
-            <div className="flex gap-2 justify-center mb-4">
+              {classes.length === 0 && (
 
-              <input
-                type="date"
-                className="border p-2 rounded"
-                value={date}
-                onChange={(e) =>
-                  setDate(e.target.value)
-                }
-              />
+                <div className="text-center text-red-500 font-semibold">
 
-              {mode === "view" && (
+                  No Classes Found
 
-                <button
-                  onClick={
-                    loadAttendanceByDate
-                  }
-                  className="bg-purple-600 text-white px-4 rounded"
-                >
-                  Load
-                </button>
+                </div>
               )}
 
-            </div>
-
-            {/* TAKEN INFO */}
-            {takenInfo && (
-
-              <div className="bg-yellow-100 p-2 rounded text-center mb-3">
-
-                Attendance Taken By :
-
-                <b>
-                  {" "}
-                  {takenInfo.name}
-                </b>
-
-                {" "}
-                ({takenInfo.role})
-
-              </div>
-            )}
-
-            <div className="space-y-3">
-
-              {students.map((stu) => (
+              {classes.map((cls) => (
 
                 <div
-                  key={stu.id}
-                  className="bg-gray-50 p-3 rounded flex justify-between items-center"
+                  key={cls.id}
+                  className="bg-gray-50 border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:shadow-lg transition"
                 >
 
                   <div>
 
-                    <p className="font-semibold">
-                      {stu.studName}
-                      {" "}
-                      {stu.studLastName}
-                    </p>
+                    <h2 className="text-lg sm:text-xl font-bold">
 
-                    <p className="text-sm">
-                      {stu.email}
+                      Class :
+                      {" "}
+                      {cls.className}
+
+                    </h2>
+
+                    <p className="text-gray-500 text-sm mt-1">
+
+                      Take or View Attendance
+
                     </p>
 
                   </div>
 
-                  {mode === "take" ? (
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
-                    <select
-                      value={
-                        attendance[stu.id]
-                      }
-                      onChange={(e) =>
-                        handleChange(
-                          stu.id,
-                          e.target.value
+                    <button
+                      onClick={() =>
+                        loadStudents(
+                          cls,
+                          "take"
                         )
                       }
-                      className="border p-2 rounded"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto"
                     >
 
-                      <option value="P">
-                        Present
-                      </option>
+                      <FaPlus />
 
-                      <option value="A">
-                        Absent
-                      </option>
+                      Take
 
-                    </select>
+                    </button>
 
-                  ) : (
+                    <button
+                      onClick={() =>
+                        loadStudents(
+                          cls,
+                          "view"
+                        )
+                      }
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-3 rounded-xl flex items-center justify-center gap-2 w-full sm:w-auto"
+                    >
 
-                    <div>
+                      <FaEye />
 
-                      {attendance[stu.id] ===
-                      "P"
-                        ? "Present"
-                        : "Absent"}
+                      View
 
-                    </div>
+                    </button>
 
-                  )}
+                  </div>
 
                 </div>
               ))}
 
             </div>
+          )}
 
-            {mode === "take" && (
+          {/* ATTENDANCE AREA */}
 
-              <div className="text-center mt-4">
+          {selectedClass && (
 
-                <button
-                  onClick={handleSubmit}
-                  className="bg-blue-600 text-white px-6 py-2 rounded"
-                >
+            <div className="p-3 sm:p-6">
 
-                  {loading
-                    ? "Saving..."
-                    : "Submit"}
+              {/* CLASS INFO */}
 
-                </button>
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-5 flex items-center gap-3">
+
+                <div className="bg-blue-600 text-white p-3 rounded-xl">
+
+                  <FaUsers />
+
+                </div>
+
+                <div>
+
+                  <h2 className="font-bold text-lg sm:text-2xl">
+
+                    Class :
+                    {" "}
+                    {selectedClass.className}
+
+                  </h2>
+
+                  <p className="text-sm text-gray-600 mt-1">
+
+                    {mode === "take"
+                      ? "You are creating attendance for this class"
+                      : "You are viewing attendance"}
+
+                  </p>
+
+                </div>
 
               </div>
-            )}
 
-          </div>
-        )}
+              {/* BACK */}
+
+              <button
+                onClick={goBack}
+                className="bg-gray-700 hover:bg-gray-800 text-white px-5 py-3 rounded-xl flex items-center gap-2 mb-6 text-sm sm:text-base"
+              >
+
+                <FaArrowLeft />
+
+                Back
+
+              </button>
+
+              {/* FILTERS */}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+
+                {/* DATE */}
+
+                <input
+                  type="date"
+                  value={attendanceDate}
+                  onChange={(e) =>
+                    setAttendanceDate(
+                      e.target.value
+                    )
+                  }
+                  className="border p-3 rounded-xl w-full"
+                />
+
+                {/* SECTION */}
+
+                <select
+                  value={selectedSection}
+                  onChange={(e) =>
+                    handleSectionChange(
+                      e.target.value
+                    )
+                  }
+                  className="border p-3 rounded-xl w-full"
+                >
+
+                  <option value="">
+                    Select Section
+                  </option>
+
+                  {sections.map((sec) => (
+
+                    <option
+                      key={sec.id}
+                      value={
+                        sec.sectionName
+                      }
+                    >
+
+                      {sec.sectionName}
+
+                    </option>
+                  ))}
+
+                </select>
+
+                {/* SEARCH */}
+
+                <input
+                  type="text"
+                  placeholder="Search Student"
+                  value={searchText}
+                  onChange={(e) =>
+                    setSearchText(
+                      e.target.value
+                    )
+                  }
+                  className="border p-3 rounded-xl w-full"
+                />
+
+                {/* VIEW LOAD BUTTON */}
+
+                {mode === "view" && (
+
+                  <button
+                    onClick={
+                      loadAttendance
+                    }
+                    className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-4 py-3 w-full"
+                  >
+
+                    Load Attendance
+
+                  </button>
+                )}
+
+                {/* QR BUTTON ONLY IN TAKE MODE */}
+
+                {mode === "take" && (
+
+                  <button
+                    onClick={() =>
+                      setShowQrBox(
+                        !showQrBox
+                      )
+                    }
+                    className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-3 flex items-center justify-center gap-2 w-full"
+                  >
+
+                    <FaQrcode />
+
+                    QR Attendance
+
+                  </button>
+                )}
+
+              </div>
+
+              {/* QR BOX */}
+
+              {mode === "take" &&
+                showQrBox && (
+
+                <div className="bg-green-50 border border-green-300 rounded-2xl p-4 sm:p-5 mb-6">
+
+                  <h3 className="font-bold text-base sm:text-lg mb-3">
+
+                    Scan QR / Enter Student ID
+
+                  </h3>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+
+                    <input
+                      type="text"
+                      placeholder="Enter Student ID"
+                      value={qrStudentId}
+                      onChange={(e) =>
+                        setQrStudentId(
+                          e.target.value
+                        )
+                      }
+                      className="border p-3 rounded-xl flex-1"
+                    />
+
+                    <button
+                      onClick={
+                        handleQrAttendance
+                      }
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl"
+                    >
+
+                      Mark Present
+
+                    </button>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* TAKEN INFO */}
+
+              {takenInfo && (
+
+                <div className="bg-yellow-100 border border-yellow-300 rounded-2xl p-4 mb-5 text-center text-sm sm:text-base">
+
+                  Attendance already created by
+
+                  <b>
+                    {" "}
+                    {takenInfo.takenBy}
+                  </b>
+
+                  {" "}
+                  (
+                  {takenInfo.role}
+                  )
+
+                </div>
+              )}
+
+              {/* STUDENTS */}
+
+              <div className="space-y-4">
+
+                {filteredStudents.map((stu) => (
+
+                  <div
+                    key={stu.id}
+                    className="bg-gray-50 rounded-2xl shadow-sm border p-4 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4"
+                  >
+
+                    {/* LEFT */}
+
+                    <div className="flex items-center gap-4 min-w-0">
+
+                      <img
+                        src={
+                          stu.profileImage ||
+                          "https://via.placeholder.com/100"
+                        }
+                        alt=""
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border shrink-0"
+                      />
+
+                      <div className="min-w-0">
+
+                        <h3 className="font-bold text-base sm:text-lg break-words">
+
+                          {stu.fullName ||
+                            `${stu.studName} ${stu.studLastName}`}
+
+                        </h3>
+
+                        <p className="text-xs sm:text-sm text-gray-600 break-all">
+
+                          Student ID :
+                          {" "}
+                          {stu.studentId}
+
+                        </p>
+
+                        <p className="text-xs sm:text-sm text-gray-600">
+
+                          Roll :
+                          {" "}
+                          {stu.studRollNo}
+
+                        </p>
+
+                        <p className="text-xs sm:text-sm text-gray-600">
+
+                          Section :
+                          {" "}
+                          {stu.section}
+
+                        </p>
+
+                        <p className="text-xs sm:text-sm text-gray-600 break-all">
+
+                          {stu.email}
+
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    {/* RIGHT */}
+
+                    <div className="w-full lg:w-auto">
+
+                      {mode === "take" ? (
+
+                        <select
+                          value={
+                            attendance[
+                              stu.id
+                            ]
+                          }
+                          onChange={(e) =>
+                            handleChange(
+                              stu.id,
+                              e.target.value
+                            )
+                          }
+                          className={`border rounded-xl px-4 py-3 font-bold w-full lg:w-auto ${
+                            attendance[
+                              stu.id
+                            ] === "P"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+
+                          <option value="P">
+                            Present
+                          </option>
+
+                          <option value="A">
+                            Absent
+                          </option>
+
+                        </select>
+
+                      ) : (
+
+                        <div
+                          className={`px-5 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 w-full lg:w-auto ${
+                            attendance[
+                              stu.id
+                            ] === "P"
+                              ? "bg-green-600"
+                              : "bg-red-600"
+                          }`}
+                        >
+
+                          <FaCheckCircle />
+
+                          {attendance[
+                            stu.id
+                          ] === "P"
+                            ? "Present"
+                            : "Absent"}
+
+                        </div>
+                      )}
+
+                    </div>
+
+                  </div>
+                ))}
+
+              </div>
+
+              {/* SAVE */}
+
+              {mode === "take" && (
+
+                <div className="text-center mt-8">
+
+                  <button
+                    onClick={
+                      handleSubmit
+                    }
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto px-8 sm:px-12 py-4 rounded-2xl text-base sm:text-lg font-bold"
+                  >
+
+                    {loading
+                      ? "Saving..."
+                      : "Save Attendance"}
+
+                  </button>
+
+                </div>
+              )}
+
+            </div>
+          )}
+
+        </div>
 
       </div>
 

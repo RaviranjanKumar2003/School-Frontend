@@ -1,160 +1,251 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 export default function TeacherAttendance() {
 
-  const [teachers, setTeachers] = useState([]);
-  const [attendance, setAttendance] = useState({});
-  const [viewData, setViewData] = useState([]);
-  const [date, setDate] = useState("");
-  const [mode, setMode] = useState("take");
-  const [loading, setLoading] = useState(false);
+  // =====================================================
+  // ====================== STATES ========================
+  // =====================================================
 
-  // ================= LOGIN USER =================
-  const hodData = JSON.parse(
-    localStorage.getItem("hodData")
+  const [teachers, setTeachers] =
+    useState([]);
+
+  const [attendance, setAttendance] =
+    useState({});
+
+  const [viewData, setViewData] =
+    useState([]);
+
+  const [date, setDate] = useState(
+    new Date()
+      .toISOString()
+      .split("T")[0]
   );
 
-  const schoolAdminData = JSON.parse(
-    localStorage.getItem("schoolAdminData")
+  const [mode, setMode] =
+    useState("take");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [viewLoading, setViewLoading] =
+    useState(false);
+
+  // =====================================================
+  // ================= LOGIN USER =========================
+  // =====================================================
+
+  const hodDataRaw =
+    localStorage.getItem("hodData");
+
+  const schoolAdminRaw =
+    localStorage.getItem(
+      "schoolAdminData"
+    );
+
+  const hodData = hodDataRaw
+    ? JSON.parse(hodDataRaw)
+    : null;
+
+  const schoolAdminData =
+    schoolAdminRaw
+      ? JSON.parse(schoolAdminRaw)
+      : null;
+
+  const loginUser =
+    hodData || schoolAdminData;
+
+  // =====================================================
+  // ================= SAFE IDS ===========================
+  // =====================================================
+
+  const schoolId = Number(
+
+    loginUser?.school?.id ||
+
+    loginUser?.schoolId ||
+
+    0
   );
 
-  const loginUser = hodData || schoolAdminData;
+  const loginUserId = Number(
+    loginUser?.id || 0
+  );
 
-  const schoolId = loginUser?.schoolId || 1;
+  const loginRole =
+    hodData
+      ? "HOD"
+      : "SCHOOL_ADMIN";
 
-  // ================= LOAD =================
+  // =====================================================
+  // ================= LOAD TEACHERS ======================
+  // =====================================================
+
   useEffect(() => {
-    fetchTeachers();
-  }, []);
 
-  // ================= FETCH TEACHERS =================
+    if (!schoolId) return;
+
+    fetchTeachers();
+
+  }, [schoolId]);
+
+  // =====================================================
+  // ================= FETCH TEACHERS =====================
+  // =====================================================
+
   const fetchTeachers = async () => {
 
     try {
 
-      const res = await axios.get(
-        `http://localhost:8080/api/professors?schoolId=${schoolId}`
-      );
+      setLoading(true);
 
-      const formatted = res.data.map((t) => ({
-        ...t,
+      const res =
+        await axios.get(
 
-        groupedAssignments: groupAssignments(
-          t.assignments || []
-        ),
-      }));
+          `http://localhost:8080/api/professors?schoolId=${schoolId}`
 
-      setTeachers(formatted);
+        );
+
+      setTeachers(res.data || []);
 
       const initial = {};
 
-      formatted.forEach((t) => {
+      (res.data || []).forEach((t) => {
+
         initial[t.id] = "P";
+
       });
 
       setAttendance(initial);
 
     } catch (err) {
 
-      console.error("Teacher fetch error:", err);
+      console.log(
+        "TEACHER FETCH ERROR => ",
+        err
+      );
 
-      alert("Error fetching teachers");
+      alert(
+        "Error fetching teachers"
+      );
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
-  // ================= GROUP =================
-  const groupAssignments = (
-    assignments = []
-  ) => {
+  // =====================================================
+  // ================= CHANGE ATTENDANCE ==================
+  // =====================================================
 
-    const map = {};
-
-    assignments.forEach((a) => {
-
-      if (!map[a.className]) {
-        map[a.className] = [];
-      }
-
-      map[a.className].push(
-        a.subjectName
-      );
-    });
-
-    return Object.entries(map).map(
-      ([cls, subs]) => ({
-        className: cls,
-        subjects: subs,
-      })
-    );
-  };
-
-  // ================= CHANGE =================
   const handleChange = (
-    id,
-    value
+    teacherId,
+    status
   ) => {
 
     setAttendance((prev) => ({
+
       ...prev,
-      [id]: value,
+
+      [teacherId]: status,
     }));
   };
 
-  // ================= SAVE =================
-  const handleSubmit = async () => {
+  // =====================================================
+  // ================= SAVE ATTENDANCE ====================
+  // =====================================================
+
+  const saveAttendance = async (
+    forceUpdate = false
+  ) => {
 
     if (!date) {
-      alert("Select date");
+
+      alert(
+        "Please select date"
+      );
+
       return;
     }
-
-    if (!loginUser?.id) {
-      alert("Login user not found");
-      return;
-    }
-
-    setLoading(true);
 
     try {
 
-      const payload = teachers.map((t) => ({
+      setLoading(true);
 
-        teacherId: Number(t.id),
+      const payload =
+        teachers.map((t) => ({
 
-        status: attendance[t.id],
+          teacherId: Number(
+            t.id
+          ),
 
-        date: date,
+          status:
+            attendance[t.id] || "P",
 
-        // 🔥 LOGIN INFO
-        createdBy: Number(
-          loginUser.id
-        ),
+          attendanceDate:
+            date,
 
-        createdByRole: hodData
-          ? "HOD"
-          : "SCHOOL_ADMIN",
+          createdBy:
+            loginUserId,
 
-        createdByName:
-          loginUser.name ||
-          "Unknown",
-      }));
+          createdByRole:
+            loginRole,
 
-      console.log(
-        "SAVE PAYLOAD => ",
-        payload
-      );
+          createdByName:
+            loginUser?.name ||
+            "Unknown",
 
-      const res = await axios.post(
-        `http://localhost:8080/api/attendance/teacher/save?schoolId=${schoolId}`,
-        payload
-      );
+          updatedBy:
+            loginUserId,
 
-      console.log(res.data);
+          updatedByRole:
+            loginRole,
 
-      alert(
-        "Attendance Saved Successfully"
-      );
+          updatedByName:
+            loginUser?.name ||
+            "Unknown",
+        }));
+
+      const url =
+
+        `http://localhost:8080/api/attendance/teacher/save?schoolId=${schoolId}&forceUpdate=${forceUpdate}`;
+
+      const res =
+        await axios.post(
+          url,
+          payload
+        );
+
+      // UPDATE CONFIRM
+
+      if (
+
+        typeof res.data ===
+          "string" &&
+
+        res.data.includes(
+          "Do you want to update?"
+        )
+
+      ) {
+
+        const confirmUpdate =
+          window.confirm(
+            res.data
+          );
+
+        if (confirmUpdate) {
+
+          await saveAttendance(
+            true
+          );
+        }
+
+        return;
+      }
+
+      alert(res.data);
 
       setMode("view");
 
@@ -162,18 +253,15 @@ export default function TeacherAttendance() {
 
     } catch (err) {
 
-      console.error(
-        "Save error:",
+      console.log(
+        "SAVE ERROR => ",
         err
       );
 
-      console.log(
-        "BACKEND ERROR => ",
-        err?.response?.data
-      );
-
       alert(
+
         err?.response?.data ||
+
         "Error saving attendance"
       );
 
@@ -183,340 +271,1365 @@ export default function TeacherAttendance() {
     }
   };
 
-  // ================= FETCH ATTENDANCE =================
+  // =====================================================
+  // ================= FETCH ATTENDANCE ===================
+  // =====================================================
+
   const fetchAttendance = async () => {
 
     if (!date) {
-      alert("Select date");
+
+      alert(
+        "Please select date"
+      );
+
       return;
     }
 
-    setLoading(true);
-
     try {
 
-      const res = await axios.get(
-        `http://localhost:8080/api/attendance/teacher?schoolId=${schoolId}&date=${date}`
-      );
+      setViewLoading(true);
 
-      const merged = res.data.map((a) => {
+      const url =
 
-        const teacher = teachers.find(
-          (t) =>
-            Number(t.id) ===
-            Number(a.teacherId)
-        );
+        `http://localhost:8080/api/attendance/teacher?schoolId=${schoolId}&attendanceDate=${date}`;
 
-        return {
+      const res =
+        await axios.get(url);
 
-          ...a,
+      const merged =
+        (res.data || []).map((a) => {
 
-          name:
-            teacher?.name ||
-            a.teacherName ||
-            "Unknown",
+          const teacher =
+            teachers.find(
+              (t) =>
+                Number(t.id) ===
+                Number(a.teacherId)
+            );
 
-          email:
-            teacher?.email ||
-            a.email ||
-            "-",
+          return {
 
-          groupedAssignments:
-            teacher?.groupedAssignments ||
-            [],
-        };
-      });
+            ...a,
+
+            name:
+
+              a.teacherName ||
+
+              teacher?.name ||
+
+              "No Name",
+
+            email:
+
+              a.teacherEmail ||
+
+              teacher?.email ||
+
+              "-",
+          };
+        });
 
       setViewData(merged);
 
     } catch (err) {
 
-      console.error(
-        "Fetch error:",
+      console.log(
+        "FETCH ERROR => ",
         err
       );
 
       alert(
+
+        err?.response?.data ||
+
         "Error fetching attendance"
       );
 
     } finally {
 
-      setLoading(false);
+      setViewLoading(false);
     }
   };
 
-  // ================= UI =================
+  // =====================================================
+  // ================= TAKE COUNTS ========================
+  // =====================================================
+
+  const presentCount =
+    Object.values(attendance)
+      .filter(
+        (s) => s === "P"
+      ).length;
+
+  const absentCount =
+    Object.values(attendance)
+      .filter(
+        (s) => s === "A"
+      ).length;
+
+  // =====================================================
+  // ================= VIEW COUNTS ========================
+  // =====================================================
+
+  const viewPresentCount =
+    useMemo(() => {
+
+      return viewData.filter(
+        (v) => v.status === "P"
+      ).length;
+
+    }, [viewData]);
+
+  const viewAbsentCount =
+    useMemo(() => {
+
+      return viewData.filter(
+        (v) => v.status === "A"
+      ).length;
+
+    }, [viewData]);
+
+  // =====================================================
+  // ====================== UI ============================
+  // =====================================================
+
   return (
 
-    <div className="p-3">
+    <div
+      className="
+        min-h-screen
+        bg-gradient-to-br
+        from-slate-100
+        via-blue-50
+        to-purple-100
+        p-2
+        sm:p-4
+      "
+    >
 
-      <div className="max-h-[90vh] bg-white rounded-2xl shadow-lg overflow-auto">
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+          bg-white/90
+          backdrop-blur-xl
+          rounded-[32px]
+          overflow-hidden
+          shadow-2xl
+          border
+          border-white
+        "
+      >
 
-        {/* HEADER */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-4 text-lg font-bold">
-          Teacher Attendance
-        </div>
+        {/* ================================================= */}
+        {/* ===================== HEADER ==================== */}
+        {/* ================================================= */}
 
-        {/* MODE */}
-        <div className="flex justify-center gap-2 p-3 border-b">
+        <div
+          className="
+            bg-gradient-to-r
+            from-blue-700
+            via-indigo-700
+            to-purple-700
+            p-5
+            sm:p-8
+            text-white
+            relative
+            overflow-hidden
+          "
+        >
 
-          <button
-            onClick={() =>
-              setMode("take")
-            }
-            className={`px-4 py-1 rounded-full text-sm ${
-              mode === "take"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            Take
-          </button>
-
-          <button
-            onClick={() =>
-              setMode("view")
-            }
-            className={`px-4 py-1 rounded-full text-sm ${
-              mode === "view"
-                ? "bg-purple-600 text-white"
-                : "bg-gray-200"
-            }`}
-          >
-            View
-          </button>
-
-        </div>
-
-        {/* DATE */}
-        <div className="p-3 flex justify-between items-center">
-
-          <span className="text-sm font-medium">
-            📅 Date
-          </span>
-
-          <input
-            type="date"
-            className="border px-3 py-1 rounded-lg text-sm"
-            value={date}
-            onChange={(e) =>
-              setDate(
-                e.target.value
-              )
-            }
+          <div
+            className="
+              absolute
+              top-0
+              right-0
+              h-52
+              w-52
+              rounded-full
+              bg-white/10
+              blur-3xl
+            "
           />
 
-        </div>
+          <div
+            className="
+              relative
+              flex
+              flex-col
+              xl:flex-row
+              xl:items-center
+              xl:justify-between
+              gap-6
+            "
+          >
 
-        {/* ================= TAKE ================= */}
-        {mode === "take" && (
+            {/* LEFT */}
 
-          <div className="p-3 space-y-3">
+            <div>
 
-            {teachers.map((t, i) => (
-
-              <div
-                key={t.id}
-                className="bg-gray-50 rounded-xl p-3 shadow-sm border"
+              <h1
+                className="
+                  text-2xl
+                  sm:text-4xl
+                  font-black
+                  tracking-tight
+                "
               >
 
-                <div className="flex justify-between items-center">
+                Teacher Attendance
 
-                  <div>
+              </h1>
 
-                    <h3 className="font-semibold text-sm">
-                      {i + 1}. {t.name}
-                    </h3>
+              <p
+                className="
+                  mt-2
+                  text-sm
+                  sm:text-base
+                  text-blue-100
+                "
+              >
 
-                    <p className="text-xs text-gray-500">
-                      {t.email}
-                    </p>
+                Smart attendance management dashboard
 
-                  </div>
+              </p>
 
-                  <select
-                    value={
-                      attendance[t.id]
-                    }
-                    onChange={(e) =>
-                      handleChange(
-                        t.id,
-                        e.target.value
-                      )
-                    }
-                    className={`text-xs px-2 py-1 rounded font-semibold ${
-                      attendance[t.id] ===
-                      "P"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    }`}
-                  >
-                    <option value="P">
-                      Present
-                    </option>
+            </div>
 
-                    <option value="A">
-                      Absent
-                    </option>
+            {/* RIGHT */}
 
-                  </select>
+            <div
+              className="
+                grid
+                grid-cols-3
+                gap-3
+                w-full
+                xl:w-auto
+              "
+            >
+
+              {/* TOTAL */}
+
+              <div
+                className="
+                  bg-white/15
+                  backdrop-blur-xl
+                  rounded-3xl
+                  px-5
+                  py-4
+                  text-center
+                  border
+                  border-white/20
+                "
+              >
+
+                <div
+                  className="
+                    text-2xl
+                    font-black
+                  "
+                >
+
+                  {mode === "take"
+                    ? teachers.length
+                    : viewData.length}
 
                 </div>
 
-                <div className="text-xs mt-2 text-gray-700">
+                <div
+                  className="
+                    text-xs
+                    mt-1
+                    text-blue-100
+                  "
+                >
 
-                  {t.groupedAssignments.map(
-                    (g, idx) => (
-
-                      <div key={idx}>
-                        <b>
-                          {g.className}
-                        </b>
-
-                        {" - "}
-
-                        {g.subjects.join(
-                          ", "
-                        )}
-                      </div>
-                    )
-                  )}
+                  Total
 
                 </div>
 
               </div>
-            ))}
 
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg mt-3"
+              {/* PRESENT */}
+
+              <div
+                className="
+                  bg-green-500/20
+                  rounded-3xl
+                  px-5
+                  py-4
+                  text-center
+                  border
+                  border-green-300/20
+                "
+              >
+
+                <div
+                  className="
+                    text-2xl
+                    font-black
+                  "
+                >
+
+                  {mode === "take"
+                    ? presentCount
+                    : viewPresentCount}
+
+                </div>
+
+                <div
+                  className="
+                    text-xs
+                    mt-1
+                  "
+                >
+
+                  Present
+
+                </div>
+
+              </div>
+
+              {/* ABSENT */}
+
+              <div
+                className="
+                  bg-red-500/20
+                  rounded-3xl
+                  px-5
+                  py-4
+                  text-center
+                  border
+                  border-red-300/20
+                "
+              >
+
+                <div
+                  className="
+                    text-2xl
+                    font-black
+                  "
+                >
+
+                  {mode === "take"
+                    ? absentCount
+                    : viewAbsentCount}
+
+                </div>
+
+                <div
+                  className="
+                    text-xs
+                    mt-1
+                  "
+                >
+
+                  Absent
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ================================================= */}
+        {/* ===================== TOP BAR =================== */}
+        {/* ================================================= */}
+
+        <div
+          className="
+            p-4
+            sm:p-5
+            bg-white
+            border-b
+          "
+        >
+
+          <div
+            className="
+              flex
+              flex-col
+              xl:flex-row
+              xl:items-center
+              xl:justify-between
+              gap-4
+            "
+          >
+
+            {/* MODE */}
+
+            <div
+              className="
+                bg-gray-100
+                rounded-2xl
+                p-1
+                flex
+                w-full
+                sm:w-fit
+              "
             >
-              {loading
-                ? "Saving..."
-                : "Submit Attendance"}
-            </button>
+
+              <button
+                onClick={() =>
+                  setMode("take")
+                }
+                className={`
+                  flex-1
+                  sm:flex-none
+                  px-5
+                  py-3
+                  rounded-2xl
+                  text-sm
+                  font-bold
+                  transition-all
+                  ${
+                    mode === "take"
+                      ? `
+                        bg-gradient-to-r
+                        from-blue-600
+                        to-indigo-600
+                        text-white
+                        shadow-lg
+                      `
+                      : `
+                        text-gray-700
+                      `
+                  }
+                `}
+              >
+
+                Take Attendance
+
+              </button>
+
+              <button
+                onClick={() =>
+                  setMode("view")
+                }
+                className={`
+                  flex-1
+                  sm:flex-none
+                  px-5
+                  py-3
+                  rounded-2xl
+                  text-sm
+                  font-bold
+                  transition-all
+                  ${
+                    mode === "view"
+                      ? `
+                        bg-gradient-to-r
+                        from-purple-600
+                        to-pink-600
+                        text-white
+                        shadow-lg
+                      `
+                      : `
+                        text-gray-700
+                      `
+                  }
+                `}
+              >
+
+                View Attendance
+
+              </button>
+
+            </div>
+
+            {/* RIGHT */}
+
+            <div
+              className="
+                flex
+                flex-col
+                sm:flex-row
+                gap-3
+                w-full
+                xl:w-auto
+              "
+            >
+
+              <input
+                type="date"
+                value={date}
+                onChange={(e) =>
+                  setDate(
+                    e.target.value
+                  )
+                }
+                className="
+                  border
+                  border-gray-300
+                  rounded-2xl
+                  px-4
+                  py-3
+                  text-sm
+                  focus:ring-2
+                  focus:ring-blue-500
+                  outline-none
+                  bg-white
+                "
+              />
+
+              {mode === "view" && (
+
+                <button
+                  onClick={
+                    fetchAttendance
+                  }
+                  disabled={viewLoading}
+                  className="
+                    bg-gradient-to-r
+                    from-blue-600
+                    to-purple-600
+                    text-white
+                    px-6
+                    py-3
+                    rounded-2xl
+                    text-sm
+                    font-bold
+                    shadow-lg
+                    whitespace-nowrap
+                  "
+                >
+
+                  {viewLoading
+                    ? "Loading..."
+                    : "Show Attendance"}
+
+                </button>
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ================================================= */}
+        {/* ================= TAKE MODE ===================== */}
+        {/* ================================================= */}
+
+        {mode === "take" && (
+
+          <div className="p-3 sm:p-5">
+
+            {loading ? (
+
+              <div
+                className="
+                  flex
+                  justify-center
+                  items-center
+                  py-24
+                "
+              >
+
+                <div
+                  className="
+                    h-14
+                    w-14
+                    border-4
+                    border-blue-600
+                    border-t-transparent
+                    rounded-full
+                    animate-spin
+                  "
+                />
+
+              </div>
+
+            ) : (
+
+              <>
+                <div
+                  className="
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-2
+                    gap-4
+                  "
+                >
+
+                  {teachers.map((t, i) => (
+
+                    <div
+                      key={t.id}
+                      className="
+                        bg-white
+                        rounded-[28px]
+                        border
+                        border-gray-200
+                        p-4
+                        sm:p-5
+                        shadow-sm
+                        hover:shadow-xl
+                        transition-all
+                      "
+                    >
+
+                      <div
+                        className="
+                          flex
+                          justify-between
+                          gap-4
+                        "
+                      >
+
+                        {/* LEFT */}
+
+                        <div
+                          className="
+                            flex
+                            gap-3
+                            min-w-0
+                          "
+                        >
+
+                          <div
+                            className="
+                              h-14
+                              w-14
+                              rounded-2xl
+                              bg-gradient-to-r
+                              from-blue-600
+                              to-purple-600
+                              text-white
+                              flex
+                              items-center
+                              justify-center
+                              font-black
+                              shrink-0
+                            "
+                          >
+
+                            {i + 1}
+
+                          </div>
+
+                          <div className="min-w-0">
+
+                            <h2
+                              className="
+                                font-bold
+                                text-gray-800
+                                text-sm
+                                sm:text-base
+                                truncate
+                              "
+                            >
+
+                              {t.name}
+
+                            </h2>
+
+                            <p
+                              className="
+                                text-xs
+                                text-gray-500
+                                mt-1
+                                break-all
+                              "
+                            >
+
+                              {t.email}
+
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                        {/* RIGHT */}
+
+                        <div
+                          className="
+                            flex
+                            flex-col
+                            gap-2
+                          "
+                        >
+
+                          <button
+                            onClick={() =>
+                              handleChange(
+                                t.id,
+                                "P"
+                              )
+                            }
+                            className={`
+                              px-4
+                              py-2
+                              rounded-xl
+                              text-xs
+                              font-bold
+                              transition
+                              ${
+                                attendance[
+                                  t.id
+                                ] === "P"
+                                  ? `
+                                    bg-green-600
+                                    text-white
+                                  `
+                                  : `
+                                    bg-gray-200
+                                    text-gray-700
+                                  `
+                              }
+                            `}
+                          >
+
+                            Present
+
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleChange(
+                                t.id,
+                                "A"
+                              )
+                            }
+                            className={`
+                              px-4
+                              py-2
+                              rounded-xl
+                              text-xs
+                              font-bold
+                              transition
+                              ${
+                                attendance[
+                                  t.id
+                                ] === "A"
+                                  ? `
+                                    bg-red-600
+                                    text-white
+                                  `
+                                  : `
+                                    bg-gray-200
+                                    text-gray-700
+                                  `
+                              }
+                            `}
+                          >
+
+                            Absent
+
+                          </button>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+                  ))}
+
+                </div>
+
+                {/* SUBMIT */}
+
+                <div className="mt-6">
+
+                  <button
+                    onClick={() =>
+                      saveAttendance(
+                        false
+                      )
+                    }
+                    disabled={loading}
+                    className="
+                      w-full
+                      bg-gradient-to-r
+                      from-blue-600
+                      via-purple-600
+                      to-indigo-600
+                      text-white
+                      py-4
+                      rounded-3xl
+                      font-black
+                      text-base
+                      shadow-xl
+                    "
+                  >
+
+                    {loading
+                      ? "Saving Attendance..."
+                      : "Submit Attendance"}
+
+                  </button>
+
+                </div>
+
+              </>
+            )}
 
           </div>
         )}
 
-        {/* ================= VIEW ================= */}
-        {mode === "view" && (
+        {/* ================================================= */}
+        {/* ================= VIEW MODE ===================== */}
+        {/* ================================================= */}
 
-          <div className="p-3">
+        {/* ================================================= */}
+{/* ================= VIEW MODE ===================== */}
+{/* ================================================= */}
 
-            <button
-              onClick={fetchAttendance}
-              disabled={loading}
-              className="w-full bg-purple-600 text-white py-2 rounded-lg mb-3"
+{mode === "view" && (
+
+  <div className="p-3 sm:p-5">
+
+    {/* EMPTY */}
+
+    {viewData.length === 0 &&
+      !viewLoading && (
+
+      <div
+        className="
+          bg-white
+          rounded-3xl
+          border
+          p-12
+          text-center
+          text-gray-500
+        "
+      >
+
+        No Attendance Found
+
+      </div>
+    )}
+
+    {/* LOADING */}
+
+    {viewLoading && (
+
+      <div
+        className="
+          flex
+          justify-center
+          py-20
+        "
+      >
+
+        <div
+          className="
+            h-14
+            w-14
+            border-4
+            border-purple-600
+            border-t-transparent
+            rounded-full
+            animate-spin
+          "
+        />
+
+      </div>
+    )}
+
+    {/* INFO */}
+
+    {viewData.length > 0 &&
+      !viewLoading && (
+
+      <>
+
+        {/* ================= INFO CARD ================= */}
+
+        <div
+          className="
+            bg-gradient-to-r
+            from-blue-50
+            via-indigo-50
+            to-purple-50
+            border
+            border-blue-100
+            rounded-[30px]
+            p-5
+            sm:p-6
+            mb-5
+            shadow-sm
+          "
+        >
+
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              flex-wrap
+              gap-3
+            "
+          >
+
+            <div>
+
+              <h2
+                className="
+                  text-xl
+                  font-black
+                  text-blue-700
+                "
+              >
+
+                Attendance Information
+
+              </h2>
+
+              <p
+                className="
+                  text-sm
+                  text-gray-500
+                  mt-1
+                "
+              >
+
+                Complete attendance audit details
+
+              </p>
+
+            </div>
+
+            <div
+              className="
+                px-4
+                py-2
+                rounded-2xl
+                bg-white
+                border
+                shadow-sm
+                text-sm
+                font-bold
+                text-gray-700
+              "
             >
-              {loading
-                ? "Loading..."
-                : "Get Attendance"}
-            </button>
 
-            {/* 🔥 TAKEN BY */}
-            {viewData.length > 0 && (
+              {viewData[0]?.attendanceDate}
 
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+            </div>
 
-                <div className="text-sm font-semibold text-blue-700">
-                  Attendance Taken By
+          </div>
+
+          {/* ================= DETAILS ================= */}
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              md:grid-cols-2
+              xl:grid-cols-3
+              gap-4
+              mt-6
+            "
+          >
+
+            {/* CREATED BY */}
+
+            <div
+              className="
+                bg-white/80
+                backdrop-blur-xl
+                rounded-3xl
+                p-5
+                border
+                border-blue-100
+                shadow-sm
+              "
+            >
+
+              <div
+                className="
+                  text-xs
+                  uppercase
+                  tracking-wider
+                  text-blue-600
+                  font-bold
+                "
+              >
+
+                Created By
+
+              </div>
+
+              <div
+                className="
+                  mt-3
+                  flex
+                  items-center
+                  gap-3
+                "
+              >
+
+                <div
+                  className="
+                    h-12
+                    w-12
+                    rounded-2xl
+                    bg-gradient-to-r
+                    from-blue-600
+                    to-indigo-600
+                    text-white
+                    flex
+                    items-center
+                    justify-center
+                    font-black
+                    text-lg
+                  "
+                >
+
+                  {viewData[0]
+                    ?.createdByName?.charAt(0)
+                    ?.toUpperCase() || "U"}
+
                 </div>
 
-                <div className="mt-1 flex items-center gap-2">
+                <div>
 
-                  <span className="text-sm text-gray-700">
-                    {
-                      viewData[0]
-                        ?.createdByName
-                    }
-                  </span>
+                  <div
+                    className="
+                      font-black
+                      text-gray-800
+                      text-base
+                    "
+                  >
 
-                  <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
-                    {
-                      viewData[0]
-                        ?.createdByRole
-                    }
-                  </span>
+                    {viewData[0]
+                      ?.createdByName || "-"}
+
+                  </div>
+
+                  <div
+                    className="
+                      text-sm
+                      text-blue-600
+                      font-semibold
+                      mt-1
+                    "
+                  >
+
+                    {viewData[0]
+                      ?.createdByRole || "-"}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* UPDATED BY */}
+            {/* ONLY SHOW IF UPDATED */}
+
+            {viewData[0]?.updatedByName &&
+              viewData[0]?.updatedByName !==
+              viewData[0]?.createdByName && (
+
+              <div
+                className="
+                  bg-white/80
+                  backdrop-blur-xl
+                  rounded-3xl
+                  p-5
+                  border
+                  border-purple-100
+                  shadow-sm
+                "
+              >
+
+                <div
+                  className="
+                    text-xs
+                    uppercase
+                    tracking-wider
+                    text-purple-600
+                    font-bold
+                  "
+                >
+
+                  Updated By
+
+                </div>
+
+                <div
+                  className="
+                    mt-3
+                    flex
+                    items-center
+                    gap-3
+                  "
+                >
+
+                  <div
+                    className="
+                      h-12
+                      w-12
+                      rounded-2xl
+                      bg-gradient-to-r
+                      from-purple-600
+                      to-pink-600
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      font-black
+                      text-lg
+                    "
+                  >
+
+                    {viewData[0]
+                      ?.updatedByName?.charAt(0)
+                      ?.toUpperCase() || "U"}
+
+                  </div>
+
+                  <div>
+
+                    <div
+                      className="
+                        font-black
+                        text-gray-800
+                        text-base
+                      "
+                    >
+
+                      {viewData[0]
+                        ?.updatedByName || "-"}
+
+                    </div>
+
+                    <div
+                      className="
+                        text-sm
+                        text-purple-600
+                        font-semibold
+                        mt-1
+                      "
+                    >
+
+                      {viewData[0]
+                        ?.updatedByRole || "-"}
+
+                    </div>
+
+                  </div>
 
                 </div>
 
               </div>
             )}
 
-            {/* EMPTY */}
-            {viewData.length === 0 &&
-              !loading && (
+            {/* DATE */}
 
-              <p className="text-center text-gray-500 text-sm">
-                No data found
-              </p>
-            )}
-
-            {/* LIST */}
-            {viewData.map((a, i) => (
+            <div
+              className="
+                bg-white/80
+                backdrop-blur-xl
+                rounded-3xl
+                p-5
+                border
+                border-green-100
+                shadow-sm
+              "
+            >
 
               <div
-                key={i}
-                className="border rounded-xl p-3 mb-2 bg-white shadow-sm"
+                className="
+                  text-xs
+                  uppercase
+                  tracking-wider
+                  text-green-600
+                  font-bold
+                "
               >
 
-                <div className="flex justify-between items-center">
+                Attendance Date
 
-                  <div>
+              </div>
 
-                    <h3 className="font-semibold text-sm">
+              <div
+                className="
+                  mt-4
+                  text-2xl
+                  font-black
+                  text-gray-800
+                "
+              >
+
+                {viewData[0]
+                  ?.attendanceDate || "-"}
+
+              </div>
+
+              <div
+                className="
+                  text-sm
+                  text-gray-500
+                  mt-1
+                "
+              >
+
+                Official attendance record
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ================= LIST ================= */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-2
+            gap-4
+          "
+        >
+
+          {viewData.map((a, i) => (
+
+            <div
+              key={i}
+              className="
+                bg-white
+                border
+                border-gray-200
+                rounded-[30px]
+                p-5
+                shadow-sm
+                hover:shadow-xl
+                transition-all
+                duration-300
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  justify-between
+                  items-start
+                  gap-4
+                "
+              >
+
+                {/* LEFT */}
+
+                <div
+                  className="
+                    flex
+                    gap-3
+                    min-w-0
+                  "
+                >
+
+                  <div
+                    className="
+                      h-14
+                      w-14
+                      rounded-2xl
+                      bg-gradient-to-r
+                      from-purple-600
+                      to-pink-600
+                      text-white
+                      flex
+                      items-center
+                      justify-center
+                      font-black
+                      shrink-0
+                    "
+                  >
+
+                    {i + 1}
+
+                  </div>
+
+                  <div className="min-w-0">
+
+                    <h3
+                      className="
+                        font-black
+                        text-gray-800
+                        text-base
+                        truncate
+                      "
+                    >
+
                       {a.name}
+
                     </h3>
 
-                    <p className="text-xs text-gray-500">
+                    <p
+                      className="
+                        text-xs
+                        text-gray-500
+                        mt-1
+                        break-all
+                      "
+                    >
+
                       {a.email}
+
                     </p>
 
                   </div>
 
+                </div>
+
+                {/* STATUS */}
+
+                <div>
+
                   <span
-                    className={`text-xs px-2 py-1 rounded font-semibold ${
-                      a.status === "P"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
+                    className={`
+                      px-4
+                      py-2
+                      rounded-2xl
+                      text-xs
+                      font-black
+                      shadow-sm
+                      ${
+                        a.status === "P"
+                          ? `
+                            bg-green-100
+                            text-green-700
+                          `
+                          : `
+                            bg-red-100
+                            text-red-700
+                          `
+                      }
+                    `}
                   >
+
                     {a.status === "P"
                       ? "Present"
                       : "Absent"}
+
                   </span>
 
                 </div>
 
-                <div className="text-xs mt-2 text-gray-700">
-
-                  {a.groupedAssignments.map(
-                    (g, idx) => (
-
-                      <div key={idx}>
-                        <b>
-                          {g.className}
-                        </b>
-
-                        {" - "}
-
-                        {g.subjects.join(
-                          ", "
-                        )}
-                      </div>
-                    )
-                  )}
-
-                </div>
-
               </div>
-            ))}
 
-          </div>
-        )}
+            </div>
+          ))}
+
+        </div>
+
+      </>
+    )}
+
+  </div>
+)}
 
       </div>
 

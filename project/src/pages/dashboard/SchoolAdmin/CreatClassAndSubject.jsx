@@ -45,9 +45,6 @@ function CreatClassAndSubject() {
   const [newClassName, setNewClassName] =
     useState("");
 
-  const [newClassNumber, setNewClassNumber] =
-    useState("");
-
   // ================= SUBJECT =================
   const [openSubjectDialog, setOpenSubjectDialog] =
     useState(false);
@@ -139,8 +136,7 @@ function CreatClassAndSubject() {
   const handleAddClass = async () => {
 
     if (
-      !newClassName.trim() ||
-      !newClassNumber
+      !newClassName.trim()
     ) return;
 
     try {
@@ -149,7 +145,6 @@ function CreatClassAndSubject() {
         `${BASE_URL}/classes/${schoolId}`,
         {
           className: newClassName,
-          classNumber: Number(newClassNumber),
         }
       );
 
@@ -731,16 +726,6 @@ function CreatClassAndSubject() {
                 setNewClassName(e.target.value)
               }
             />
-
-            <Input
-              type="number"
-              label="Class Number"
-              value={newClassNumber}
-              onChange={(e) =>
-                setNewClassNumber(e.target.value)
-              }
-            />
-
           </div>
 
         </DialogBody>

@@ -42,6 +42,7 @@ export function Sidenav({ brandImg, routes }) {
 
   // ================= SIDENAV TYPES =================
   const sidenavTypes = {
+
     dark:
       "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900",
 
@@ -58,17 +59,25 @@ export function Sidenav({ brandImg, routes }) {
     const role =
       localStorage.getItem("userRole") || "student";
 
+    // 🔥 FIX
     const userId =
-      localStorage.getItem("userId");
+      localStorage.getItem("userId") ||
+      localStorage.getItem("schoolAdminId");
 
     setUserRole(role.toUpperCase());
 
     let data = null;
 
     const getParsed = (key) => {
+
       try {
-        return JSON.parse(localStorage.getItem(key));
+
+        return JSON.parse(
+          localStorage.getItem(key)
+        );
+
       } catch {
+
         return null;
       }
     };
@@ -76,79 +85,141 @@ export function Sidenav({ brandImg, routes }) {
     // ================= HOD =================
     if (role.toLowerCase() === "hod") {
 
-      const hodData = getParsed("hodData");
+      const hodData =
+        getParsed("hodData");
 
       data = Array.isArray(hodData)
-        ? hodData.find(h => String(h.id) === String(userId))
+        ? hodData.find(
+            (h) =>
+              String(h.id) ===
+              String(userId)
+          )
         : hodData;
 
       if (data?.id) {
+
         setProfileImage(
+
           `http://localhost:8080/api/hods/image/get/${data.id}`
+
         );
       }
     }
 
     // ================= PROFESSOR =================
-    else if (role.toLowerCase() === "professor") {
+    else if (
+      role.toLowerCase() ===
+      "professor"
+    ) {
 
-      const professorData = getParsed("professorData");
+      const professorData =
+        getParsed("professorData");
 
-      data = Array.isArray(professorData)
-        ? professorData.find(p => String(p.id) === String(userId))
+      data = Array.isArray(
+        professorData
+      )
+        ? professorData.find(
+            (p) =>
+              String(p.id) ===
+              String(userId)
+          )
         : professorData;
 
       if (data?.id) {
+
         setProfileImage(
+
           `http://localhost:8080/api/professors/image/get/${data.id}`
+
         );
       }
     }
 
     // ================= STUDENT =================
-    else if (role.toLowerCase() === "student") {
+    else if (
+      role.toLowerCase() ===
+      "student"
+    ) {
 
-      const studentData = getParsed("studentData");
+      const studentData =
+        getParsed("studentData");
 
-      data = Array.isArray(studentData)
-        ? studentData.find(s => String(s.id) === String(userId))
+      data = Array.isArray(
+        studentData
+      )
+        ? studentData.find(
+            (s) =>
+              String(s.id) ===
+              String(userId)
+          )
         : studentData;
 
       if (data?.id) {
+
         setProfileImage(
+
           `http://localhost:8080/api/students/image/get/${data.id}`
+
         );
       }
     }
 
-        // ================= SUPER ADMIN =================
-else if (role.toLowerCase() === "superadmin") {
+    // ================= SUPER ADMIN =================
+    else if (
+      role.toLowerCase() ===
+      "superadmin"
+    ) {
 
-  const adminData = getParsed("adminData");
+      const adminData =
+        getParsed("adminData");
 
-  data = Array.isArray(adminData)
-    ? adminData.find(a => String(a.id) === String(userId))
-    : adminData;
+      data = Array.isArray(
+        adminData
+      )
+        ? adminData.find(
+            (a) =>
+              String(a.id) ===
+              String(userId)
+          )
+        : adminData;
 
-  if (data?.id) {
-    setProfileImage("/img/logo-ct.png");
-  }
-}
+      if (data?.id) {
 
+        setProfileImage(
+          "/img/logo-ct.png"
+        );
+      }
+    }
 
-// ================= SCHOOL ADMIN =================
-else if (role.toLowerCase() === "schooladmin") {
+    // ================= SCHOOL ADMIN =================
+    else if (
+      role.toLowerCase() ===
+      "schooladmin"
+    ) {
 
-  const schoolAdminData = getParsed("schoolAdminData");
+      const schoolAdminData =
+        getParsed("schoolAdminData");
 
-  data = Array.isArray(schoolAdminData)
-    ? schoolAdminData.find(a => String(a.id) === String(userId))
-    : schoolAdminData;
+      data = Array.isArray(
+        schoolAdminData
+      )
+        ? schoolAdminData.find(
+            (a) =>
+              String(a.id) ===
+              String(userId)
+          )
+        : schoolAdminData;
 
-  if (data?.id) {
-    setProfileImage("/img/school-admin.png"); // optional
-  }
-}
+      // 🔥 IMPORTANT FIX
+      if (data?.id) {
+
+        setProfileImage(
+
+          `http://localhost:8080/api/school-admin/image/get/${data.id}`
+
+        );
+      }
+    }
 
     setUserData(data || null);
 
@@ -158,46 +229,72 @@ else if (role.toLowerCase() === "schooladmin") {
   useEffect(() => {
 
     if (openSidenav) {
-      document.body.style.overflow = "hidden";
+
+      document.body.style.overflow =
+        "hidden";
+
     } else {
-      document.body.style.overflow = "auto";
+
+      document.body.style.overflow =
+        "auto";
     }
 
   }, [openSidenav]);
 
   const closeSidebar = () => {
-    setOpenSidenav(dispatch, false);
+
+    setOpenSidenav(
+      dispatch,
+      false
+    );
   };
 
   return (
     <>
       {/* ================= MOBILE BACKDROP ================= */}
       {openSidenav && (
+
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden"
+          className="
+            fixed
+            inset-0
+            bg-black/50
+            backdrop-blur-sm
+            z-40
+            xl:hidden
+          "
           onClick={closeSidebar}
         />
+
       )}
 
       {/* ================= SIDEBAR ================= */}
       <aside
         className={`
           ${sidenavTypes[sidenavType]}
+
           ${
             openSidenav
               ? "translate-x-0"
               : "-translate-x-80"
           }
 
-          fixed top-0 left-0 z-50
-          my-4 ml-4
+          fixed
+          top-0
+          left-0
+          z-50
+          my-4
+          ml-4
           h-[calc(100vh-32px)]
           w-72
           rounded-3xl
-          transition-all duration-300
+          transition-all
+          duration-300
           xl:translate-x-0
-          border border-blue-gray-100
-          flex flex-col
+          border
+          border-blue-gray-100
+          flex
+          flex-col
           overflow-hidden
         `}
       >
@@ -220,35 +317,46 @@ else if (role.toLowerCase() === "schooladmin") {
             size="sm"
             ripple={false}
             className="
-              absolute right-2 top-2
-              grid xl:hidden text-white
+              absolute
+              right-2
+              top-2
+              grid
+              xl:hidden
+              text-white
             "
             onClick={closeSidebar}
           >
+
             <XMarkIcon
               strokeWidth={2.5}
               className="h-6 w-6"
             />
+
           </IconButton>
 
           <div className="flex flex-col items-center text-center">
 
+            {/* ================= PROFILE IMAGE ================= */}
             <Avatar
               src={profileImage}
               alt="profile"
               size="xxl"
               className="
-                border-4 border-white
+                border-4
+                border-white
                 shadow-2xl
                 object-cover
               "
               onError={(e) => {
+
+                e.target.onerror = null;
+
                 e.target.src =
                   "/img/logo-ct.png";
               }}
             />
 
-            {/* SCHOOL NAME (FIXED LOGIC SAFE) */}
+            {/* ================= SCHOOL NAME ================= */}
             <Typography
               variant="h5"
               className="
@@ -258,26 +366,38 @@ else if (role.toLowerCase() === "schooladmin") {
                 text-white
               "
             >
+
               {
-                userRole?.toLowerCase() === "superadmin"
-                ? "System Administration"
-                : userData?.school?.schoolName ||
-                userData?.schoolName ||
-                "School Dashboard"
+                userRole?.toLowerCase() ===
+                "superadmin"
+
+                  ? "System Administration"
+
+                  : userData?.school
+                      ?.schoolName ||
+
+                    userData?.schoolName ||
+
+                    "School Dashboard"
               }
+
             </Typography>
 
-            {/* ROLE */}
+            {/* ================= ROLE ================= */}
             <div
               className="
                 mt-3
                 bg-white/20
-                px-4 py-1
+                px-4
+                py-1
                 rounded-full
-                flex items-center gap-2
+                flex
+                items-center
+                gap-2
                 backdrop-blur-md
               "
             >
+
               <AcademicCapIcon className="h-4 w-4" />
 
               <Typography
@@ -288,11 +408,14 @@ else if (role.toLowerCase() === "schooladmin") {
                   tracking-widest
                 "
               >
+
                 {userRole}
+
               </Typography>
+
             </div>
 
-            {/* USER NAME */}
+            {/* ================= USER NAME ================= */}
             <Typography
               variant="small"
               className="
@@ -302,13 +425,27 @@ else if (role.toLowerCase() === "schooladmin") {
                 text-base
               "
             >
+
               {
                 userData?.name ||
-                userData?.studName + " " + userData?.studLastName ||
+
+                userData?.studName +
+                  " " +
+                  userData?.studLastName ||
+
                 userData?.fullName ||
-                `${userData?.firstName || ""} ${userData?.lastName || ""}` ||
+
+                `${
+                  userData?.firstName ||
+                  ""
+                } ${
+                  userData?.lastName ||
+                  ""
+                }` ||
+
                 "User"
               }
+
             </Typography>
 
             <Typography
@@ -321,7 +458,9 @@ else if (role.toLowerCase() === "schooladmin") {
                 mt-1
               "
             >
+
               Dashboard Panel
+
             </Typography>
 
           </div>
@@ -329,72 +468,162 @@ else if (role.toLowerCase() === "schooladmin") {
         </div>
 
         {/* ================= MENU ================= */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
+        <div
+          className="
+            flex-1
+            overflow-y-auto
+            px-3
+            py-4
+            custom-scrollbar
+          "
+        >
 
-          {routes.map(({ layout, title, pages }, key) => (
-            <ul key={key} className="mb-5 flex flex-col gap-1">
+          {routes.map(
+            (
+              {
+                layout,
+                title,
+                pages,
+              },
+              key
+            ) => (
 
-              {title && (
-                <li className="mx-3.5 mt-3 mb-2">
-                  <Typography
-                    variant="small"
-                    color={sidenavType === "dark" ? "white" : "blue-gray"}
+              <ul
+                key={key}
+                className="
+                  mb-5
+                  flex
+                  flex-col
+                  gap-1
+                "
+              >
+
+                {title && (
+
+                  <li
                     className="
-                      font-black
-                      uppercase
-                      opacity-60
-                      tracking-widest
-                      text-[11px]
+                      mx-3.5
+                      mt-3
+                      mb-2
                     "
                   >
-                    {title}
-                  </Typography>
-                </li>
-              )}
 
-              {pages.map(({ icon, name, path }) => (
-                <li key={name}>
-                  <NavLink
-                    to={`/${layout}${path}`}
-                    onClick={closeSidebar}
-                  >
-                    {({ isActive }) => (
-                      <Button
-                        variant={isActive ? "gradient" : "text"}
-                        color={
-                          isActive
-                            ? sidenavColor || "blue"
-                            : sidenavType === "dark"
-                            ? "white"
-                            : "blue-gray"
-                        }
-                        className={`
-                          flex items-center gap-4
-                          px-4 py-3
-                          capitalize
-                          rounded-2xl
-                          transition-all duration-300
-                          ${
-                            isActive
-                              ? "shadow-lg scale-[1.02]"
-                              : "hover:bg-blue-gray-50"
-                          }
-                        `}
-                        fullWidth
+                    <Typography
+                      variant="small"
+                      color={
+                        sidenavType ===
+                        "dark"
+                          ? "white"
+                          : "blue-gray"
+                      }
+                      className="
+                        font-black
+                        uppercase
+                        opacity-60
+                        tracking-widest
+                        text-[11px]
+                      "
+                    >
+
+                      {title}
+
+                    </Typography>
+
+                  </li>
+
+                )}
+
+                {pages.map(
+                  ({
+                    icon,
+                    name,
+                    path,
+                  }) => (
+
+                    <li key={name}>
+
+                      <NavLink
+                        to={`/${layout}${path}`}
+                        onClick={closeSidebar}
                       >
-                        <div className="text-lg">{icon}</div>
 
-                        <Typography className="font-semibold text-sm capitalize">
-                          {name}
-                        </Typography>
-                      </Button>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
+                        {({
+                          isActive,
+                        }) => (
 
-            </ul>
-          ))}
+                          <Button
+                            variant={
+                              isActive
+                                ? "gradient"
+                                : "text"
+                            }
+                            color={
+                              isActive
+                                ? sidenavColor ||
+                                  "blue"
+                                : sidenavType ===
+                                  "dark"
+                                ? "white"
+                                : "blue-gray"
+                            }
+                            className={`
+                              flex
+                              items-center
+                              gap-4
+                              px-4
+                              py-3
+                              capitalize
+                              rounded-2xl
+                              transition-all
+                              duration-300
+
+                              ${
+                                isActive
+                                  ? `
+                                    shadow-lg
+                                    scale-[1.02]
+                                  `
+                                  : `
+                                    hover:bg-blue-gray-50
+                                  `
+                              }
+                            `}
+                            fullWidth
+                          >
+
+                            <div className="text-lg">
+
+                              {icon}
+
+                            </div>
+
+                            <Typography
+                              className="
+                                font-semibold
+                                text-sm
+                                capitalize
+                              "
+                            >
+
+                              {name}
+
+                            </Typography>
+
+                          </Button>
+
+                        )}
+
+                      </NavLink>
+
+                    </li>
+
+                  )
+                )}
+
+              </ul>
+
+            )
+          )}
 
         </div>
 
@@ -402,15 +631,27 @@ else if (role.toLowerCase() === "schooladmin") {
 
       {/* ================= SCROLLBAR ================= */}
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
+
           background: #94a3b8;
+
           border-radius: 20px;
         }
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+
           background: #64748b;
         }
+
       `}</style>
     </>
   );
@@ -422,7 +663,9 @@ Sidenav.defaultProps = {
 
 Sidenav.propTypes = {
   brandImg: PropTypes.string,
-  routes: PropTypes.arrayOf(PropTypes.object).isRequired,
+  routes: PropTypes.arrayOf(
+    PropTypes.object
+  ).isRequired,
 };
 
 export default Sidenav;

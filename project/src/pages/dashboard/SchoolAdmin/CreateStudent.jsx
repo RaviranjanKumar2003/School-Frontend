@@ -1004,9 +1004,11 @@ export default function CreateStudent() {
   const adminData =
 JSON.parse(localStorage.getItem("schoolAdminData")) || {};
 
-const schoolId =
+const schoolId = Number(
   adminData?.schoolId ||
-  adminData?.school?.id;
+  adminData?.school?.id ||
+  0
+);
 
 console.log("FULL ADMIN DATA :", adminData);  
 
@@ -1290,7 +1292,30 @@ const handleClassChange = async (e) => {
         }
       );
 
-      setCredentials(res.data);
+      setCredentials({
+
+  studentId:
+    res.data.studentId ||
+
+    "",
+
+  username:
+    res.data.generatedUsername ||
+    res.data.username ||
+
+    "",
+
+  password:
+    res.data.generatedPassword ||
+    res.data.password ||
+
+    "",
+
+  studRollNo:
+    res.data.studRollNo ||
+
+    ""
+});
 
 setForm((prev) => ({
 
@@ -2065,34 +2090,31 @@ console.log("ERROR MESSAGE :", err.response?.data?.message);
 
               <div className="space-y-3 text-gray-700">
 
-                <p>
-                  <strong>Student ID:</strong>
-                  {" "}
-                  {credentials.studentId}
-                </p>
+  <p>
+    <strong>Student ID:</strong>
+    {" "}
+    {credentials.studentId}
+  </p>
 
-                <p>
-  <strong>Username:</strong>
-  {" "}
-  {
-    credentials.generatedUsername ||
-    credentials.username
-  }
-</p>
+  <p>
+    <strong>Username:</strong>
+    {" "}
+    {credentials.username}
+  </p>
 
-<p>
-  <strong>Password:</strong>
-  {" "}
-  {credentials.generatedPassword}
-</p>
+  <p>
+    <strong>Password:</strong>
+    {" "}
+    {credentials.password}
+  </p>
 
-<p>
-  <strong>Roll No:</strong>
-  {" "}
-  {credentials.studRollNo}
-</p>
+  <p>
+    <strong>Roll No:</strong>
+    {" "}
+    {credentials.studRollNo}
+  </p>
 
-              </div>
+</div>
 
               <button
                 onClick={() => setShowPopup(false)}

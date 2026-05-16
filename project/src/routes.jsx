@@ -7,6 +7,9 @@ import {
   RectangleStackIcon,
   EnvelopeIcon,
   PencilIcon,
+  ClipboardDocumentCheckIcon ,
+  CalendarDaysIcon ,
+
 } from "@heroicons/react/24/solid";
 import { lazy, Suspense } from "react";
 
@@ -94,9 +97,9 @@ const ArchivedStudents = lazy(() =>
 const StudentFees = lazy(() =>
   import("@/pages/dashboard/hod/StudentFees")
 );
-const HODAttendance = lazy(() =>
-  import("@/pages/dashboard/hod/Attendance")
-);
+// const HODAttendance = lazy(() =>
+//   import("@/pages/dashboard/hod/Attendance")
+// );
 
 /* ================= PROFESSOR ================= */
 
@@ -193,7 +196,7 @@ const icon = {
   className: "w-5 h-5 text-inherit",
 };
 
-//======================================== COMMEN IMPORT
+//========================================================== COMMEN IMPORT
 
 const Teachers = lazy(() =>
   import("@/pages/dashboard/shared/Teachers")
@@ -201,6 +204,10 @@ const Teachers = lazy(() =>
 
 const Students = lazy(() =>
   import("@/pages/dashboard/shared/Students")
+);
+
+const Attendance = lazy(() =>
+  import("@/pages/dashboard/shared/Attendance")
 );
 
 const LoadingSpinner = () => (
@@ -297,11 +304,11 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><StudentFees /></Suspense>,
       },
       {
-        icon: <TableCellsIcon {...icon} />,
+        icon: <CalendarDaysIcon {...icon} />,
         name: "Attendance",
         path: "/hod/attendance",
-        element: <Suspense fallback={<LoadingSpinner />}><HODAttendance /></Suspense>,
-      },
+        element: <Suspense fallback={<LoadingSpinner />}><Attendance /></Suspense>,
+      }
     ],
   },
 
@@ -328,10 +335,14 @@ export const routes = [
         element: <Suspense fallback={<LoadingSpinner />}><ProfessorNotifications /></Suspense>,
       },
       {
-        icon: <PencilIcon {...icon} />,
-        name: "Class Attendance",
+        icon: <CalendarDaysIcon {...icon} />,
+        name: "Attendance",
         path: "/professor/attendance",
-        element: <Suspense fallback={<LoadingSpinner />}><AttendancePage /></Suspense>,
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Attendance />
+          </Suspense>
+        ),
       },
       {
         icon: <PencilIcon {...icon} />,
@@ -627,6 +638,17 @@ export const routes = [
         <Suspense fallback={<LoadingSpinner />}>
           <Students />
         </Suspense>,
+      },
+
+      {
+        icon: <CalendarDaysIcon {...icon} />,
+        name: "Attendance",
+        path: "/schooladmin/attendance",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Attendance />
+          </Suspense>
+        ),
       },
 
     
