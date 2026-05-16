@@ -1,11 +1,13 @@
 package com.example.stud_erp.service.Implementation;
 
 import com.example.stud_erp.entity.FeeItem;
+import com.example.stud_erp.entity.Student;
 import com.example.stud_erp.entity.StudentFee;
 import com.example.stud_erp.payload.FeeItemDTO;
 import com.example.stud_erp.payload.StudentFeeDTO;
 import com.example.stud_erp.payload.SummaryDTO;
 import com.example.stud_erp.repository.StudentFeeRepository;
+import com.example.stud_erp.repository.StudentRepository;
 import com.example.stud_erp.service.StudentFeeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class StudentFeeServiceImpl implements StudentFeeService {
 
     @Autowired
     private StudentFeeRepository repo;
+
+    @Autowired
+    private StudentRepository studentRepo;
 
     @Override
     public StudentFeeDTO addOrUpdateFee(StudentFeeDTO dto) {
@@ -100,10 +105,22 @@ public class StudentFeeServiceImpl implements StudentFeeService {
         return repo.findAll().stream().map(this::mapToDTO).toList();
     }
 
+
     @Override
-    public List<StudentFeeDTO> getByStudent(String studentId) {
-        return repo.findByStudentId(studentId)
-                .stream().map(this::mapToDTO).toList();
+    public List<StudentFeeDTO> getByStudent(String id) {
+
+        // 🔥 STEP 1: numeric id → student निकालो
+        Student student = studentRepo.findById(Long.parseLong(id))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        // 🔥 STEP 2: उसका real studentId लो
+        String realStudentId = student.getStudentId();
+
+        // 🔥 STEP 3: fees fetch करो
+        return repo.findByStudentId(realStudentId)
+                .stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
     @Override
@@ -196,8 +213,4 @@ public class StudentFeeServiceImpl implements StudentFeeService {
 
         return dto;
     }
-
-
-
-
 }

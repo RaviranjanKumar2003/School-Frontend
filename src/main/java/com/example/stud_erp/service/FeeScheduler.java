@@ -47,7 +47,7 @@ public class FeeScheduler {
             // ✅ FIXED METHOD NAME (yahi tera main error tha)
             emailService.sendFeeReminder(
                     s.getEmail(),
-                    s.getStudName(),
+                    s.getFullName(),
                     fee.getPendingAmount()
             );
         }

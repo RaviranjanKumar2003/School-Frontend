@@ -113,7 +113,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         List<AttendanceDTO> students = session.getAttendance().stream().map(a -> {
             AttendanceDTO ad = new AttendanceDTO();
             ad.setStudentId(a.getStudent().getId());
-            ad.setStudentName(a.getStudent().getStudName());
+            ad.setStudentName(a.getStudent().getFullName());
             ad.setStatus(a.getStatus());
             return ad;
         }).toList();
@@ -146,7 +146,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             AttendanceDTO s = new AttendanceDTO();
 
             s.setStudentId(a.getStudent().getId());
-            s.setStudentName(a.getStudent().getStudName());
+            s.setStudentName(a.getStudent().getFullName());
             s.setStudRollNo(a.getStudent().getStudRollNo());
             s.setStatus(a.getStatus());
 

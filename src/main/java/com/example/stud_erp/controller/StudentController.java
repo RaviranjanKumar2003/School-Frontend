@@ -2,559 +2,871 @@
 //
 //import com.example.stud_erp.entity.Student;
 //import com.example.stud_erp.payload.LoginRequest;
-//import com.example.stud_erp.payload.StudentDTO;
-//import com.example.stud_erp.service.ImageService;
+//import com.example.stud_erp.payload.LoginResponse;
+//import com.example.stud_erp.payload.StudentDto;
 //import com.example.stud_erp.service.StudentService;
 //
-//import jakarta.servlet.http.HttpServletResponse;
 //import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.core.io.Resource;
+//import org.springframework.core.io.UrlResource;
+//import org.springframework.http.HttpHeaders;
+//import org.springframework.http.MediaType;
 //import org.springframework.http.ResponseEntity;
-//import org.springframework.util.StreamUtils;
 //import org.springframework.web.bind.annotation.*;
+//
 //import org.springframework.web.multipart.MultipartFile;
 //
-//import java.io.File;
-//import java.io.InputStream;
+//import java.io.IOException;
+//import java.nio.file.Files;
+//import java.nio.file.Path;
+//import java.nio.file.Paths;
 //import java.util.List;
-//import java.util.Optional;
-//import java.util.UUID;
 //
 //@RestController
 //@RequestMapping("/api/students")
-//@CrossOrigin(origins = "*")
+//
+//@CrossOrigin(
+//        origins = "*",
+//        allowedHeaders = "*",
+//        methods = {
+//                RequestMethod.GET,
+//                RequestMethod.POST,
+//                RequestMethod.PUT,
+//                RequestMethod.DELETE,
+//                RequestMethod.OPTIONS
+//        }
+//)
+//
 //public class StudentController {
-//
-//    @Value("${project.image}")
-//    private String path;
-//
-//    @Autowired
-//    private ImageService imageService;
 //
 //    @Autowired
 //    private StudentService studentService;
 //
+//    // =========================================================
+//    // CREATE
+//    // =========================================================
 //
+//    @PostMapping(
+//            value = "/add-student",
+//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+//    )
+//    public Student create(
 //
-//// ✅ CREATE STUDENT (FINAL FIXED)
-//@PostMapping("/add-student")
-//public ResponseEntity<?> createStudent(
-//        @ModelAttribute Student student,
-//        @RequestParam(value = "image", required = false) MultipartFile image
-//) {
-//    try {
+//            @RequestPart("student")
+//            Student student,
 //
-//        // ✅ VALIDATION
-//        if (student.getStudName() == null || student.getStudName().isEmpty()) {
-//            return ResponseEntity.badRequest().body("Student Name is required");
-//        }
+//            @RequestPart(
+//                    value = "image",
+//                    required = false
+//            )
+//            MultipartFile image
 //
-//        if (student.getClassNumber() <= 0) {
-//            return ResponseEntity.badRequest().body("Class is required");
-//        }
+//    ) throws IOException {
 //
-//        if (student.getEmail() == null || student.getEmail().isEmpty()) {
-//            return ResponseEntity.badRequest().body("Email required");
-//        }
-//
-//        // ✅ DUPLICATE CHECK (🔥 IMPORTANT)
-//        if (studentService.existsByEmail(student.getEmail())) {
-//            return ResponseEntity.badRequest().body("Email already exists");
-//        }
-//
-//        // ✅ IMAGE UPLOAD
-//        if (image != null && !image.isEmpty()) {
-//            String fileName = imageService.uploadImage(image);
-//            student.setImageUrl(fileName);
-//        }
-//
-//        Student savedStudent = studentService.addStudent(student);
-//
-//        return ResponseEntity.ok(savedStudent);
-//
-//    } catch (Exception e) {
-//        e.printStackTrace();
-//        return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-//    }
-//}
-//
-//
-//// ✅ GET ALL
-//    @GetMapping
-//    public List<StudentDTO> getAllStudents() {
-//        return studentService.findAll();
+//        return studentService.createStudent(
+//                student,
+//                image
+//        );
 //    }
 //
+//    // =========================================================
+//    // UPDATE
+//    // =========================================================
 //
-//// ✅ GET BY STUDENT ID
-//    @GetMapping("/by-studentId/{studentId}")
-//    public ResponseEntity<?> getStudentByStudentId(@PathVariable String studentId) {
+//    @PutMapping(
+//            value = "/update/{id}",
+//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+//    )
+//    public Student update(
 //
-//        Optional<Student> student = studentService.getByStudentId(studentId);
+//            @PathVariable Long id,
 //
-//        return student.map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
+//            @RequestParam String studName,
 //
+//            @RequestParam(required = false)
+//            String studLastName,
 //
+//            @RequestParam String email,
 //
-//// ✅ GET BY DB ID
-//    @GetMapping("/by-id/{id}")
-//    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
+//            @RequestParam String studPhoneNumber,
 //
-//        Optional<Student> student = studentService.getById(id);
+//            @RequestParam Long classNumber,
 //
-//        return student.map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
+//            @RequestParam Long studRollNo,
 //
+//            @RequestPart(
+//                    value = "image",
+//                    required = false
+//            )
+//            MultipartFile image
 //
-//// ✅ GET BY CLASS (🔥 IMPORTANT)
-//    @GetMapping("/class/{classNumber}")
-//    public ResponseEntity<?> getStudentsByClass(@PathVariable int classNumber) {
-//        return ResponseEntity.ok(studentService.getStudentsByClass(classNumber));
-//    }
+//    ) throws IOException {
 //
-//
-//
-//// ✅ UPDATE
-//@PutMapping("/update/{id}")
-//public ResponseEntity<?> updateStudent(
-//        @PathVariable Long id,
-//        @RequestParam String studName,
-//        @RequestParam String email,
-//        @RequestParam String phone,
-//        @RequestParam int classNumber,
-//        @RequestParam Long rollNo,
-//        @RequestParam(required = false) MultipartFile image
-//) {
-//    try {
-//
-//        if (studName == null || studName.isEmpty()) {
-//            return ResponseEntity.badRequest().body("Name required");
-//        }
-//
-//        if (classNumber <= 0) {
-//            return ResponseEntity.badRequest().body("Invalid class number");
-//        }
-//
-//        if (rollNo <= 0) {
-//            return ResponseEntity.badRequest().body("Invalid roll number");
-//        }
-//
-//        Student student = studentService.getById(id)
-//                .orElseThrow(() -> new RuntimeException("Student not found"));
+//        Student student = new Student();
 //
 //        student.setStudName(studName);
+//
+//        student.setStudLastName(
+//                studLastName
+//        );
+//
 //        student.setEmail(email);
-//        student.setStudPhoneNumber(phone);
-//        student.setClassNumber(classNumber);
-//        student.setStudRollNo(rollNo);
 //
-//        // ✅ IMAGE UPDATE
-//        if (image != null && !image.isEmpty()) {
+//        student.setStudPhoneNumber(
+//                studPhoneNumber
+//        );
 //
-//            if (student.getImageUrl() != null) {
-//                imageService.deleteImage(student.getImageUrl());
-//            }
+//        student.setClassNumber(
+//                classNumber
+//        );
 //
-//            String fileName = imageService.uploadImage(image);
-//            student.setImageUrl(fileName);
-//        }
+//        student.setStudRollNo(
+//                studRollNo
+//        );
 //
-//        // 🔥 FINAL FIX HERE
-//        return ResponseEntity.ok(studentService.updateStudent(id, student));
-//
-//    } catch (Exception e) {
-//        e.printStackTrace();
-//        return ResponseEntity.internalServerError().body("Update failed: " + e.getMessage());
+//        return studentService.updateStudent(
+//                id,
+//                student,
+//                image
+//        );
 //    }
-//}
 //
-//    // ===============================
-//    // ✅ DELETE
-//    // ===============================
+//    // =========================================================
+//    // DELETE
+//    // =========================================================
+//
 //    @DeleteMapping("/{id}")
-//    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+//    public String delete(
+//            @PathVariable Long id
+//    ) {
 //
 //        studentService.deleteStudent(id);
 //
-//        return ResponseEntity.ok("Student deleted");
+//        return "Student deleted successfully";
 //    }
 //
+//    // =========================================================
+//    // GET ALL STUDENTS BY SCHOOL
+//    // =========================================================
 //
-//// ✅ LOGIN
+//    @GetMapping("/school/{schoolId}")
+//    public List<StudentDto> getAll(
+//
+//            @PathVariable Long schoolId
+//    ) {
+//
+//        return studentService.getAllStudents(
+//                schoolId
+//        );
+//    }
+//
+//    // =========================================================
+//    // TOTAL COUNT
+//    // =========================================================
+//
+//    @GetMapping("/count/{schoolId}")
+//    public Long getTotalStudents(
+//
+//            @PathVariable Long schoolId
+//    ) {
+//
+//        return studentService.getTotalStudents(
+//                schoolId
+//        );
+//    }
+//
+//    // =========================================================
+//    // CLASS WISE
+//    // =========================================================
+//
+//    @GetMapping("/school/{schoolId}/class/{classNumber}")
+//    public List<StudentDto> getByClass(
+//
+//            @PathVariable Long schoolId,
+//
+//            @PathVariable Long classNumber
+//    ) {
+//
+//        return studentService.getStudentsByClass(
+//                schoolId,
+//                classNumber
+//        );
+//    }
+//
+//    // =========================================================
+//    // GET SINGLE
+//    // =========================================================
+//
+//    @GetMapping("/{id}")
+//    public Student getById(
+//
+//            @PathVariable Long id
+//    ) {
+//
+//        return studentService
+//                .getStudentById(id)
+//
+//                .orElseThrow(() ->
+//                        new RuntimeException(
+//                                "Student not found"
+//                        )
+//                );
+//    }
+//
+//    // =========================================================
+//    // GET BY STUDENT ID
+//    // =========================================================
+//
+//    @GetMapping("/student-id/{studentId}")
+//    public Student getByStudentId(
+//
+//            @PathVariable String studentId
+//    ) {
+//
+//        return studentService
+//                .getByStudentId(studentId)
+//
+//                .orElseThrow(() ->
+//                        new RuntimeException(
+//                                "Student not found"
+//                        )
+//                );
+//    }
+//
+//    // =========================================================
+//    // LOGIN
+//    // =========================================================
+//
 //    @PostMapping("/login")
-//    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+//    public ResponseEntity<?> login(
 //
-//        Student student = studentService.authenticateUser(request);
+//            @RequestBody LoginRequest request
+//    ) {
 //
-//        return ResponseEntity.ok(student);
+//        LoginResponse response =
+//                studentService.authenticateUser(
+//                        request
+//                );
+//
+//        return ResponseEntity.ok(response);
+//    }
+//
+//    // ================= IMAGE GET =================
+//    @GetMapping("/image/get/{id}")
+//    public ResponseEntity<Resource> getImage(
+//            @PathVariable Long id
+//    ) throws IOException {
+//
+//        // ================= STUDENT =================
+//        Student student =
+//                studentService.getById(id);
+//
+//        // ================= IMAGE NULL CHECK =================
+//        if (
+//                student == null ||
+//                        student.getImageUrl() == null
+//        ) {
+//
+//            throw new RuntimeException(
+//                    "Image not found"
+//            );
+//        }
+//
+//        // ================= IMAGE PATH =================
+//        Path path = Paths.get(
+//                "uploads/students/"
+//                        + student.getImageUrl()
+//        );
+//
+//        // ================= FILE CHECK =================
+//        if (!Files.exists(path)) {
+//
+//            throw new RuntimeException(
+//                    "File does not exist : "
+//                            + path
+//            );
+//        }
+//
+//        // ================= RESOURCE =================
+//        Resource resource =
+//                new UrlResource(
+//                        path.toUri()
+//                );
+//
+//        // ================= CONTENT TYPE =================
+//        String contentType =
+//                Files.probeContentType(path);
+//
+//        if (contentType == null) {
+//
+//            contentType =
+//                    "application/octet-stream";
+//        }
+//
+//        // ================= RESPONSE =================
+//        return ResponseEntity.ok()
+//                .contentType(
+//                        MediaType.parseMediaType(
+//                                contentType
+//                        )
+//                )
+//                .header(
+//                        HttpHeaders.CACHE_CONTROL,
+//                        "no-cache, no-store, must-revalidate"
+//                )
+//                .header(
+//                        HttpHeaders.PRAGMA,
+//                        "no-cache"
+//                )
+//                .header(
+//                        HttpHeaders.EXPIRES,
+//                        "0"
+//                )
+//                .body(resource);
 //    }
 //
 //
 //    @GetMapping("/deleted")
-//    public List<StudentDTO> getDeletedStudents() {
-//        return studentService.getDeletedStudents();
+//    public List<StudentDto> getDeleted(@RequestParam Long schoolId) {
+//        return studentService.getDeletedStudents(schoolId);
 //    }
 //
-//// ✅ RESTORE
 //    @PutMapping("/restore/{id}")
-//    public String restoreStudent(@PathVariable Long id) {
+//    public String restore(@PathVariable Long id) {
 //        studentService.restoreStudent(id);
-//        return "Student restored successfully";
+//        return "Restored Successfully";
 //    }
 //
-//// ❌ PERMANENT DELETE
+//
 //    @DeleteMapping("/permanent/{id}")
-//    public String deletePermanently(@PathVariable Long id) {
-//        studentService.deletePermanently(id);
-//        return "Student permanently deleted";
+//    public String permanent(@PathVariable Long id) {
+//        studentService.permanentDelete(id);
+//        return "Deleted Permanently";
 //    }
-//
-////=============================================== IMAGE =================================
-//
-//    @PostMapping("/image/upload/{id}")
-//    public ResponseEntity<?> uploadStudentImage(
-//            @PathVariable Long id,
-//            @RequestParam("image") MultipartFile image
-//    ) {
-//        try {
-//
-//            Student student = studentService.getById(id)
-//                    .orElseThrow(() -> new RuntimeException("Student not found"));
-//
-//            if (student.getImageUrl() != null) {
-//                imageService.deleteImage(student.getImageUrl());
-//            }
-//
-//            String fileName = imageService.uploadImage(image);
-//            student.setImageUrl(fileName);
-//
-//            return ResponseEntity.ok(studentService.addStudent(student));
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.internalServerError().body("Image upload failed");
-//        }
-//    }
-//
-//
-//    @GetMapping("/image/get/{id}")
-//    public void getStudentImage(
-//            @PathVariable Long id,
-//            HttpServletResponse response
-//    ) throws Exception {
-//
-//        Student student = studentService.getById(id)
-//                .orElseThrow(() -> new RuntimeException("Student not found"));
-//
-//        if (student.getImageUrl() == null) {
-//            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-//            return;
-//        }
-//
-//        InputStream is = imageService.getResource(student.getImageUrl());
-//
-//        response.setContentType("image/jpeg");
-//
-//        StreamUtils.copy(is, response.getOutputStream());
-//    }
-//
 //}
 
 
 
-
-
-// upar sahi testing
-
-
-
+//=================================================================================== NEW
 
 package com.example.stud_erp.controller;
 
-import com.example.stud_erp.entity.Student;
 import com.example.stud_erp.payload.LoginRequest;
-import com.example.stud_erp.payload.StudentDTO;
-import com.example.stud_erp.service.ImageService;
+import com.example.stud_erp.payload.LoginResponse;
+import com.example.stud_erp.payload.StudentDto;
 import com.example.stud_erp.service.StudentService;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
+
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.InputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/students")
-@CrossOrigin(origins = "*")
+
+@CrossOrigin(
+        origins = "*",
+        allowedHeaders = "*",
+        methods = {
+                RequestMethod.GET,
+                RequestMethod.POST,
+                RequestMethod.PUT,
+                RequestMethod.DELETE,
+                RequestMethod.OPTIONS
+        }
+)
+
 public class StudentController {
-
-    @Value("${project.image}")
-    private String path;
-
-    @Autowired
-    private ImageService imageService;
 
     @Autowired
     private StudentService studentService;
 
+    // =========================================================
+    // CREATE STUDENT
+    // =========================================================
 
+    @PostMapping(
+            value = "/add-student",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<StudentDto> createStudent(
 
-    // ✅ CREATE STUDENT (FINAL FIXED)
-    @PostMapping("/add-student")
-    public ResponseEntity<?> createStudent(
-            @ModelAttribute Student student,
-            @RequestParam(value = "image", required = false) MultipartFile image
-    ) {
-        try {
+            @RequestPart("student")
+            StudentDto studentDto,
 
-            // ✅ VALIDATION
-            if (student.getStudName() == null || student.getStudName().isEmpty()) {
-                return ResponseEntity.badRequest().body("Student Name is required");
-            }
+            @RequestPart(
+                    value = "image",
+                    required = false
+            )
+            MultipartFile image
 
-            if (student.getClassNumber() <= 0) {
-                return ResponseEntity.badRequest().body("Class is required");
-            }
+    ) throws IOException {
 
-            if (student.getEmail() == null || student.getEmail().isEmpty()) {
-                return ResponseEntity.badRequest().body("Email required");
-            }
+        StudentDto createdStudent =
+                studentService.createStudent(
+                        studentDto,
+                        image
+                );
 
-            // ✅ DUPLICATE CHECK (🔥 IMPORTANT)
-            if (studentService.existsByEmail(student.getEmail())) {
-                return ResponseEntity.badRequest().body("Email already exists");
-            }
-
-            // ✅ IMAGE UPLOAD
-            if (image != null && !image.isEmpty()) {
-                String fileName = imageService.uploadImage(image);
-                student.setImageUrl(fileName);
-            }
-
-            Student savedStudent = studentService.addStudent(student);
-
-            return ResponseEntity.ok(savedStudent);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-        }
+        return ResponseEntity.ok(createdStudent);
     }
 
+    // =========================================================
+    // UPDATE STUDENT
+    // =========================================================
 
-    // ✅ GET ALL
-    @GetMapping
-    public List<StudentDTO> getAllStudents() {
-        return studentService.findAll();
-    }
+    @PutMapping(
+            value = "/update/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<StudentDto> updateStudent(
 
-
-    // ✅ GET BY STUDENT ID
-    @GetMapping("/by-studentId/{studentId}")
-    public ResponseEntity<?> getStudentByStudentId(@PathVariable String studentId) {
-
-        Optional<Student> student = studentService.getByStudentId(studentId);
-
-        return student.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-
-
-    // ✅ GET BY DB ID
-    @GetMapping("/by-id/{id}")
-    public ResponseEntity<?> getStudentById(@PathVariable Long id) {
-
-        Optional<Student> student = studentService.getById(id);
-
-        return student.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-
-    // ✅ GET BY CLASS (🔥 IMPORTANT)
-    @GetMapping("/class/{classNumber}")
-    public ResponseEntity<?> getStudentsByClass(@PathVariable int classNumber) {
-        return ResponseEntity.ok(studentService.getStudentsByClass(classNumber));
-    }
-
-
-
-    // ✅ UPDATE
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateStudent(
             @PathVariable Long id,
-            @RequestParam String studName,
-            @RequestParam String email,
-            @RequestParam String phone,
-            @RequestParam int classNumber,
-            @RequestParam Long rollNo,
-            @RequestParam(required = false) MultipartFile image
-    ) {
-        try {
 
-            if (studName == null || studName.isEmpty()) {
-                return ResponseEntity.badRequest().body("Name required");
-            }
+            @RequestPart("student")
+            StudentDto studentDto,
 
-            if (classNumber <= 0) {
-                return ResponseEntity.badRequest().body("Invalid class number");
-            }
+            @RequestPart(
+                    value = "image",
+                    required = false
+            )
+            MultipartFile image
 
-            if (rollNo <= 0) {
-                return ResponseEntity.badRequest().body("Invalid roll number");
-            }
+    ) throws IOException {
 
-            Student student = studentService.getById(id)
-                    .orElseThrow(() -> new RuntimeException("Student not found"));
+        StudentDto updatedStudent =
+                studentService.updateStudent(
+                        id,
+                        studentDto,
+                        image
+                );
 
-            student.setStudName(studName);
-            student.setEmail(email);
-            student.setStudPhoneNumber(phone);
-            student.setClassNumber(classNumber);
-            student.setStudRollNo(rollNo);
-
-            // ✅ IMAGE UPDATE
-            if (image != null && !image.isEmpty()) {
-
-                if (student.getImageUrl() != null) {
-                    imageService.deleteImage(student.getImageUrl());
-                }
-
-                String fileName = imageService.uploadImage(image);
-                student.setImageUrl(fileName);
-            }
-
-            // 🔥 FINAL FIX HERE
-            return ResponseEntity.ok(studentService.updateStudent(id, student));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Update failed: " + e.getMessage());
-        }
+        return ResponseEntity.ok(updatedStudent);
     }
 
-    // ===============================
-    // ✅ DELETE
-    // ===============================
+    // =========================================================
+    // DELETE STUDENT
+    // =========================================================
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<String> deleteStudent(
+            @PathVariable Long id
+    ) {
 
         studentService.deleteStudent(id);
 
-        return ResponseEntity.ok("Student deleted");
+        return ResponseEntity.ok(
+                "Student deleted successfully"
+        );
     }
 
+    // =========================================================
+    // RESTORE STUDENT
+    // =========================================================
 
-    // ✅ LOGIN
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<String> restoreStudent(
+            @PathVariable Long id
+    ) {
 
-        Student student = studentService.authenticateUser(request);
+        studentService.restoreStudent(id);
+
+        return ResponseEntity.ok(
+                "Student restored successfully"
+        );
+    }
+
+    // =========================================================
+    // PERMANENT DELETE
+    // =========================================================
+
+    @DeleteMapping("/permanent/{id}")
+    public ResponseEntity<String> permanentDelete(
+            @PathVariable Long id
+    ) {
+
+        studentService.permanentDelete(id);
+
+        return ResponseEntity.ok(
+                "Student permanently deleted"
+        );
+    }
+
+    // =========================================================
+    // GET ALL STUDENTS
+    // =========================================================
+
+    @GetMapping("/school/{schoolId}")
+    public ResponseEntity<List<StudentDto>> getAllStudents(
+
+            @PathVariable Long schoolId
+
+    ) {
+
+        List<StudentDto> students =
+                studentService.getAllStudents(
+                        schoolId
+                );
+
+        return ResponseEntity.ok(students);
+    }
+
+    // =========================================================
+    // GET DELETED STUDENTS
+    // =========================================================
+
+    @GetMapping("/deleted/{schoolId}")
+    public ResponseEntity<List<StudentDto>> getDeletedStudents(
+
+            @PathVariable Long schoolId
+
+    ) {
+
+        List<StudentDto> students =
+                studentService.getDeletedStudents(
+                        schoolId
+                );
+
+        return ResponseEntity.ok(students);
+    }
+
+    // =========================================================
+    // GET STUDENTS BY CLASS
+    // =========================================================
+
+    @GetMapping("/school/{schoolId}/class/{className}")
+    public ResponseEntity<List<StudentDto>> getStudentsByClass(
+
+            @PathVariable Long schoolId,
+
+            @PathVariable String className
+
+    ) {
+
+        List<StudentDto> students =
+                studentService.getStudentsByClass(
+                        schoolId,
+                        className
+                );
+
+        return ResponseEntity.ok(students);
+    }
+
+    // =========================================================
+    // GET SINGLE STUDENT
+    // =========================================================
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StudentDto> getStudentById(
+
+            @PathVariable Long id
+
+    ) {
+
+        StudentDto student =
+                studentService.getStudentById(id);
 
         return ResponseEntity.ok(student);
     }
 
+    // =========================================================
+    // GET BY STUDENT ID
+    // =========================================================
 
-    @GetMapping("/deleted")
-    public List<StudentDTO> getDeletedStudents() {
-        return studentService.getDeletedStudents();
-    }
+    @GetMapping("/student-id/{studentId}")
+    public ResponseEntity<StudentDto> getByStudentId(
 
-    // ✅ RESTORE
-    @PutMapping("/restore/{id}")
-    public String restoreStudent(@PathVariable Long id) {
-        studentService.restoreStudent(id);
-        return "Student restored successfully";
-    }
+            @PathVariable String studentId
 
-    // ❌ PERMANENT DELETE
-    @DeleteMapping("/permanent/{id}")
-    public String deletePermanently(@PathVariable Long id) {
-        studentService.deletePermanently(id);
-        return "Student permanently deleted";
-    }
-
-//=============================================== IMAGE =================================
-
-    @PostMapping("/image/upload/{id}")
-    public ResponseEntity<?> uploadStudentImage(
-            @PathVariable Long id,
-            @RequestParam("image") MultipartFile image
     ) {
-        try {
 
-            Student student = studentService.getById(id)
-                    .orElseThrow(() -> new RuntimeException("Student not found"));
+        StudentDto student =
+                studentService.getByStudentId(
+                        studentId
+                );
 
-            if (student.getImageUrl() != null) {
-                imageService.deleteImage(student.getImageUrl());
-            }
-
-            String fileName = imageService.uploadImage(image);
-            student.setImageUrl(fileName);
-
-            return ResponseEntity.ok(studentService.updateStudent(id, student));
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Image upload failed");
-        }
+        return ResponseEntity.ok(student);
     }
+
+    // =========================================================
+    // SEARCH STUDENTS
+    // =========================================================
+
+    @GetMapping("/search")
+    public ResponseEntity<List<StudentDto>> searchStudents(
+
+            @RequestParam Long schoolId,
+
+            @RequestParam String keyword
+
+    ) {
+
+        List<StudentDto> students =
+                studentService.searchStudents(
+                        schoolId,
+                        keyword
+                );
+
+        return ResponseEntity.ok(students);
+    }
+
+    // =========================================================
+    // TOTAL STUDENTS
+    // =========================================================
+
+    @GetMapping("/count/{schoolId}")
+    public ResponseEntity<Long> getTotalStudents(
+
+            @PathVariable Long schoolId
+
+    ) {
+
+        Long total =
+                studentService.getTotalStudents(
+                        schoolId
+                );
+
+        return ResponseEntity.ok(total);
+    }
+
+    // =========================================================
+    // TOTAL ACTIVE STUDENTS
+    // =========================================================
+
+    @GetMapping("/count/active/{schoolId}")
+    public ResponseEntity<Long> getTotalActiveStudents(
+
+            @PathVariable Long schoolId
+
+    ) {
+
+        Long total =
+                studentService.getTotalActiveStudents(
+                        schoolId
+                );
+
+        return ResponseEntity.ok(total);
+    }
+
+    // =========================================================
+    // TOTAL DELETED STUDENTS
+    // =========================================================
+
+    @GetMapping("/count/deleted/{schoolId}")
+    public ResponseEntity<Long> getTotalDeletedStudents(
+
+            @PathVariable Long schoolId
+
+    ) {
+
+        Long total =
+                studentService.getTotalDeletedStudents(
+                        schoolId
+                );
+
+        return ResponseEntity.ok(total);
+    }
+
+    // =========================================================
+    // UPDATE STATUS
+    // =========================================================
+
+    @PutMapping("/status/{studentId}")
+    public ResponseEntity<String> updateStatus(
+
+            @PathVariable Long studentId,
+
+            @RequestParam String status
+
+    ) {
+
+        studentService.updateStudentStatus(
+                studentId,
+                status
+        );
+
+        return ResponseEntity.ok(
+                "Student status updated successfully"
+        );
+    }
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+
+            @RequestBody LoginRequest request
+
+    ) {
+
+        LoginResponse response =
+                studentService.authenticateUser(
+                        request
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // =========================================================
+    // GET PROFILE IMAGE
+    // =========================================================
 
     @GetMapping("/image/get/{id}")
-    public void getStudentImage(
-            @PathVariable Long id,
-            HttpServletResponse response
-    ) throws Exception {
+    public ResponseEntity<Resource> getProfileImage(
 
-        Student student = studentService.getById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+            @PathVariable Long id
 
-        if (student.getImageUrl() == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
+    ) throws IOException {
+
+        StudentDto student =
+                studentService.getStudentById(id);
+
+        if (
+                student == null ||
+                        student.getProfileImage() == null ||
+                        student.getProfileImage().isEmpty()
+        ) {
+
+            return ResponseEntity.notFound().build();
         }
 
-        InputStream is = imageService.getResource(student.getImageUrl());
+        Path path = Paths.get(
+                System.getProperty("user.dir"),
+                "uploads",
+                "students",
+                student.getProfileImage()
+        );
 
-        response.setContentType("image/jpeg");
+        System.out.println("ABSOLUTE PATH = " + path.toAbsolutePath());
 
-        StreamUtils.copy(is, response.getOutputStream());
+        if (!Files.exists(path)) {
+
+            throw new RuntimeException(
+                    "File does not exist : "
+                            + path.toAbsolutePath()
+            );
+        }
+
+        Resource resource =
+                new UrlResource(
+                        path.toUri()
+                );
+
+        String contentType =
+                Files.probeContentType(path);
+
+        if (contentType == null) {
+
+            contentType =
+                    "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+
+                .contentType(
+                        MediaType.parseMediaType(
+                                contentType
+                        )
+                )
+
+                .header(
+                        HttpHeaders.CACHE_CONTROL,
+                        "no-cache, no-store, must-revalidate"
+                )
+
+                .header(
+                        HttpHeaders.PRAGMA,
+                        "no-cache"
+                )
+
+                .header(
+                        HttpHeaders.EXPIRES,
+                        "0"
+                )
+
+                .body(resource);
     }
 
-// NEW API: GET STUDENT BY CLASS + ROLL (FIX)
-    @GetMapping("/class/{classNumber}/roll/{rollNo}")
-    public ResponseEntity<?> getStudentByClassAndRoll(
-            @PathVariable int classNumber,
-            @PathVariable Long rollNo
+    // =========================================================
+    // GET QR CODE IMAGE
+    // =========================================================
+
+    @GetMapping("/qrcode/{studentId}")
+    public ResponseEntity<Resource> getQrCode(
+
+            @PathVariable String studentId
+
+    ) throws IOException {
+
+        StudentDto student =
+                studentService.getByStudentId(
+                        studentId
+                );
+
+        if (
+                student == null ||
+                        student.getQrCodeUrl() == null
+        ) {
+
+            throw new RuntimeException(
+                    "QR Code not found"
+            );
+        }
+
+        Path path = Paths.get(
+                student.getQrCodeUrl()
+        );
+
+        if (!Files.exists(path)) {
+
+            throw new RuntimeException(
+                    "QR file not found"
+            );
+        }
+
+        Resource resource =
+                new UrlResource(
+                        path.toUri()
+                );
+
+        return ResponseEntity.ok()
+
+                .contentType(
+                        MediaType.IMAGE_PNG
+                )
+
+                .body(resource);
+    }
+
+    // =========================================================
+    // QR SCAN STUDENT DETAILS
+    // =========================================================
+
+    @GetMapping("/scan/{qrCode}")
+    public ResponseEntity<StudentDto> scanQrCode(
+
+            @PathVariable String qrCode
+
     ) {
-        try {
 
-            Optional<Student> student = studentService
-                    .findByClassNumberAndStudRollNo(classNumber, rollNo);
+        StudentDto student =
+                studentService.getStudentByQrCode(
+                        qrCode
+                );
 
-            if (student.isPresent()) {
-                return ResponseEntity.ok(student.get());
-            } else {
-                return ResponseEntity.status(404).body("Student not found");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Error fetching student");
-        }
+        return ResponseEntity.ok(student);
     }
-
 }
-
-

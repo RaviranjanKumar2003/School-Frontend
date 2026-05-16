@@ -16,7 +16,4 @@ public interface StudentFeeService {
     StudentFeeDTO updatePayment(StudentFeeDTO dto);
 
     SummaryDTO getSummary(Integer classId);
-
-
-
 }

@@ -1,33 +1,3 @@
-//package com.example.stud_erp.payload;
-//
-//import lombok.Data;
-//
-//@Data
-//public class LoginRequest {
-//    private String username;
-//    private String password;
-//
-//    public String getUsername() {
-//        return username;
-//    }
-//
-//    public void setUsername(String username) {
-//        this.username = username;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-//
-//    public void setPassword(String password) {
-//        this.password = password;
-//    }
-//}
-
-
-
-
-
 package com.example.stud_erp.payload;
 
 public class LoginRequest {
@@ -35,33 +5,42 @@ public class LoginRequest {
     private String username;
     private String password;
 
-    // Default Constructor
+    // ================= DEFAULT CONSTRUCTOR =================
     public LoginRequest() {
     }
 
-    // Parameterized Constructor
+    // ================= PARAMETERIZED CONSTRUCTOR =================
     public LoginRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }
 
-    // Getter for username
+    // ================= GET USERNAME =================
     public String getUsername() {
         return username;
     }
 
-    // Setter for username
+    // ================= SET USERNAME =================
     public void setUsername(String username) {
         this.username = username;
     }
 
-    // Getter for password
+    // ================= GET PASSWORD =================
     public String getPassword() {
         return password;
     }
 
-    // Setter for password
+    // ================= SET PASSWORD =================
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    // ================= TO STRING =================
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

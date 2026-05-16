@@ -8,4 +8,7 @@ import java.util.List;
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     List<Subject> findByClassEntityId(Long classId);
+
+    // ⭐ SCHOOL SAFE QUERY
+    List<Subject> findBySchoolId(Long schoolId);
 }

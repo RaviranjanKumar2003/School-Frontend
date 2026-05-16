@@ -230,6 +230,7 @@ import com.example.stud_erp.payload.StudentFeeDTO;
 import com.example.stud_erp.repository.ReminderLogRepository;
 import com.example.stud_erp.repository.StudentFeeRepository;
 import com.example.stud_erp.repository.StudentRepository;
+import com.example.stud_erp.service.ReminderService;
 import com.example.stud_erp.service.SmsService;
 import com.example.stud_erp.service.StudentFeeService;
 
@@ -238,7 +239,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.stud_erp.payload.SummaryDTO;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -260,6 +260,8 @@ public class StudentFeeController {
 
     @Autowired
     private ReminderLogRepository logRepo;
+
+    private ReminderService reminderService;
 
     // 🔥 ADD / UPDATE
     @PostMapping("/add")
@@ -295,45 +297,18 @@ public class StudentFeeController {
 
     @PostMapping("/send-reminder/{studentId}")
     public String sendReminder(@PathVariable String studentId) {
+        reminderService.sendReminder(studentId);
+        return "Reminder Sent Successfully";
+    }
 
-        StudentFee fee = repo.findTopByStudentIdOrderByIdDesc(studentId);
+    @GetMapping("/reminder-history/{studentId}")
+    public List<ReminderLog> getLogsByStudent(@PathVariable String studentId) {
+        return logRepo.findByStudentId(studentId);
+    }
 
-        if (fee == null) return "No Fee Found";
-
-        if (fee.getPendingAmount() == null || fee.getPendingAmount() <= 0) {
-            return "No pending fee";
-        }
-
-        Student student = studentRepo.findByStudentId(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-
-        String mobile = student.getStudPhoneNumber();
-
-        if (mobile == null || mobile.isEmpty()) {
-            return "Mobile not found";
-        }
-
-        String message = "Dear Parent, ₹" + fee.getPendingAmount() +
-                " fee pending for " + fee.getStudentName();
-
-        // 🔥 LOG OBJECT
-        ReminderLog log = new ReminderLog();
-        log.setStudentId(studentId);
-        log.setStudentName(fee.getStudentName());
-        log.setMobile(mobile);
-        log.setAmount(fee.getPendingAmount());
-        log.setSentAt(LocalDateTime.now());
-
-        try {
-            smsService.sendSMS(mobile, message);
-            log.setStatus("SENT");
-        } catch (Exception e) {
-            log.setStatus("FAILED");
-        }
-
-        logRepo.save(log); // ✅ DB me save
-
-        return "Reminder Processed";
+    @GetMapping("/latest-reminder/{studentId}")
+    public ReminderLog getLatest(@PathVariable String studentId) {
+        return logRepo.findTopByStudentIdOrderBySentAtDesc(studentId);
     }
 
     @GetMapping("/reminder-history")

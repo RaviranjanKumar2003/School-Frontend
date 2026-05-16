@@ -16,21 +16,44 @@ public class SubjectController {
     @Autowired
     private SubjectService subjectService;
 
-    // ✅ ADD SUBJECT
-    @PostMapping
-    public SubjectDTO addSubject(@RequestBody SubjectDTO dto) {
+    // ================= ADD SUBJECT =================
+    @PostMapping("/{schoolId}/{classId}")
+    public SubjectDTO addSubject(
+            @PathVariable Long schoolId,
+            @PathVariable Long classId,
+            @RequestParam String subjectName
+    ) {
+
+        SubjectDTO dto = new SubjectDTO();
+
+        dto.setSchoolId(schoolId); // ⭐ IMPORTANT
+        dto.setClassId(classId);
+        dto.setSubjectName(subjectName);
+
         return subjectService.addSubject(dto);
     }
 
-    // ✅ GET SUBJECTS BY CLASS
-    @GetMapping("/class/{classId}")
-    public List<SubjectDTO> getSubjects(@PathVariable Long classId) {
-        return subjectService.getSubjectsByClass(classId);
+    // ================= GET BY CLASS =================
+    @GetMapping("/school/{schoolId}/class/{classId}")
+    public List<SubjectDTO> getByClass(
+            @PathVariable Long schoolId,
+            @PathVariable Long classId
+    ) {
+        return subjectService.getSubjectsByClass(schoolId, classId);
     }
 
-    // ✅ DELETE SUBJECT
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        subjectService.deleteSubject(id);
+    // ================= GET BY SCHOOL =================
+    @GetMapping("/school/{schoolId}")
+    public List<SubjectDTO> getBySchool(@PathVariable Long schoolId) {
+        return subjectService.getSubjectsBySchool(schoolId);
+    }
+
+    // ================= DELETE =================
+    @DeleteMapping("/{schoolId}/{subjectId}")
+    public void delete(
+            @PathVariable Long schoolId,
+            @PathVariable Long subjectId
+    ) {
+        subjectService.deleteSubject(schoolId, subjectId);
     }
 }

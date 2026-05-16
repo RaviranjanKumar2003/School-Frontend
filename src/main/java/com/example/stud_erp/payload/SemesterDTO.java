@@ -12,14 +12,14 @@ public class SemesterDTO {
     private Long id;
     private String semester;
     private CourseDTO course;
-    private StudentDTO student;
+    private StudentDto student;
     private List<PracticalDTO> practicals;
     private List<SubjectSessionDTO> subjects;
 
     public SemesterDTO(Long id, String semester, CourseDTO courseDTO) {
     }
 
-    public SemesterDTO(Long id, String semester, CourseDTO courseDTO, StudentDTO studentDTO) {
+    public SemesterDTO(Long id, String semester, CourseDTO courseDTO, StudentDto studentDTO) {
         this.id = id;
         this.semester = semester;
         this.course = courseDTO;
@@ -50,11 +50,11 @@ public class SemesterDTO {
         this.course = course;
     }
 
-    public StudentDTO getStudent() {
+    public StudentDto getStudent() {
         return student;
     }
 
-    public void setStudent(StudentDTO student) {
+    public void setStudent(StudentDto student) {
         this.student = student;
     }
 

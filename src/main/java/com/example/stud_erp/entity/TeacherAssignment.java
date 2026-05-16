@@ -17,9 +17,22 @@ public class TeacherAssignment {
     private Professor professor;
 
     private String className;
+    private Long classId;
+
     private String subjectName;
 
+
+// GETTERS & SETTERS
+
     public TeacherAssignment() {}
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public void setClassId(Long classId) {
+        this.classId = classId;
+    }
 
     public Long getId() {
         return id;

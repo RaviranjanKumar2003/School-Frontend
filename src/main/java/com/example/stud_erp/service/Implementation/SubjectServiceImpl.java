@@ -22,7 +22,7 @@ public class SubjectServiceImpl implements SubjectService {
     @Autowired
     private ClassRepository classRepo;
 
-    // ✅ ADD SUBJECT
+    // ================= ADD SUBJECT =================
     @Override
     public SubjectDTO addSubject(SubjectDTO dto) {
 
@@ -30,8 +30,10 @@ public class SubjectServiceImpl implements SubjectService {
                 .orElseThrow(() -> new RuntimeException("Class not found"));
 
         Subject subject = new Subject();
+
         subject.setSubjectName(dto.getSubjectName());
         subject.setClassEntity(cls);
+        subject.setSchoolId(dto.getSchoolId()); // ⭐ IMPORTANT
 
         Subject saved = subjectRepo.save(subject);
 
@@ -39,25 +41,52 @@ public class SubjectServiceImpl implements SubjectService {
         return dto;
     }
 
-    // ✅ GET SUBJECTS BY CLASS
+    // ================= GET BY CLASS =================
     @Override
-    public List<SubjectDTO> getSubjectsByClass(Long classId) {
+    public List<SubjectDTO> getSubjectsByClass(Long schoolId, Long classId) {
 
         return subjectRepo.findByClassEntityId(classId)
                 .stream()
-                .map(sub -> {
-                    SubjectDTO dto = new SubjectDTO();
-                    dto.setId(sub.getId());
-                    dto.setSubjectName(sub.getSubjectName());
-                    dto.setClassId(sub.getClassEntity().getId());
-                    return dto;
-                })
+                .filter(s -> s.getSchoolId().equals(schoolId)) // ⭐ SECURITY
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-    // ✅ DELETE SUBJECT
+    // ================= GET BY SCHOOL =================
     @Override
-    public void deleteSubject(Long subjectId) {
-        subjectRepo.deleteById(subjectId);
+    public List<SubjectDTO> getSubjectsBySchool(Long schoolId) {
+
+        return subjectRepo.findBySchoolId(schoolId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ================= DELETE SUBJECT =================
+    @Override
+    public void deleteSubject(Long schoolId, Long subjectId) {
+
+        Subject subject = subjectRepo.findById(subjectId)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        if (!subject.getSchoolId().equals(schoolId)) {
+            throw new RuntimeException("Unauthorized delete");
+        }
+
+        subjectRepo.delete(subject);
+    }
+
+    // ================= MAPPER =================
+    private SubjectDTO mapToDTO(Subject sub) {
+
+        SubjectDTO dto = new SubjectDTO();
+
+        dto.setId(sub.getId());
+        dto.setSubjectName(sub.getSubjectName());
+        dto.setClassId(sub.getClassEntity().getId());
+        dto.setSchoolId(sub.getSchoolId());
+        dto.setNumber(sub.getNumber());
+
+        return dto;
     }
 }

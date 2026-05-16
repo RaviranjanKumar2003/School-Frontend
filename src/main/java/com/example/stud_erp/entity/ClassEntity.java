@@ -13,16 +13,40 @@ public class ClassEntity {
 
     private String className;
 
+    // ⭐ IMPORTANT: SCHOOL LINK
+    private Long schoolId;
+
     @OneToMany(mappedBy = "classEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subject> subjects;
 
-    // GETTERS & SETTERS
+    @OneToMany(
+            mappedBy = "classEntity",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ClassSectionEntity> sections;
+
+// GETTERS & SETTERS
+
+
+    public List<ClassSectionEntity> getSections() {
+        return sections;
+    }
+
+    public void setSections(List<ClassSectionEntity> sections) {
+        this.sections = sections;
+    }
+
     public Long getId() {
         return id;
     }
 
     public String getClassName() {
         return className;
+    }
+
+    public Long getSchoolId() {
+        return schoolId;
     }
 
     public List<Subject> getSubjects() {
@@ -35,6 +59,10 @@ public class ClassEntity {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
     }
 
     public void setSubjects(List<Subject> subjects) {

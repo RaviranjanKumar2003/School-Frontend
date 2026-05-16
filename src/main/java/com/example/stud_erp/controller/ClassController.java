@@ -16,39 +16,62 @@ public class ClassController {
     @Autowired
     private ClassService classService;
 
-    // ✅ CREATE CLASS
-    @PostMapping
-    public ClassDTO createClass(@RequestBody ClassDTO dto) {
-        return classService.createClass(dto);
+    // ================= CREATE CLASS =================
+    @PostMapping("/{schoolId}")
+    public ClassDTO createClass(
+            @PathVariable Long schoolId,
+            @RequestBody ClassDTO dto
+    ) {
+        return classService.createClass(schoolId, dto);
     }
 
-    // ✅ GET ALL
+    // ================= GET ALL (GLOBAL - optional admin use) =================
     @GetMapping
     public List<ClassDTO> getAll() {
         return classService.getAllClasses();
     }
 
-    // ✅ DELETE CLASS
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        classService.deleteClass(id);
+    // ================= GET BY SCHOOL =================
+    @GetMapping("/by-school/{schoolId}")
+    public List<ClassDTO> getBySchool(@PathVariable Long schoolId) {
+        return classService.getClassesBySchool(schoolId);
     }
 
-    // ✅ ADD SUBJECT
-    @PostMapping("/{classId}/subject")
+    // ================= GET SINGLE CLASS =================
+    @GetMapping("/{schoolId}/{classId}")
+    public ClassDTO getClassById(
+            @PathVariable Long schoolId,
+            @PathVariable Long classId
+    ) {
+        return classService.getClassById(schoolId, classId);
+    }
+
+    // ================= DELETE CLASS =================
+    @DeleteMapping("/{schoolId}/{classId}")
+    public void deleteClass(
+            @PathVariable Long schoolId,
+            @PathVariable Long classId
+    ) {
+        classService.deleteClass(schoolId, classId);
+    }
+
+    // ================= ADD SUBJECT =================
+    @PostMapping("/{schoolId}/{classId}/subject")
     public ClassDTO addSubject(
+            @PathVariable Long schoolId,
             @PathVariable Long classId,
             @RequestParam String subjectName
     ) {
-        return classService.addSubject(classId, subjectName);
+        return classService.addSubject(schoolId, classId, subjectName);
     }
 
-    // ✅ DELETE SUBJECT
-    @DeleteMapping("/{classId}/subject")
+    // ================= DELETE SUBJECT =================
+    @DeleteMapping("/{schoolId}/{classId}/subject")
     public void deleteSubject(
+            @PathVariable Long schoolId,
             @PathVariable Long classId,
             @RequestParam String subjectName
     ) {
-        classService.deleteSubject(classId, subjectName);
+        classService.deleteSubject(schoolId, classId, subjectName);
     }
 }

@@ -5,13 +5,21 @@ import java.util.List;
 
 public interface ClassService {
 
-    ClassDTO createClass(ClassDTO dto);
+    // ================= CREATE =================
+    ClassDTO createClass(Long schoolId, ClassDTO dto);
 
+    // ================= READ =================
     List<ClassDTO> getAllClasses();
 
-    void deleteClass(Long id);
+    List<ClassDTO> getClassesBySchool(Long schoolId);
 
-    ClassDTO addSubject(Long classId, String subjectName);
+    ClassDTO getClassById(Long schoolId, Long classId);
 
-    void deleteSubject(Long classId, String subjectName);
+    // ================= DELETE =================
+    void deleteClass(Long schoolId, Long classId);
+
+    // ================= SUBJECT =================
+    ClassDTO addSubject(Long schoolId, Long classId, String subjectName);
+
+    void deleteSubject(Long schoolId, Long classId, String subjectName);
 }

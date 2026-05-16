@@ -39,10 +39,10 @@ public class RecheckService {
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
         request.setStudentName(
-                student.getStudName() + " " + student.getStudLastName()
+                student.getFullName()
         );
 
-        request.setStudentImage(student.getImageUrl());
+        request.setStudentImage(student.getProfileImage());
         request.setProfessorId(exam.getTeacherId());
         request.setClassId(exam.getClassId());
         request.setSubjectName(subject);

@@ -1,115 +1,39 @@
 package com.example.stud_erp.service;
 
 import com.example.stud_erp.entity.HOD;
+import com.example.stud_erp.payload.HODDto;
 import com.example.stud_erp.payload.LoginRequest;
 import com.example.stud_erp.payload.ResetPasswordRequest;
-import com.example.stud_erp.repository.HODRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
-@Service
-public class HODService {
+public interface HODService {
 
-    @Autowired
-    private HODRepository hodRepository;
+    // ================= CRUD =================
+    HOD createHOD(HODDto request, MultipartFile file) throws IOException;
 
-    @Autowired
-    private EmailService emailService;
+    HOD updateHOD(Long id, HODDto request, MultipartFile file) throws IOException;
 
-    public HOD saveHOD(HOD hod) {
-        return hodRepository.save(hod);
-    }
+    HOD saveHOD(HOD hod);
 
-    public List<HOD> getAllHODs() {
-        return hodRepository.findAll();
-    }
+    List<HOD> getAllHODs();
 
-    public HOD getHODById(Long id) {
-        return hodRepository.findById(id).orElse(null);
-    }
+    HOD getHODById(Long id);
 
-    public void deleteHOD(Long id) {
-        hodRepository.deleteById(id);
-    }
+    void deleteHOD(Long id);
 
-    public HOD updateHOD(Long id, HOD hodDetails) {
+    // ================= LOGIN =================
+    HOD authenticateUser(LoginRequest loginRequest);
 
-        HOD hod = hodRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("HOD not found"));
+    // ================= OTP =================
+    void sendForgotPasswordEmail(String email);
 
-        hod.setName(hodDetails.getName());
-        hod.setDepartment(hodDetails.getDepartment());
-        hod.setUsername(hodDetails.getUsername());
-        hod.setPassword(hodDetails.getPassword());
-        hod.setEmail(hodDetails.getEmail());
-        hod.setPhone(hodDetails.getPhone());
-        hod.setSubjects(hodDetails.getSubjects());
-        hod.setUpdatedAt(LocalDateTime.now());
+    void verifyOTP(String email, String otp);
 
-        if (hodDetails.getImageUrl() != null) {
-            hod.setImageUrl(hodDetails.getImageUrl());
-        }
+    void resetPassword(ResetPasswordRequest request);
 
-        return hodRepository.save(hod);
-    }
+    List<HOD> getHODsBySchool(Long schoolId);
 
-    public HOD authenticateUser(LoginRequest loginRequest) {
-
-        HOD user = hodRepository.findByUsername(loginRequest.getUsername());
-
-        if (user == null || !loginRequest.getPassword().equals(user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
-        }
-
-        return user;
-    }
-
-    public void sendForgotPasswordEmail(String email) {
-
-        HOD user = hodRepository.findByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        String otp = generateOTP();
-        user.setOtp(otp);
-
-        hodRepository.save(user);
-
-        emailService.sendOtpEmail(user.getEmail(), otp);
-    }
-
-    public void verifyOTP(String email, String otp) {
-
-        HOD user = hodRepository.findByEmail(email);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        if (!otp.equals(user.getOtp())) {
-            throw new RuntimeException("Invalid OTP");
-        }
-    }
-
-    public void resetPassword(ResetPasswordRequest request) {
-
-        HOD hod = hodRepository.findByEmail(request.getEmail());
-
-        if (hod == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        hod.setPassword(request.getNewPassword());
-        hodRepository.save(hod);
-    }
-
-    private String generateOTP() {
-        return String.valueOf(100000 + new Random().nextInt(900000));
-    }
 }

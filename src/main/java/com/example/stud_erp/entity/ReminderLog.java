@@ -22,8 +22,19 @@ public class ReminderLog {
 
     private LocalDateTime sentAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
 // GETTERS & SETTERS
 
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     public Long getId() {
         return id;

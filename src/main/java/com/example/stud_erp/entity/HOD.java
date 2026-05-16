@@ -1,87 +1,101 @@
 package com.example.stud_erp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "hods", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
-})
+@Table(
+        name = "hods",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "username"),
+                @UniqueConstraint(columnNames = "email")
+        }
+)
 public class HOD {
 
+ // ================= ID =================
  @Id
  @GeneratedValue(strategy = GenerationType.IDENTITY)
  private Long id;
 
+ // ================= BASIC INFO =================
  @Column(nullable = false)
  private String name;
 
- @Column(length = 255)
  private String imageUrl;
 
  @Column(nullable = false)
  private String department;
 
- @Column(unique = true, nullable = false)
+ @Column(nullable = false, unique = true)
  private String username;
 
  @Column(nullable = false)
  private String password;
 
- @Column(unique = true, nullable = false)
+ @Column(nullable = false, unique = true)
  private String email;
 
  @Column(nullable = false)
  private String phone;
 
- private String coverImage;
-
+ // ================= SUBJECTS =================
  @ElementCollection
- @CollectionTable(name = "hod_subjects", joinColumns = @JoinColumn(name = "hod_id"))
+ @CollectionTable(
+         name = "hod_subjects",
+         joinColumns = @JoinColumn(name = "hod_id")
+ )
  @Column(name = "subject")
  private List<String> subjects;
 
- @Column
+ // ================= OTP =================
  private String otp;
 
- @Column
  private LocalDateTime otpExpiry;
 
- @Column(nullable = false, updatable = false)
+ // ================= AUDIT =================
  private LocalDateTime createdAt;
 
- @Column
  private LocalDateTime updatedAt;
 
- @PrePersist
- protected void onCreate() {
-  createdAt = LocalDateTime.now();
- }
+ // ================= SCHOOL =================
+ @ManyToOne(fetch = FetchType.LAZY)
 
- @PreUpdate
- protected void onUpdate() {
+ @JoinColumn(
+         name = "school_id",
+         nullable = false
+ )
+
+ @JsonIgnoreProperties({
+         "schoolAdmin",
+         "hods",
+         "hibernateLazyInitializer",
+         "handler"
+ })
+
+ private School school;
+
+ // ================= LIFECYCLE =================
+ @PrePersist
+ public void onCreate() {
+
+  createdAt = LocalDateTime.now();
+
   updatedAt = LocalDateTime.now();
  }
 
-    public void setUpdatedAt(LocalDateTime now) {
-    }
+ @PreUpdate
+ public void onUpdate() {
 
- public String getPhone() {
-  return phone;
+  updatedAt = LocalDateTime.now();
  }
 
- public void setPhone(String phone) {
-  this.phone = phone;
- }
+ // ================= GETTERS & SETTERS =================
 
  public Long getId() {
   return id;
@@ -139,6 +153,14 @@ public class HOD {
   this.email = email;
  }
 
+ public String getPhone() {
+  return phone;
+ }
+
+ public void setPhone(String phone) {
+  this.phone = phone;
+ }
+
  public List<String> getSubjects() {
   return subjects;
  }
@@ -175,11 +197,15 @@ public class HOD {
   return updatedAt;
  }
 
- public String getCoverImage() {
-  return coverImage;
+ public void setUpdatedAt(LocalDateTime updatedAt) {
+  this.updatedAt = updatedAt;
  }
 
- public void setCoverImage(String coverImage) {
-  this.coverImage = coverImage;
+ public School getSchool() {
+  return school;
+ }
+
+ public void setSchool(School school) {
+  this.school = school;
  }
 }

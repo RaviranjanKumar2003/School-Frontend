@@ -12,15 +12,18 @@ public class Subject {
 
     private String subjectName;
 
-    // ✅ FIX: number field add
     @Column(nullable = false)
     private Integer number = 0;
 
+    // ⭐ CLASS LINK
     @ManyToOne
     @JoinColumn(name = "class_id")
     private ClassEntity classEntity;
 
-    // ================= GETTERS & SETTERS =================
+    // ⭐ SCHOOL LINK (IMPORTANT FIX)
+    private Long schoolId;
+
+    // GETTERS & SETTERS
 
     public Long getId() {
         return id;
@@ -38,6 +41,10 @@ public class Subject {
         return classEntity;
     }
 
+    public Long getSchoolId() {
+        return schoolId;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -52,5 +59,9 @@ public class Subject {
 
     public void setClassEntity(ClassEntity classEntity) {
         this.classEntity = classEntity;
+    }
+
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
     }
 }

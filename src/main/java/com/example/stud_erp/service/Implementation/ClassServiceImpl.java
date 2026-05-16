@@ -23,44 +23,89 @@ public class ClassServiceImpl implements ClassService {
     @Autowired
     private SubjectRepository subjectRepo;
 
-    // ✅ CREATE CLASS
+    // ================= CREATE CLASS =================
     @Override
-    public ClassDTO createClass(ClassDTO dto) {
+    public ClassDTO createClass(Long schoolId, ClassDTO dto) {
+
         ClassEntity cls = new ClassEntity();
+
         cls.setClassName(dto.getClassName());
+
+        cls.setSchoolId(schoolId);
 
         ClassEntity saved = classRepo.save(cls);
 
-        return convertToDTO(saved); // ✅ better return
+        return convertToDTO(saved);
     }
 
-    // ✅ GET ALL
+    // ================= GET ALL =================
     @Override
     public List<ClassDTO> getAllClasses() {
+
         return classRepo.findAll()
                 .stream()
-                .map(this::convertToDTO) // ✅ reusable method
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    // ✅ DELETE CLASS
+    // ================= GET BY SCHOOL =================
     @Override
-    public void deleteClass(Long id) {
-        classRepo.deleteById(id);
+    public List<ClassDTO> getClassesBySchool(Long schoolId) {
+
+        return classRepo.findAll()
+                .stream()
+                .filter(c -> c.getSchoolId() != null
+                        && c.getSchoolId().equals(schoolId))
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
-    // ✅ ADD SUBJECT
+    // ================= GET SINGLE CLASS =================
     @Override
-    public ClassDTO addSubject(Long classId, String subjectName) {
+    public ClassDTO getClassById(Long schoolId, Long classId) {
 
         ClassEntity cls = classRepo.findById(classId)
                 .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        // ⭐ SECURITY CHECK
+        if (!cls.getSchoolId().equals(schoolId)) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        return convertToDTO(cls);
+    }
+
+    // ================= DELETE CLASS =================
+    @Override
+    public void deleteClass(Long schoolId, Long classId) {
+
+        ClassEntity cls = classRepo.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        // ⭐ SECURITY CHECK
+        if (!cls.getSchoolId().equals(schoolId)) {
+            throw new RuntimeException("Unauthorized delete attempt");
+        }
+
+        classRepo.delete(cls);
+    }
+
+    // ================= ADD SUBJECT =================
+    @Override
+    public ClassDTO addSubject(Long schoolId, Long classId, String subjectName) {
+
+        ClassEntity cls = classRepo.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        // ⭐ SECURITY CHECK
+        if (!cls.getSchoolId().equals(schoolId)) {
+            throw new RuntimeException("Unauthorized access");
+        }
 
         Subject sub = new Subject();
         sub.setSubjectName(subjectName);
         sub.setClassEntity(cls);
 
-        // ✅ Auto numbering (important)
         int count = cls.getSubjects() == null ? 0 : cls.getSubjects().size();
         sub.setNumber(count + 1);
 
@@ -70,15 +115,20 @@ public class ClassServiceImpl implements ClassService {
             cls.getSubjects().add(sub);
         }
 
-        return convertToDTO(cls); // ✅ direct return (fast)
+        return convertToDTO(cls);
     }
 
-    // ✅ DELETE SUBJECT
+    // ================= DELETE SUBJECT =================
     @Override
-    public void deleteSubject(Long classId, String subjectName) {
+    public void deleteSubject(Long schoolId, Long classId, String subjectName) {
 
         ClassEntity cls = classRepo.findById(classId)
                 .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        // ⭐ SECURITY CHECK
+        if (!cls.getSchoolId().equals(schoolId)) {
+            throw new RuntimeException("Unauthorized access");
+        }
 
         if (cls.getSubjects() != null) {
             cls.getSubjects().removeIf(
@@ -89,26 +139,40 @@ public class ClassServiceImpl implements ClassService {
         classRepo.save(cls);
     }
 
-    // ✅ COMMON DTO MAPPER (MOST IMPORTANT)
+    // ================= DTO MAPPER =================
     private ClassDTO convertToDTO(ClassEntity cls) {
 
         ClassDTO dto = new ClassDTO();
+
         dto.setId(cls.getId());
+
         dto.setClassName(cls.getClassName());
+
+        dto.setSchoolId(cls.getSchoolId());
 
         if (cls.getSubjects() != null) {
 
             List<SubjectDTO> subjectList = cls.getSubjects()
                     .stream()
                     .map(sub -> {
+
                         SubjectDTO s = new SubjectDTO();
+
                         s.setId(sub.getId());
-                        s.setSubjectName(sub.getSubjectName());
-                        s.setClassId(cls.getId()); // ✅ important
-                        s.setNumber(sub.getNumber()); // ✅ important
+
+                        s.setSubjectName(
+                                sub.getSubjectName()
+                        );
+
+                        s.setClassId(cls.getId());
+
+                        s.setNumber(
+                                sub.getNumber()
+                        );
+
                         return s;
-                    })
-                    .collect(Collectors.toList());
+
+                    }).collect(Collectors.toList());
 
             dto.setSubjects(subjectList);
         }
