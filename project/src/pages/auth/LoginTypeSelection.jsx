@@ -10,6 +10,7 @@ import {
   UserIcon,
   ShieldCheckIcon,
   BuildingOffice2Icon,
+  PhoneIcon,
 } from "@heroicons/react/24/solid";
 
 import { Link, useNavigate } from "react-router-dom";
@@ -22,237 +23,116 @@ export default function LoginTypeSelection() {
     navigate(`/auth/${type}/sign-in`);
   };
 
+  const roles = [
+    {
+      label: "HOD Login",
+      type: "hod",
+      icon: AcademicCapIcon,
+      color: "blue",
+    },
+    {
+      label: "Professor Login",
+      type: "professor",
+      icon: UserGroupIcon,
+      color: "green",
+    },
+    {
+      label: "Student Login",
+      type: "student",
+      icon: UserIcon,
+      color: "purple",
+    },
+    {
+      label: "School Admin Login",
+      type: "schooladmin",
+      icon: BuildingOffice2Icon,
+      color: "amber",
+    },
+    {
+      label: "Super Admin Login",
+      type: "superadmin",
+      icon: ShieldCheckIcon,
+      color: "red",
+    },
+
+    // 🔥 NEW ROLE ADDED
+    {
+      label: "Receptionist Login",
+      type: "receptionist",
+      icon: PhoneIcon,
+      color: "cyan",
+    },
+  ];
+
   return (
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 px-4">
 
-    <section
-      className="
-        min-h-screen
-        flex
-        items-center
-        justify-center
-        bg-gradient-to-br
-        from-blue-600
-        via-cyan-500
-        to-teal-400
-        px-4
-      "
-    >
+      <Card className="w-full max-w-lg p-8 rounded-3xl shadow-2xl border border-white/20 backdrop-blur-sm">
 
-      <Card
-        className="
-          w-full
-          max-w-lg
-          p-8
-          rounded-3xl
-          shadow-2xl
-          border
-          border-white/20
-          backdrop-blur-sm
-        "
-      >
-
-        {/* ================= HEADER ================= */}
-
+        {/* HEADER */}
         <div className="text-center mb-8">
 
-          <Typography
-            variant="h2"
-            className="
-              font-extrabold
-              text-gray-800
-              tracking-tight
-            "
-          >
+          <Typography variant="h2" className="font-extrabold text-gray-800">
             School ERP Login
           </Typography>
 
-          <Typography
-            variant="paragraph"
-            className="
-              mt-2
-              text-gray-600
-              text-base
-            "
-          >
+          <Typography variant="paragraph" className="mt-2 text-gray-600">
             Select your role to access dashboard
           </Typography>
 
         </div>
 
-        {/* ================= LOGIN BUTTONS ================= */}
-
+        {/* BUTTONS */}
         <div className="space-y-5">
 
-          {/* HOD */}
+          {roles.map((role) => {
+            const Icon = role.icon;
 
-          <Button
-            fullWidth
-            color="blue"
-            size="lg"
-            onClick={() => handleLoginType("hod")}
-            className="
-              flex
-              items-center
-              justify-center
-              gap-3
-              rounded-xl
-              py-4
-              text-base
-              shadow-lg
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-            "
-          >
-
-            <AcademicCapIcon className="h-6 w-6" />
-
-            HOD Login
-
-          </Button>
-
-          {/* PROFESSOR */}
-
-          <Button
-            fullWidth
-            color="green"
-            size="lg"
-            onClick={() => handleLoginType("professor")}
-            className="
-              flex
-              items-center
-              justify-center
-              gap-3
-              rounded-xl
-              py-4
-              text-base
-              shadow-lg
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-            "
-          >
-
-            <UserGroupIcon className="h-6 w-6" />
-
-            Professor Login
-
-          </Button>
-
-          {/* STUDENT */}
-
-          <Button
-            fullWidth
-            color="purple"
-            size="lg"
-            onClick={() => handleLoginType("student")}
-            className="
-              flex
-              items-center
-              justify-center
-              gap-3
-              rounded-xl
-              py-4
-              text-base
-              shadow-lg
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-            "
-          >
-
-            <UserIcon className="h-6 w-6" />
-
-            Student Login
-
-          </Button>
-
-          {/* SCHOOL ADMIN */}
-
-          <Button
-            fullWidth
-            color="amber"
-            size="lg"
-            onClick={() => handleLoginType("schooladmin")}
-            className="
-              flex
-              items-center
-              justify-center
-              gap-3
-              rounded-xl
-              py-4
-              text-base
-              shadow-lg
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-            "
-          >
-
-            <BuildingOffice2Icon className="h-6 w-6" />
-
-            School Admin Login
-
-          </Button>
-
-          {/* SUPER ADMIN */}
-
-          <Button
-            fullWidth
-            color="red"
-            size="lg"
-            onClick={() => handleLoginType("superadmin")}
-            className="
-              flex
-              items-center
-              justify-center
-              gap-3
-              rounded-xl
-              py-4
-              text-base
-              shadow-lg
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-            "
-          >
-
-            <ShieldCheckIcon className="h-6 w-6" />
-
-            Super Admin Login
-
-          </Button>
+            return (
+              <Button
+                key={role.type}
+                fullWidth
+                color={role.color}
+                size="lg"
+                onClick={() => handleLoginType(role.type)}
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  gap-3
+                  rounded-xl
+                  py-4
+                  text-base
+                  shadow-lg
+                  transition-all
+                  duration-300
+                  hover:scale-[1.02]
+                "
+              >
+                <Icon className="h-6 w-6" />
+                {role.label}
+              </Button>
+            );
+          })}
 
         </div>
 
-        {/* ================= FOOTER ================= */}
-
+        {/* FOOTER */}
         <div className="mt-8 text-center">
 
-          <Typography
-            variant="small"
-            className="text-gray-700"
-          >
+          <Typography variant="small" className="text-gray-700">
             Not registered yet?
-
             <Link
               to="/auth/sign-up"
-              className="
-                ml-1
-                font-semibold
-                text-blue-700
-                hover:underline
-              "
+              className="ml-1 font-semibold text-blue-700 hover:underline"
             >
               Create an account
             </Link>
-
           </Typography>
 
         </div>
 
       </Card>
-
     </section>
   );
 }

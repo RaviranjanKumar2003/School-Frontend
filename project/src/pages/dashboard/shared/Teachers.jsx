@@ -77,16 +77,8 @@ const isChecked = (classId, subjectName) => {  // cls
 
         if (role === "hod") {
 
-            const schoolId = userData.schoolId;
-            const hodId = userData.id;
-
-            if (!schoolId || !hodId) {
-                console.log("❌ Invalid IDs:", { schoolId, hodId });
-                return;
-            }
-
             res = await axios.get(
-                `${BASE_URL}/by-hod/${schoolId}/${hodId}`
+                `${BASE_URL}/by-school/${userData.schoolId}`
             );
         }
 
