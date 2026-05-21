@@ -72,6 +72,22 @@ const AddInquiry = lazy(() =>
   import("@/pages/dashboard/receptionist/AddInquiry")
 );
 
+const InquiryList = lazy(() =>
+  import("@/pages/dashboard/receptionist/InquiryList")
+);
+
+const InquiryDetails = lazy(() =>
+  import("@/pages/dashboard/receptionist/InquiryDetails")
+);
+
+const CallLogs = lazy(() =>
+  import("@/pages/dashboard/receptionist/CallLogs")
+);
+
+const FollowUps = lazy(() =>
+  import("@/pages/dashboard/receptionist/FollowUps")
+);
+
 /* =========================================================
    SUPER ADMIN
 ========================================================= */
@@ -717,7 +733,7 @@ export const routes = [
         element: Load(ReceptionistHome),
       },
       {
-        icon: <PhoneIcon {...icon} />,
+        icon: <UserCircleIcon {...icon} />,
         name: "Receptionist Information",
         path: "/receptionist/information",
         element: Load(ReceptionistInfo),
@@ -729,6 +745,36 @@ export const routes = [
         path: "/receptionist/addinquiry",
         element: Load(AddInquiry),
       },
+      {
+        icon: (
+        <DocumentTextIcon{...icon} />),
+        name: "Inquiry List",
+        path: "/receptionist/inquiryList",
+        element: Load(InquiryList),
+      },
+      {
+        icon: (
+        <DocumentTextIcon{...icon} />),
+        name: "Inquiry Details",
+        path: "/receptionist/inquiryDetails/:id",
+        element: Load(InquiryDetails),
+      },
+
+      {
+        icon: (
+        <DocumentTextIcon{...icon} />),
+        name: "Call Log",
+        path: "/receptionist/callLog",
+        element: Load(CallLogs),
+      },
+      {
+        icon: (
+        <DocumentTextIcon{...icon} />),
+        name: "Follow Up",
+        path: "/receptionist/followups",
+        element: Load(FollowUps),
+      },
+
     ],
   },
 

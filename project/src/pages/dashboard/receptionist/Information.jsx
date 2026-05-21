@@ -256,8 +256,9 @@ export function Information() {
   // =====================================================
 
   const imageUrl =
-
-    `http://localhost:8080/api/receptionists/image/get/${receptionistId}?t=${Date.now()}`;
+  receptionist?.imageUrl
+    ? `http://localhost:8080/api/receptionists/image/${receptionist.imageUrl}?t=${Date.now()}`
+    : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
   // =====================================================
   // COVER URL

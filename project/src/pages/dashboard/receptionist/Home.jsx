@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef  } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import axios from "axios";
 
@@ -13,6 +13,9 @@ import {
   Progress,
   Chip,
   Spinner,
+  Dialog,
+  DialogBody,
+  DialogHeader,
 } from "@material-tailwind/react";
 
 import {
@@ -29,14 +32,14 @@ import {
   ArrowPathIcon,
   BuildingOffice2Icon,
   EnvelopeIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
 
 // ======================================================
 // BASE URL
 // ======================================================
 
-const BASE_URL =
-  "http://localhost:8080/api";
+const BASE_URL = "http://localhost:8080/api";
 
 // ======================================================
 // RECEPTIONIST DASHBOARD
@@ -44,27 +47,23 @@ const BASE_URL =
 
 function Home() {
 
-    const navigate = useNavigate();
-    
-    const inquiriesRef = useRef(null);
+  const navigate = useNavigate();
+
+  const inquiriesRef = useRef(null);
 
   // ======================================================
   // LOCAL STORAGE
   // ======================================================
 
   const receptionistData = JSON.parse(
-    localStorage.getItem(
-      "receptionistData"
-    )
+    localStorage.getItem("receptionistData")
   );
 
   const schoolCode =
-    receptionistData?.school
-      ?.schoolCode;
+    receptionistData?.school?.schoolCode;
 
   const schoolName =
-    receptionistData?.school
-      ?.schoolName;
+    receptionistData?.school?.schoolName;
 
   // ======================================================
   // STATES
@@ -76,41 +75,43 @@ function Home() {
   const [inquiries, setInquiries] =
     useState([]);
 
+  const [search, setSearch] =
+    useState("");
+
+  const [selectedInquiry, setSelectedInquiry] =
+    useState(null);
+
   // ======================================================
   // FETCH INQUIRIES
   // ======================================================
 
-  const fetchInquiries =
-    async () => {
+  const fetchInquiries = async () => {
 
-      try {
+    try {
 
-        setLoading(true);
+      setLoading(true);
 
-        const response =
-          await axios.get(
-
-            `${BASE_URL}/inquiries/school/${schoolCode}`
-
-          );
-
-        setInquiries(
-          response.data || []
+      const response =
+        await axios.get(
+          `${BASE_URL}/inquiries/school/${schoolCode}`
         );
 
-      } catch (err) {
+      setInquiries(
+        response.data || []
+      );
 
-        console.error(
-          "Inquiry Fetch Error:",
-          err.response?.data ||
-            err.message
-        );
+    } catch (err) {
 
-      } finally {
+      console.error(
+        "Inquiry Fetch Error:",
+        err.response?.data || err.message
+      );
 
-        setLoading(false);
-      }
-    };
+    } finally {
+
+      setLoading(false);
+    }
+  };
 
   // ======================================================
   // USE EFFECT
@@ -124,6 +125,54 @@ function Home() {
     }
 
   }, [schoolCode]);
+
+  // ======================================================
+  // ACTIONS
+  // ======================================================
+
+  const callParent = (phone) => {
+
+    window.location.href = `tel:${phone}`;
+  };
+
+  const whatsappParent = (phone) => {
+
+    window.open(
+      `https://wa.me/${phone}`,
+      "_blank"
+    );
+  };
+
+  const smsParent = (phone) => {
+
+    window.location.href = `sms:${phone}`;
+  };
+
+  // ======================================================
+  // FILTERED INQUIRIES
+  // ======================================================
+
+  const filteredInquiries =
+    inquiries.filter((item) => {
+
+      return (
+
+        item.studentName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+
+        item.parentName
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+
+        item.phone
+          ?.includes(search)
+      );
+    });
 
   // ======================================================
   // STATS
@@ -141,8 +190,7 @@ function Home() {
       return (
         new Date(
           item.createdAt
-        ).toDateString() ===
-        today
+        ).toDateString() === today
       );
     }).length;
 
@@ -183,7 +231,8 @@ function Home() {
 
     {
       title: "Parent Calls",
-      value: totalCalls || 0,
+      value:
+        totalCalls || 0,
       icon: PhoneIcon,
       color:
         "from-orange-500 to-red-500",
@@ -191,7 +240,8 @@ function Home() {
 
     {
       title: "Follow Ups",
-      value: followUps || 0,
+      value:
+        followUps || 0,
       icon: CalendarDaysIcon,
       color:
         "from-green-500 to-emerald-500",
@@ -378,11 +428,32 @@ function Home() {
                   font-semibold
                 "
               >
-                {schoolName ||
-                  "School"}
+                {schoolName || "School"}
               </Typography>
 
             </div>
+
+            {/* SEARCH */}
+
+            <input
+              type="text"
+              placeholder="Search student / parent / phone"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="
+                mt-6
+                w-full
+                md:w-[400px]
+                bg-white
+                text-black
+                rounded-2xl
+                px-4
+                py-3
+                outline-none
+              "
+            />
 
             {/* ACTIONS */}
 
@@ -396,21 +467,23 @@ function Home() {
             >
 
               <Button
-  onClick={() => {
-    inquiriesRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }}
-  className="bg-white text-blue-700 rounded-xl"
->
-  New Inquiry
-</Button>
+                onClick={() => {
+                  inquiriesRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }}
+                className="
+                  bg-white
+                  text-blue-700
+                  rounded-xl
+                "
+              >
+                Recent Inquiry
+              </Button>
 
               <Button
-                onClick={
-                  fetchInquiries
-                }
+                onClick={fetchInquiries}
                 variant="outlined"
                 className="
                   border-white
@@ -651,7 +724,7 @@ function Home() {
           {/* ================================================= */}
 
           <Card
-          ref={inquiriesRef}
+            ref={inquiriesRef}
             className="
               rounded-3xl
               shadow-xl
@@ -679,7 +752,7 @@ function Home() {
                 </Typography>
 
                 <Chip
-                  value={`${totalInquiries} Total`}
+                  value={`${filteredInquiries.length} Total`}
                   color="blue"
                 />
 
@@ -687,8 +760,7 @@ function Home() {
 
               {/* EMPTY */}
 
-              {inquiries.length ===
-              0 ? (
+              {filteredInquiries.length === 0 ? (
 
                 <div
                   className="
@@ -723,159 +795,150 @@ function Home() {
 
                 <div className="space-y-4">
 
-                  {inquiries
-                    .slice(0, 8)
-                    .map(
-                      (
-                        item,
-                        index
-                      ) => (
+                  {filteredInquiries.map(
+                    (
+                      item,
+                      index
+                    ) => (
+
+                      <div
+                        key={index}
+                        className="
+                          p-4
+                          rounded-3xl
+                          border
+                          border-gray-100
+                          hover:bg-blue-50
+                          transition-all
+                          flex
+                          flex-col
+                          lg:flex-row
+                          lg:items-center
+                          lg:justify-between
+                          gap-5
+                        "
+                      >
+
+                        {/* LEFT */}
 
                         <div
-                          key={index}
                           className="
-                            p-4
-                            rounded-3xl
-                            border
-                            border-gray-100
-                            hover:bg-blue-50
-                            transition-all
                             flex
-                            flex-col
-                            lg:flex-row
-                            lg:items-center
-                            lg:justify-between
-                            gap-5
+                            items-start
+                            gap-4
                           "
                         >
 
-                          {/* LEFT */}
-
                           <div
                             className="
+                              h-16
+                              w-16
+                              rounded-2xl
+                              bg-blue-100
                               flex
-                              items-start
-                              gap-4
+                              items-center
+                              justify-center
+                              shrink-0
                             "
                           >
 
+                            <AcademicCapIcon
+                              className="
+                                h-8
+                                w-8
+                                text-blue-700
+                              "
+                            />
+
+                          </div>
+
+                          <div>
+
+                            <Typography
+                              variant="h6"
+                              className="
+                                font-bold
+                              "
+                            >
+                              {item.studentName}
+                            </Typography>
+
+                            <Typography
+                              className="
+                                text-sm
+                                text-gray-600
+                                mt-1
+                              "
+                            >
+                              Parent:
+                              {" "}
+                              {item.parentName}
+                            </Typography>
+
                             <div
                               className="
-                                h-16
-                                w-16
-                                rounded-2xl
-                                bg-blue-100
+                                mt-2
                                 flex
-                                items-center
-                                justify-center
-                                shrink-0
+                                flex-col
+                                sm:flex-row
+                                sm:items-center
+                                gap-2
+                                sm:gap-4
                               "
                             >
 
-                              <AcademicCapIcon
+                              <div
                                 className="
-                                  h-8
-                                  w-8
-                                  text-blue-700
-                                "
-                              />
-
-                            </div>
-
-                            <div>
-
-                              <Typography
-                                variant="h6"
-                                className="
-                                  font-bold
+                                  flex
+                                  items-center
+                                  gap-2
                                 "
                               >
-                                {
-                                  item.studentName
-                                }
-                              </Typography>
 
-                              <Typography
-                                className="
-                                  text-sm
-                                  text-gray-600
-                                  mt-1
-                                "
-                              >
-                                Parent:{" "}
-                                {
-                                  item.parentName
-                                }
-                              </Typography>
+                                <PhoneIcon
+                                  className="
+                                    h-4
+                                    w-4
+                                    text-gray-500
+                                  "
+                                />
+
+                                <Typography
+                                  className="
+                                    text-sm
+                                    text-gray-700
+                                  "
+                                >
+                                  {item.phone}
+                                </Typography>
+
+                              </div>
 
                               <div
                                 className="
-                                  mt-2
                                   flex
-                                  flex-col
-                                  sm:flex-row
-                                  sm:items-center
+                                  items-center
                                   gap-2
-                                  sm:gap-4
                                 "
                               >
 
-                                <div
+                                <EnvelopeIcon
                                   className="
-                                    flex
-                                    items-center
-                                    gap-2
+                                    h-4
+                                    w-4
+                                    text-gray-500
+                                  "
+                                />
+
+                                <Typography
+                                  className="
+                                    text-sm
+                                    text-gray-700
                                   "
                                 >
-
-                                  <PhoneIcon
-                                    className="
-                                      h-4
-                                      w-4
-                                      text-gray-500
-                                    "
-                                  />
-
-                                  <Typography
-                                    className="
-                                      text-sm
-                                      text-gray-700
-                                    "
-                                  >
-                                    {
-                                      item.phone
-                                    }
-                                  </Typography>
-
-                                </div>
-
-                                <div
-                                  className="
-                                    flex
-                                    items-center
-                                    gap-2
-                                  "
-                                >
-
-                                  <EnvelopeIcon
-                                    className="
-                                      h-4
-                                      w-4
-                                      text-gray-500
-                                    "
-                                  />
-
-                                  <Typography
-                                    className="
-                                      text-sm
-                                      text-gray-700
-                                    "
-                                  >
-                                    {item.email ||
-                                      "No Email"}
-                                  </Typography>
-
-                                </div>
+                                  {item.email ||
+                                    "No Email"}
+                                </Typography>
 
                               </div>
 
@@ -883,54 +946,121 @@ function Home() {
 
                           </div>
 
-                          {/* RIGHT */}
+                        </div>
 
-                          <div
+                        {/* RIGHT */}
+
+                        <div
+                          className="
+                            flex
+                            flex-wrap
+                            items-center
+                            gap-3
+                          "
+                        >
+
+                          <Chip
+                            value={
+                              item.status ||
+                              "NEW"
+                            }
+                            color="blue"
                             className="
+                              rounded-full
+                            "
+                          />
+
+                          <Button
+                            size="sm"
+                            className="
+                              rounded-xl
+                              bg-green-600
+                            "
+                            onClick={() =>
+                              callParent(item.phone)
+                            }
+                          >
+                            Call
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            className="
+                              rounded-xl
+                              bg-blue-600
                               flex
                               items-center
-                              gap-3
+                              gap-2
                             "
+                            onClick={() =>
+                              whatsappParent(item.phone)
+                            }
                           >
 
-                            <Chip
-                              value={
-                                item.status ||
-                                "NEW"
-                              }
-                              color="blue"
+                            <ChatBubbleLeftRightIcon
                               className="
-                                rounded-full
+                                h-4
+                                w-4
                               "
                             />
 
-                            <Button
-                              size="sm"
+                            WhatsApp
+
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            className="
+                              rounded-xl
+                              bg-purple-600
+                            "
+                            onClick={() =>
+                              smsParent(item.phone)
+                            }
+                          >
+                            SMS
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            className="
+                              rounded-xl
+                              bg-orange-500
+                            "
+                          >
+                            Follow Up
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            className="
+                              rounded-xl
+                              flex
+                              items-center
+                              gap-2
+                              bg-gray-900
+                            "
+                            onClick={() =>
+                              setSelectedInquiry(item)
+                            }
+                          >
+
+                            <EyeIcon
                               className="
-                                rounded-xl
-                                flex
-                                items-center
-                                gap-2
-                                bg-blue-700
+                                h-4
+                                w-4
                               "
-                            >
+                            />
 
-                              <EyeIcon
-                                className="
-                                  h-4
-                                  w-4
-                                "
-                              />
+                            View
 
-                              View
-
-                            </Button>
-
-                          </div>
+                          </Button>
 
                         </div>
-                      )
-                    )}
+
+                      </div>
+                    )
+                  )}
 
                 </div>
               )}
@@ -1006,9 +1136,7 @@ function Home() {
 
                   </div>
 
-                  <Progress
-                    value={88}
-                  />
+                  <Progress value={88} />
 
                 </div>
 
@@ -1036,9 +1164,7 @@ function Home() {
 
                   </div>
 
-                  <Progress
-                    value={92}
-                  />
+                  <Progress value={92} />
 
                 </div>
 
@@ -1066,9 +1192,7 @@ function Home() {
 
                   </div>
 
-                  <Progress
-                    value={76}
-                  />
+                  <Progress value={76} />
 
                 </div>
 
@@ -1207,9 +1331,17 @@ function Home() {
               >
 
                 <Button
-                  onClick={() => navigate("/dashboard/receptionist/addinquiry")}
-                  className=" rounded-xl bg-blue-700" >
-                    Add New Inquiry
+                  onClick={() =>
+                    navigate(
+                      "/dashboard/receptionist/addinquiry"
+                    )
+                  }
+                  className="
+                    rounded-xl
+                    bg-blue-700
+                  "
+                >
+                  Add Inquiry
                 </Button>
 
                 <Button
@@ -1338,6 +1470,114 @@ function Home() {
         </div>
 
       </div>
+
+      {/* ================================================= */}
+      {/* VIEW DIALOG */}
+      {/* ================================================= */}
+
+      <Dialog
+        open={!!selectedInquiry}
+        handler={() =>
+          setSelectedInquiry(null)
+        }
+        size="sm"
+      >
+
+        <DialogHeader>
+          Inquiry Details
+        </DialogHeader>
+
+        <DialogBody divider>
+
+          {selectedInquiry && (
+
+            <div className="space-y-4">
+
+              <div>
+
+                <Typography
+                  variant="h5"
+                  className="font-bold"
+                >
+                  {selectedInquiry.studentName}
+                </Typography>
+
+                <Typography className="text-gray-600">
+                  Student Inquiry
+                </Typography>
+
+              </div>
+
+              <div className="space-y-2">
+
+                <Typography>
+                  <strong>Parent:</strong>
+                  {" "}
+                  {selectedInquiry.parentName}
+                </Typography>
+
+                <Typography>
+                  <strong>Phone:</strong>
+                  {" "}
+                  {selectedInquiry.phone}
+                </Typography>
+
+                <Typography>
+                  <strong>Email:</strong>
+                  {" "}
+                  {selectedInquiry.email || "No Email"}
+                </Typography>
+
+                <Typography>
+                  <strong>Status:</strong>
+                  {" "}
+                  {selectedInquiry.status || "NEW"}
+                </Typography>
+
+                <Typography>
+                  <strong>Created:</strong>
+                  {" "}
+                  {selectedInquiry.createdAt
+                    ? new Date(
+                        selectedInquiry.createdAt
+                      ).toLocaleString()
+                    : "N/A"}
+                </Typography>
+
+              </div>
+
+              <div className="flex gap-3 pt-4">
+
+                <Button
+                  className="bg-green-600"
+                  onClick={() =>
+                    callParent(
+                      selectedInquiry.phone
+                    )
+                  }
+                >
+                  Call
+                </Button>
+
+                <Button
+                  className="bg-blue-600"
+                  onClick={() =>
+                    whatsappParent(
+                      selectedInquiry.phone
+                    )
+                  }
+                >
+                  WhatsApp
+                </Button>
+
+              </div>
+
+            </div>
+          )}
+
+        </DialogBody>
+
+      </Dialog>
 
     </div>
   );

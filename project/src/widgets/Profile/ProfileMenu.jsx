@@ -561,13 +561,15 @@ function ProfileMenu({
     // ==========================================
 
     if (
-      userRole === "receptionist"
-    ) {
+  userRole === "receptionist"
+) {
 
-      return user?.imageUrl
-        ? `http://localhost:8080/${user.imageUrl}`
-        : defaultImage;
-    }
+  return user?.imageUrl
+
+    ? `http://localhost:8080/api/receptionists/image/${user.imageUrl}`
+
+    : defaultImage;
+}
 
     // ==========================================
     // SUPER ADMIN
@@ -584,14 +586,18 @@ function ProfileMenu({
     // SCHOOL ADMIN
     // ==========================================
 
-    if (
-      userRole === "schooladmin"
-    ) {
+    // ==========================================
+// SCHOOL ADMIN
+// ==========================================
 
-      return "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-    }
+if (
+  userRole === "schooladmin"
+) {
 
-    return defaultImage;
+  return user?.id
+    ? `http://localhost:8080/api/school-admin/image/get/${user.id}`
+    : defaultImage;
+}
   };
 
   // ==========================================

@@ -833,31 +833,31 @@ export function Sidenav({ brandImg, routes }) {
 
     // ================= RECEPTIONIST =================
 
-    else if (role === "receptionist") {
+    // ================= RECEPTIONIST =================
 
-      data =
-        getParsed("receptionistData");
+else if (role === "receptionist") {
 
-      // 🔥 IMPORTANT
-      // if image API exists
+  data = getParsed("receptionistData");
 
-      if (data?.id) {
+  console.log("Receptionist Data =", data);
 
-        setProfileImage(
-          `http://localhost:8080/api/receptionists/image/get/${data.id}`
-        );
-      }
+  if (data?.imageUrl) {
 
-      // fallback if imageUrl stored
+    setProfileImage(
+      `http://localhost:8080/api/receptionists/image/${data.imageUrl}`
+    );
 
-      else if (data?.imageUrl) {
+  } else if (data?.id) {
 
-        setProfileImage(
-          data.imageUrl
-        );
-      }
-    }
+    setProfileImage(
+      `http://localhost:8080/api/receptionists/image/get/${data.id}`
+    );
 
+  } else {
+
+    setProfileImage("/img/logo-ct.png");
+  }
+}
     // ================= SUPER ADMIN =================
 
     else if (role === "superadmin") {

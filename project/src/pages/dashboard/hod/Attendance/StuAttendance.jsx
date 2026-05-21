@@ -256,8 +256,8 @@ function StuAttendance() {
 
         const res = await axios.get(
 
-          `${BASE_URL}/students/school/${schoolId}/class/${selectedClass.className}`
-        );
+  `${BASE_URL}/students/school/${schoolId}/class/${selectedClass.id}`
+);
 
         const filtered =
           res.data.filter(
