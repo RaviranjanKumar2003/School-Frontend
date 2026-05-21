@@ -14,9 +14,21 @@ import {
 const StudentExams = () => {
 
   const [classes, setClasses] = useState([]);
-  const teachers = JSON.parse(localStorage.getItem("professorData"));
-  const teacherId = teachers?.id; // 🔥 FIX
-  const teacher = JSON.parse(localStorage.getItem("professorData"));
+  const [teacher, setTeacher] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+
+  useEffect(() => {
+
+  const storedTeacher =
+    JSON.parse(localStorage.getItem("professorData"));
+
+  console.log("TEACHER => ", storedTeacher);
+
+  setTeacher(storedTeacher);
+
+ }, []);
+
+ const teacherId = teacher?.id;
 
   const [filter, setFilter] = useState("ALL");
   
@@ -54,9 +66,19 @@ const StudentExams = () => {
   });
 
   useEffect(() => {
-  loadExams();
-  loadClasses(); // 🔥 add
-  }, []);
+
+  if (teacher?.school?.id) {
+
+    console.log(
+      "SCHOOL ID => ",
+      teacher.school.id
+    );
+
+    loadExams();
+    loadClasses();
+  }
+
+ }, [teacher?.school?.id]);
 
 
 
@@ -68,15 +90,36 @@ const StudentExams = () => {
   
 
 
-  const loadClasses = async () => {
-  const res = await axios.get("http://localhost:8080/api/classes");
-  setClasses(res.data);
+ const loadClasses = async () => {
+
+  try {
+
+    console.log(
+      "CLASS API => ",
+      `http://localhost:8080/api/classes/by-school/${teacher?.school?.id}`
+    );
+
+    const res = await axios.get(
+      `http://localhost:8080/api/classes/by-school/${teacher?.school?.id}`
+    );
+
+    console.log("CLASSES => ", res.data);
+
+    setClasses(res.data);
+
+  } catch (err) {
+    console.log(err);
+  }
   };
+
+
+
+
 
   const loadExams = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/exam-schedule`
+      `http://localhost:8080/api/exam-schedule/${teacher?.school?.id}`
       );
       setExams(res.data);
     } catch (err) {
@@ -127,9 +170,16 @@ const StudentExams = () => {
       }
 
       await axios.post("http://localhost:8080/api/exam-schedule", {
-       ...form,
-       subjectName: teacher?.subject || "Unknown", // 🔥 FIX
-       teacherId: teacher?.id || teacherId        // 🔥 FIX
+
+      ...form,
+
+      teacherId: teacher?.id,
+
+      schoolId: teacher?.school?.id,
+
+      schoolCode: teacher?.school?.schoolCode,
+
+      createdBy: teacher?.name
       });
 
       alert("✅ Exam Created");
@@ -268,24 +318,33 @@ const StudentExams = () => {
                 {isUpdate ? "Update Exam" : "Create Exam"}
               </Typography>
 
-              <Select
-              label="Select Class"
-              value={form.classId}
-              onChange={(v) => 
-              setForm({ 
-              ...form, 
-              classId: v,
-              subjectName: teacher?.subject?.trim() || ""
-             })
-             }
-              >
-              {classes.map((c) => (
-              <Option key={c.id} value={c.id}>
-                {c.className}
-              </Option>
-              ))}
-              </Select>
+             <Select
+             label="Select Class"
+             value={String(form.classId)}
+             onChange={(v) => {
 
+             const selectedClass = classes.find(
+             (c) => c.id === Number(v)
+             );
+
+             setSubjects(selectedClass?.subjects || []);
+
+             setForm({
+             ...form,
+             classId: Number(v),
+             subjectName: ""
+             });
+
+             }}
+             >
+
+               {classes.map((c) => (
+               <Option key={c.id} value={String(c.id)}>
+               {c.className}
+               </Option>
+               ))}
+
+        </Select>
         <Select
            label="Exam Type"
            value={form.examType}
@@ -302,11 +361,28 @@ const StudentExams = () => {
          )}
         </Select>
 
-            <Input
-             label="Subject"
-             value={form.subjectName || "No Subject"}
-             disabled
-             />
+
+        <Select
+          label="Select Subject"
+          value={form.subjectName}
+          onChange={(v) =>
+          setForm({
+          ...form,
+          subjectName: v
+          })
+          }
+          >
+         {subjects.map((s) => (
+         <Option
+         key={s.id}
+         value={s.subjectName}
+         >
+         {s.subjectName}
+         </Option>
+
+         ))}
+
+        </Select>
 
               <Input type="date"
                 value={form.examDate}

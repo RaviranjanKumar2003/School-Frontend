@@ -13,13 +13,20 @@ const LiveResult = () => {
 
   // 🔥 LOAD CLASSES
   useEffect(() => {
-    axios.get("http://localhost:8080/api/classes")
-      .then(res => setClasses(res.data))
-      .catch(() => alert("Error loading classes"));
 
-     axios.get("http://localhost:8080/api/exam-schedule/exam-types")
+  const hodData =
+    JSON.parse(localStorage.getItem("hodData"));
+
+  axios.get(
+    `http://localhost:8080/api/classes/by-school/${hodData?.school?.id}`
+  )
+  .then(res => setClasses(res.data))
+  .catch(() => alert("Error loading classes"));
+
+  axios.get("http://localhost:8080/api/exam-schedule/exam-types")
     .then(res => setExamTypes(res.data))
     .catch(() => alert("Error loading exam types"));
+
   }, []);
 
   // 🔥 LOAD STATUS

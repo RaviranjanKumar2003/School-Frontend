@@ -72,7 +72,7 @@ function MyAttendance() {
 
         name:
           studentData?.fullName ||
-          studentData?.studName,
+          `${studentData?.studfirstName || ""} ${studentData?.studlastName || ""}`,
 
         studentId:
           studentData?.studentId,
@@ -149,73 +149,183 @@ function MyAttendance() {
   // FETCH ATTENDANCE
   // =========================================================
 
-  const fetchAttendance =
-    async (date = "") => {
+  // =========================================================
+// FETCH ATTENDANCE
+// =========================================================
 
-      if (!userInfo) return;
+const fetchAttendance =
+  async (date = "") => {
 
-      try {
+    if (!userInfo) return;
 
-        setLoading(true);
+    try {
 
-        let url = "";
+      setLoading(true);
 
-        // ================= STUDENT =================
+      let url = "";
 
-        if (
-          userInfo.role === "student"
-        ) {
+      // =====================================================
+      // STUDENT
+      // =====================================================
 
-          url =
-            `${BASE_URL}/stu-attendance/student/${userInfo.id}`;
+      if (
+        userInfo.role === "student"
+      ) {
 
-          if (date) {
+        url =
+          `${BASE_URL}/stu-attendance/student/${userInfo.id}`;
 
-            url +=
-              `?attendanceDate=${date}`;
-          }
-        }
-
-        // ================= TEACHER / HOD =================
-
-        else {
-
-          url =
-            `${BASE_URL}/attendance/teacher/my-attendance`;
+        if (date) {
 
           url +=
-            `?teacherId=${userInfo.id}`;
+            `?attendanceDate=${date}`;
+        }
+      }
 
-          if (date) {
+      // =====================================================
+      // TEACHER
+      // =====================================================
 
-            url +=
-              `&attendanceDate=${date}`;
-          }
+      else if (
+        userInfo.role === "teacher"
+      ) {
+
+        url =
+          `${BASE_URL}/attendance/teacher/my-attendance`;
+
+        url +=
+          `?teacherId=${userInfo.id}`;
+
+        if (date) {
+
+          url +=
+            `&attendanceDate=${date}`;
+        }
+      }
+
+      // =====================================================
+      // HOD
+      // =====================================================
+
+      else if (
+        userInfo.role === "hod"
+      ) {
+
+        // =============================
+        // DATE WISE
+        // =============================
+
+        if (date) {
+
+          url =
+            `${BASE_URL}/hod-attendance/date/${date}`;
+
+          const res =
+            await axios.get(url);
+
+          let data =
+            Array.isArray(res.data)
+              ? res.data
+              : [];
+
+          // FILTER CURRENT HOD
+
+          data = data.filter(
+            (item) =>
+              Number(item.hodId) ===
+              Number(userInfo.id)
+          );
+
+          data = data.map(
+            (item) => ({
+
+              ...item,
+
+              markedBy:
+                item.createdByName ||
+                item.updatedByName ||
+                item.markedBy ||
+                "N/A",
+            })
+          );
+
+          setAttendance(data);
+
+          return;
         }
 
-        const res =
-          await axios.get(url);
+        // =============================
+        // ALL HOD ATTENDANCE
+        // =============================
 
-        setAttendance(
-          Array.isArray(res.data)
-            ? res.data
-            : []
-        );
-
-      } catch (err) {
-
-        console.error(
-          "Attendance Error => ",
-          err
-        );
-
-        setAttendance([]);
-
-      } finally {
-
-        setLoading(false);
+        url =
+          `${BASE_URL}/hod-attendance/hod/${userInfo.id}`;
       }
-    };
+
+      // =====================================================
+      // API CALL
+      // =====================================================
+
+      const res =
+        await axios.get(url);
+
+      let data =
+        Array.isArray(res.data)
+          ? res.data
+          : [];
+
+      // =====================================================
+      // STUDENT DATE FILTER
+      // =====================================================
+
+      if (
+        date &&
+        userInfo.role === "student"
+      ) {
+
+        data = data.filter(
+          (item) =>
+            item.attendanceDate ===
+            date
+        );
+      }
+
+      // =====================================================
+      // COMMON MARKED BY
+      // =====================================================
+
+      data = data.map(
+        (item) => ({
+
+          ...item,
+
+          markedBy:
+            item.createdByName ||
+            item.updatedByName ||
+            item.takenByName ||
+            item.teacherName ||
+            item.professorName ||
+            item.markedBy ||
+            "N/A",
+        })
+      );
+
+      setAttendance(data);
+
+    } catch (err) {
+
+      console.error(
+        "Attendance Error => ",
+        err
+      );
+
+      setAttendance([]);
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
 
   // =========================================================
   // LOAD DATA
@@ -224,6 +334,23 @@ function MyAttendance() {
   useEffect(() => {
 
     if (userInfo) {
+
+      // =============================================
+      // STUDENT => EMPTY BY DEFAULT
+      // =============================================
+
+      if (
+        userInfo.role === "student"
+      ) {
+
+        setAttendance([]);
+
+        return;
+      }
+
+      // =============================================
+      // TEACHER / HOD => LOAD ALL
+      // =============================================
 
       fetchAttendance();
     }
@@ -259,6 +386,24 @@ function MyAttendance() {
     async () => {
 
       setSearchDate("");
+
+      // =============================================
+      // STUDENT => EMPTY
+      // =============================================
+
+      if (
+        userInfo?.role ===
+        "student"
+      ) {
+
+        setAttendance([]);
+
+        return;
+      }
+
+      // =============================================
+      // OTHERS => RELOAD
+      // =============================================
 
       await fetchAttendance();
     };
@@ -430,8 +575,6 @@ function MyAttendance() {
 
               <div className="grid grid-cols-2 gap-4 w-full xl:w-auto">
 
-                {/* CARD */}
-
                 <div className="bg-white/15 backdrop-blur-lg rounded-3xl p-4 min-w-[150px] text-white shadow-lg">
 
                   <div className="flex items-center gap-2 text-sm opacity-90 mb-2">
@@ -449,8 +592,6 @@ function MyAttendance() {
                   </h2>
 
                 </div>
-
-                {/* PRESENT */}
 
                 <div className="bg-green-500 rounded-3xl p-4 text-white shadow-lg">
 
@@ -470,8 +611,6 @@ function MyAttendance() {
 
                 </div>
 
-                {/* ABSENT */}
-
                 <div className="bg-red-500 rounded-3xl p-4 text-white shadow-lg">
 
                   <div className="flex items-center gap-2 text-sm mb-2">
@@ -489,8 +628,6 @@ function MyAttendance() {
                   </h2>
 
                 </div>
-
-                {/* PERCENT */}
 
                 <div className="bg-yellow-400 rounded-3xl p-4 text-gray-900 shadow-lg">
 
@@ -526,8 +663,6 @@ function MyAttendance() {
 
           <div className="flex flex-col lg:flex-row gap-4">
 
-            {/* DATE */}
-
             <div className="flex-1 relative">
 
               <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
@@ -545,8 +680,6 @@ function MyAttendance() {
 
             </div>
 
-            {/* SEARCH */}
-
             <button
               onClick={handleSearch}
               className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition-all text-white px-6 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg"
@@ -557,8 +690,6 @@ function MyAttendance() {
               Search
 
             </button>
-
-            {/* CLEAR */}
 
             <button
               onClick={clearFilter}
@@ -614,12 +745,6 @@ function MyAttendance() {
                   No Attendance Found
 
                 </h2>
-
-                <p className="text-gray-500 mt-2 text-sm sm:text-base">
-
-                  Attendance data not available for selected date
-
-                </p>
 
               </div>
 
@@ -698,23 +823,22 @@ function MyAttendance() {
 
                       </div>
 
-                      {item.createdByName && (
+                      {/* MARKED BY */}
 
-                        <div className="bg-indigo-100 text-indigo-700 px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 text-sm sm:text-base">
+                      <div className="bg-indigo-100 text-indigo-700 px-5 py-3 rounded-2xl font-semibold flex items-center gap-2 text-sm sm:text-base">
 
-                          <FaUserClock />
+                        <FaUserClock />
 
-                          <span className="break-all">
+                        <span className="break-all">
 
-                            Marked By :
-                            {" "}
-                            {item.createdByName}
+                          Marked By :
+                          {" "}
 
-                          </span>
+                          {item.markedBy}
 
-                        </div>
+                        </span>
 
-                      )}
+                      </div>
 
                     </div>
 

@@ -11,13 +11,22 @@ const ExamAttendance = () => {
 
   const teacherData = JSON.parse(localStorage.getItem("professorData"));
   const teacherId = teacherData?.id;
+  const schoolId =teacherData?.school?.id;
+
+  
 
   // 🔥 load classes
   useEffect(() => {
-    axios.get("http://localhost:8080/api/classes")
-      .then(res => setClasses(res.data))
-      .catch(() => alert("❌ Error loading classes"));
-  }, []);
+  if (!schoolId) return;
+  axios
+  .get(
+  `http://localhost:8080/api/classes/by-school/${schoolId}`
+  )
+  .then(res => setClasses(res.data))
+  .catch(() => alert("❌ Error loading classes"));
+  }, [schoolId]);
+
+
 
   // 🔥 FIXED MESSAGE FUNCTION
   const getErrorMessage = (err) => {
@@ -170,20 +179,29 @@ const ExamAttendance = () => {
             {/* BUTTONS */}
             <div className="flex gap-3 mt-4">
 
-              <button
-                onClick={() => mark(s.id, "PRESENT")}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition"
-              >
-                PRESENT
-              </button>
+             <button
+             disabled={s.examStatus === "CANCELLED"}
+             onClick={() => mark(s.id, "PRESENT")}
+             className={`flex-1 py-2 rounded-lg transition text-white ${
+             s.examStatus === "CANCELLED"
+             ? "bg-gray-400 cursor-not-allowed"
+             : "bg-green-500 hover:bg-green-600"
+             }`}
+             >
+             PRESENT
+            </button>
 
-              <button
-                onClick={() => mark(s.id, "ABSENT")}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition"
+            <button
+              disabled={s.examStatus === "CANCELLED"}
+              onClick={() => mark(s.id, "ABSENT")}
+              className={`flex-1 py-2 rounded-lg transition text-white ${
+              s.examStatus === "CANCELLED"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-500 hover:bg-red-600"
+              }`}
               >
-                ABSENT
+              ABSENT
               </button>
-
             </div>
 
           </div>

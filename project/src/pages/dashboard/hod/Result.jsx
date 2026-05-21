@@ -26,13 +26,21 @@ export default function AdminPanel() {
 
   // 🔥 LOAD INIT
   useEffect(() => {
-    axios.get("http://localhost:8080/api/classes")
-      .then(res => setClasses(res.data));
 
-    axios.get("http://localhost:8080/api/exam-schedule/exam-types")
-      .then(res => setExamTypes(res.data));
+ const hodData =
+  JSON.parse(localStorage.getItem("hodData"));
 
-    loadRecheck();
+   axios.get(
+    `http://localhost:8080/api/classes/by-school/${hodData?.school?.id}`
+  )
+  .then(res => setClasses(res.data))
+  .catch(() => alert("Error loading classes"));
+
+  axios.get("http://localhost:8080/api/exam-schedule/exam-types")
+    .then(res => setExamTypes(res.data));
+
+  loadRecheck();
+
   }, []);
 
   // 🔥 LOAD RESULTS
@@ -46,9 +54,22 @@ export default function AdminPanel() {
 
   // 🔥 LOAD RECHECK
   const loadRecheck = () => {
-    axios.get("http://localhost:8080/api/recheck/admin")
-      .then(res => setRequests(res.data));
-  };
+
+  const hodData =
+    JSON.parse(localStorage.getItem("hodData"));
+
+  const schoolId =
+    hodData?.school?.id;
+
+  axios.get(
+    `http://localhost:8080/api/recheck/admin/${schoolId}`
+  )
+  .then(res => setRequests(res.data))
+  .catch(err => {
+    console.log(err);
+    alert("Error loading recheck");
+  });
+ };
 
   // 🔥 APPROVE / REJECT
   const approve = async (id) => {
@@ -211,7 +232,7 @@ export default function AdminPanel() {
     {/* DETAILS */}
     <div className="text-sm space-y-1">
 
-      <p>📝 Class: {r.classId}</p>
+      <p>📝 Class: {r.className}</p>
       <p>📊 Old Marks: {r.oldMarks} / {r.totalMarks}</p>
       <p>📝 Exam: {r.examType}</p>
 

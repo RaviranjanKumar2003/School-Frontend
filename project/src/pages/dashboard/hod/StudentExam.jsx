@@ -28,14 +28,37 @@ const StudentExam = () => {
     loadNotices();
   }, []);
 
+
+
   const loadClasses = async () => {
-    const res = await axios.get("http://localhost:8080/api/classes");
-    setClasses(res.data);
+
+  const hodData =
+    JSON.parse(localStorage.getItem("hodData"));
+
+  const schoolId = hodData?.school?.id;
+
+  const res = await axios.get(
+  `http://localhost:8080/api/classes/by-school/${schoolId}`
+  );
+
+  setClasses(res.data);
   };
 
+
+
+
   const loadNotices = async () => {
-    const res = await axios.get("http://localhost:8080/api/exam-notice/all");
-    setNotices(res.data);
+
+  const hodData =
+    JSON.parse(localStorage.getItem("hodData"));
+
+  const schoolId = hodData?.school?.id;
+
+  const res = await axios.get(
+    `http://localhost:8080/api/exam-notice/school/${schoolId}`
+  );
+
+  setNotices(res.data);
   };
 
   // 🔁 RESET FORM
@@ -55,11 +78,20 @@ const StudentExam = () => {
     return;
   }
 
-    await axios.post("http://localhost:8080/api/exam-notice/create", {
-      classId,
-      examType,
-      message
-    });
+  const hodData = JSON.parse(localStorage.getItem("hodData"));
+
+  await axios.post("http://localhost:8080/api/exam-notice/create", {
+
+    classId,
+    examType,
+    message,
+
+    schoolId: hodData?.school?.id,
+
+    schoolCode: hodData?.school?.schoolCode,
+  
+    createdBy: hodData?.name
+  });
 
     alert("✅ Exam Created");
     resetForm();
@@ -111,7 +143,19 @@ const StudentExam = () => {
     };
   }
 
-  grouped[key].subjects.push(n.subjectName);
+  const alreadyExists = grouped[key].subjects.find(
+  (s) => s.subjectName === n.subjectName
+  );
+
+  if (!alreadyExists) {
+
+  grouped[key].subjects.push({
+    subjectName: n.subjectName,
+    teacherAssigned: n.teacherAssigned
+  });
+
+  }
+
   grouped[key].ids.push(n.id);
   });
 
@@ -225,9 +269,20 @@ const StudentExam = () => {
               </p>
 
               <ul className="mt-2 text-sm text-gray-700">
-                {g.subjects.map((s, index) => (
-                  <li key={index}>• {s}</li>
-                ))}
+               {g.subjects.map((s, index) => (
+
+              <li key={index}>
+
+              • {s.subjectName}
+
+              {Number(s.teacherAssigned) === 0 && (
+              <span className="text-red-500 ml-2">
+              (No Teacher Assigned)
+            </span>
+          )}
+
+         </li>
+         ))}
               </ul>
 
               <div className="flex justify-between mt-4">

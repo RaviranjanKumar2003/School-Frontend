@@ -459,42 +459,40 @@ function CreatClassAndSubject() {
                           {sec.sectionName}
 
                           {/* ACTIONS */}
-                          <div className="absolute hidden group-hover:flex items-center gap-1 -top-3 -right-3 bg-white rounded-full shadow-lg p-1">
+                          <div className="absolute hidden group-hover:flex items-center gap-1 -top-8 -right-2 bg-white rounded-full shadow-md p-1">
 
-                            <IconButton
-                              size="sm"
-                              color="blue"
-                              onClick={() => {
+  <IconButton
+    className="h-6 w-6 min-w-[24px] min-h-[24px] p-1 bg-blue-500"
+    onClick={() => {
 
-                                setCurrentClass(cls);
+      setCurrentClass(cls);
 
-                                setEditingSection(sec);
+      setEditingSection(sec);
 
-                                setEditSectionName(
-                                  sec.sectionName
-                                );
+      setEditSectionName(
+        sec.sectionName
+      );
 
-                                setOpenEditSectionDialog(true);
+      setOpenEditSectionDialog(true);
 
-                              }}
-                            >
-                              <PencilIcon className="h-3 w-3" />
-                            </IconButton>
+    }}
+  >
+    <PencilIcon className="h-3 w-3" />
+  </IconButton>
 
-                            <IconButton
-                              size="sm"
-                              color="red"
-                              onClick={() =>
-                                handleDeleteSection(
-                                  cls.id,
-                                  sec.id
-                                )
-                              }
-                            >
-                              <TrashIcon className="h-3 w-3" />
-                            </IconButton>
+  <IconButton
+    className="h-6 w-6 min-w-[24px] min-h-[24px] p-1 bg-red-500"
+    onClick={() =>
+      handleDeleteSection(
+        cls.id,
+        sec.id
+      )
+    }
+  >
+    <TrashIcon className="h-3 w-3" />
+  </IconButton>
 
-                          </div>
+</div>
 
                         </div>
 

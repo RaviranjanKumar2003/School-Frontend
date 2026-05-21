@@ -18,6 +18,15 @@ import {
   ArrowTrendingUpIcon ,
   PresentationChartBarIcon ,
   PhoneIcon,
+  BellAlertIcon,
+  PencilSquareIcon,
+  ArchiveBoxIcon,
+  CurrencyRupeeIcon,
+  ClipboardDocumentListIcon,
+  DocumentMagnifyingGlassIcon,
+  IdentificationIcon,
+  PhoneArrowUpRightIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 
 import { lazy, Suspense } from "react";
@@ -215,10 +224,6 @@ const ProfessorNotifications = lazy(() =>
   import("@/pages/dashboard/professor/Notifications")
 );
 
-const AttendancePage = lazy(() =>
-  import("@/pages/dashboard/professor/PAttendance/AttendanceFlow")
-);
-
 const ProfessorResult = lazy(() =>
   import("@/pages/dashboard/professor/Result")
 );
@@ -231,28 +236,18 @@ const ProfessorEvents = lazy(() =>
    STUDENT
 ========================================================= */
 
-const StudentHome = lazy(() =>
-  import("@/pages/dashboard/student/Home")
-);
-
-const StudentProfile = lazy(() =>
-  import("@/pages/dashboard/student/Profile")
-);
-
-const Exams = lazy(() =>
-  import("@/pages/dashboard/student/Exams")
-);
-
+const SemesterTable = lazy(() => import("@/pages/dashboard/student/SemesterTable"));
+const StudentHome = lazy(() => import("@/pages/dashboard/student/Home"));
+const StudentProfile = lazy(() => import("@/pages/dashboard/student/Profile"));
+const Exams = lazy(() => import("@/pages/dashboard/student/Exams"));
+const Attendances = lazy(() => import("@/pages/dashboard/student/Attendance"));
+const StudentFee = lazy(() => import("@/pages/dashboard/student/StudentFee"));
 const LiveClass = lazy(() =>
   import("@/pages/dashboard/student/LiveClass")
 );
 
 const StudentNotifications = lazy(() =>
   import("@/pages/dashboard/student/Notifications")
-);
-
-const StudentSemesterTable = lazy(() =>
-  import("@/pages/dashboard/student/SemesterTable")
 );
 
 const StudentResult = lazy(() =>
@@ -266,7 +261,6 @@ const ArchivedNotifications = lazy(() =>
 const StudentEvents = lazy(() =>
   import("@/pages/dashboard/student/StudentEvents")
 );
-
 /* =========================================================
    AUTH
 ========================================================= */
@@ -487,10 +481,10 @@ export const routes = [
       },
 
       {
-        icon: <CalendarDaysIcon {...icon} />,
+        icon: <ClipboardDocumentCheckIcon {...icon} />,
         name: "Attendance",
-        path: "/professor/attendance",
-        element: Load(AttendancePage),
+        path: "/professor/Attendance",
+        element: <Suspense fallback={<LoadingSpinner />}><Attendance/></Suspense>,
       },
 
       {
@@ -539,65 +533,69 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "Student Dashboard",
+        name: "Student dashboard",
         path: "/student/home",
-        element: Load(StudentHome),
+        element: <Suspense fallback={<LoadingSpinner />}><StudentHome /></Suspense>,
       },
-
       {
         icon: <UserCircleIcon {...icon} />,
         name: "Student Information",
         path: "/student/information",
-        element: Load(StudentProfile),
+        element: <Suspense fallback={<LoadingSpinner />}><StudentProfile /></Suspense>,
       },
-
       {
-        icon: <BellIcon {...icon} />,
-        name: "Notifications",
+        icon: <BellAlertIcon {...icon} />,
+        name: "Student notifications",
         path: "/student/notifications",
-        element: Load(StudentNotifications),
+        element: <Suspense fallback={<LoadingSpinner />}><StudentNotifications /></Suspense>,
       },
-
       {
-        icon: <ClipboardDocumentCheckIcon {...icon} />,
+        icon: <PencilSquareIcon {...icon} />,
         name: "Exams",
         path: "/student/exams",
-        element: Load(Exams),
+        element: <Suspense fallback={<LoadingSpinner />}><Exams /></Suspense>,
       },
-
       {
         icon: <ChartBarIcon {...icon} />,
         name: "Results",
         path: "/student/result",
-        element: Load(StudentResult),
+        element: <Suspense fallback={<LoadingSpinner />}><StudentResult /></Suspense>,
       },
-
       {
-        icon: <InformationCircleIcon {...icon} />,
+        icon: <ClipboardDocumentCheckIcon {...icon} />,
+        name: "Attendance",
+        path: "/student/Attendance",
+        element: <Suspense fallback={<LoadingSpinner />}><Attendance/></Suspense>,
+      },
+      {
+        icon: <ArchiveBoxIcon {...icon} />,
         name: "Archived Notifications",
         path: "/student/archived-notifications",
-        element: Load(ArchivedNotifications),
+        element: <Suspense fallback={<LoadingSpinner />}><ArchivedNotifications /></Suspense>,
       },
-
       {
-        icon: <AcademicCapIcon {...icon} />,
+        icon: < TableCellsIcon  {...icon} />,
         name: "Semester Table",
-        path: "/student/semestertable",
-        element: Load(StudentSemesterTable),
+        path: "/student/semester-table",
+        element: <Suspense fallback={<LoadingSpinner />}><SemesterTable /></Suspense>,
       },
-
       {
         icon: <CalendarDaysIcon {...icon} />,
         name: "Events",
         path: "/student/events",
-        element: Load(StudentEvents),
+        element: <Suspense fallback={<LoadingSpinner />}><StudentEvents /></Suspense>,
       },
-
+      // {
+      //   icon: <CalendarDaysIcon {...icon} />,
+      //   name: "Live Class",
+      //   path: "/student/live-class",
+      //   element: <Suspense fallback={<LoadingSpinner />}><LiveClass /></Suspense>,
+      // },
       {
-        icon: <CalendarDaysIcon {...icon} />,
-        name: "Attendance",
-        path: "/student/attendance",
-        element: Load(Attendance),
+        icon: <CurrencyRupeeIcon {...icon} />,
+        name: "Payment",
+        path: "/student/student-fee",
+        element: <Suspense fallback={<LoadingSpinner />}><StudentFee /></Suspense>,
       },
     ],
   },
@@ -739,41 +737,49 @@ export const routes = [
         element: Load(ReceptionistInfo),
       },
       {
-        icon: (
-        <DocumentTextIcon{...icon} />),
-        name: "Add Inquiry",
-        path: "/receptionist/addinquiry",
-        element: Load(AddInquiry),
-      },
-      {
-        icon: (
-        <DocumentTextIcon{...icon} />),
-        name: "Inquiry List",
-        path: "/receptionist/inquiryList",
-        element: Load(InquiryList),
-      },
-      {
-        icon: (
-        <DocumentTextIcon{...icon} />),
-        name: "Inquiry Details",
-        path: "/receptionist/inquiryDetails/:id",
-        element: Load(InquiryDetails),
-      },
+  icon: (
+    <ClipboardDocumentListIcon {...icon} />
+  ),
+  name: "Add Inquiry",
+  path: "/receptionist/addinquiry",
+  element: Load(AddInquiry),
+},
 
-      {
-        icon: (
-        <DocumentTextIcon{...icon} />),
-        name: "Call Log",
-        path: "/receptionist/callLog",
-        element: Load(CallLogs),
-      },
-      {
-        icon: (
-        <DocumentTextIcon{...icon} />),
-        name: "Follow Up",
-        path: "/receptionist/followups",
-        element: Load(FollowUps),
-      },
+{
+  icon: (
+    <DocumentMagnifyingGlassIcon {...icon} />
+  ),
+  name: "Inquiry List",
+  path: "/receptionist/inquiryList",
+  element: Load(InquiryList),
+},
+
+{
+  icon: (
+    <IdentificationIcon {...icon} />
+  ),
+  name: "Inquiry Details",
+  path: "/receptionist/inquiryDetails/:id",
+  element: Load(InquiryDetails),
+},
+
+{
+  icon: (
+    <PhoneArrowUpRightIcon {...icon} />
+  ),
+  name: "Call Log",
+  path: "/receptionist/callLog",
+  element: Load(CallLogs),
+},
+
+{
+  icon: (
+    <ClockIcon {...icon} />
+  ),
+  name: "Follow Up",
+  path: "/receptionist/followups",
+  element: Load(FollowUps),
+},
 
     ],
   },

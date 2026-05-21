@@ -12,6 +12,9 @@ export default function Students() {
 
     const [search, setSearch] = useState("");
 
+    // ================= CLASS FILTER =================
+    const [selectedClass, setSelectedClass] = useState("");
+
     const [currentPage, setCurrentPage] = useState(1);
 
     const [editingStudent, setEditingStudent] = useState(null);
@@ -28,6 +31,16 @@ export default function Students() {
     const barcodeRef = useRef();
 
     const studentsPerPage = 5;
+
+    // ================= UNIQUE CLASSES =================
+    const uniqueClasses = [
+    ...new Set(
+        students
+            .map((s) => s.className)
+            .filter(Boolean)
+    ),
+
+    ];
 
     // ================= IMAGE URL =================
     const getStudentImage = (student) => {
@@ -115,7 +128,7 @@ export default function Students() {
 
     }, []);
 
-    // ================= USER DATA =================
+    // ================= USER DATA ================= studentsPerPage = 5;
     useEffect(() => {
 
         const role =
@@ -418,36 +431,49 @@ const updateStudent = async (e) => {
 };
 
     // ================= SEARCH =================
-    const filteredStudents =
-        students.filter((s) => {
+    // ================= SEARCH + FILTER =================
+const filteredStudents =
+    students.filter((s) => {
 
-            const fullName =
-                `${s.studfirstName || ""} ${s.studlastName || ""}`
-                    .toLowerCase();
+        const fullName =
+            `${s.studfirstName || ""} ${s.studlastName || ""}`
+                .toLowerCase();
 
-            return (
+        // ================= SEARCH MATCH =================
+        const matchesSearch =
 
-                fullName.includes(
+            fullName.includes(
+                search.toLowerCase()
+            ) ||
+
+            s.email
+                ?.toLowerCase()
+                .includes(
                     search.toLowerCase()
                 ) ||
 
-                s.email
-                    ?.toLowerCase()
-                    .includes(
-                        search.toLowerCase()
-                    ) ||
+            s.studentId
+                ?.toLowerCase()
+                .includes(
+                    search.toLowerCase()
+                ) ||
 
-                s.studentId
-                    ?.toLowerCase()
-                    .includes(
-                        search.toLowerCase()
-                    ) ||
+            String(
+                s.studRollNo || ""
+            ).includes(search);
 
-                String(
-                    s.studRollNo || ""
-                ).includes(search)
-            );
-        });
+        // ================= CLASS FILTER =================
+        const matchesClass =
+
+            selectedClass === "" ||
+
+            s.className === selectedClass;
+
+        return (
+            matchesSearch &&
+            matchesClass
+        );
+    });
 
     // ================= PAGINATION =================
     const indexOfLast =
@@ -530,11 +556,30 @@ const updateStudent = async (e) => {
         <div className="p-4 md:p-6 bg-gray-100 min-h-screen">
 
             {/* HEADER */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-around gap-4 mb-6">
 
                 <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
                     Students ({students.length})
                 </h2>
+
+                <select
+                   value={selectedClass}
+                   onChange={(e) => {
+                      setSelectedClass(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="border p-3 w-full md:w-40 rounded-xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-400">
+
+                   <option value="">
+                       All Classes
+                   </option>
+
+                   {uniqueClasses.map((cls, index) => (
+                      <option key={index} value={cls}>
+                         {cls}
+                       </option>
+                   ))}
+                </select>
 
                 <input
                     type="text"
@@ -545,6 +590,8 @@ const updateStudent = async (e) => {
                         setSearch(e.target.value)
                     }
                 />
+
+                
 
             </div>
 

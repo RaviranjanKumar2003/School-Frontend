@@ -10,6 +10,7 @@ const Result = () => {
   const [loading, setLoading] = useState(false);
 
   const [rechecks, setRechecks] = useState([]);
+  const [remarks, setRemarks] = useState({});
 
   const teacherData = JSON.parse(localStorage.getItem("professorData"));
   const teacherId = teacherData?.id;
@@ -29,7 +30,9 @@ const Result = () => {
 
   // 🔥 LOAD CLASSES
   useEffect(() => {
-    axios.get("http://localhost:8080/api/classes")
+    axios.get(
+     `http://localhost:8080/api/classes/by-school/${teacherData?.school?.id}`
+     )
       .then(res => setClasses(res.data))
       .catch(() => alert("Error loading classes"));
   }, []);
@@ -152,7 +155,7 @@ const Result = () => {
 
           <p className="text-sm mt-1">📘 Subject: {r.subjects?.[0]}</p>
 
-          <p className="text-sm">🏫 Class: {r.classId}</p>
+          <p className="text-sm">🏫 Class: {r.className}</p>
 
           <p className="text-sm">📝 Exam: {r.examType}</p>
 
@@ -210,29 +213,55 @@ const Result = () => {
               Update
             </button>
 
-            {/* ❌ NO CHANGE */}
-            <button
-             onClick={async () => {
-
-             const remark = prompt("Reason (why no change?)");
-
-             if (!remark) return alert("Reason required");
-
-             await axios.put(
-             `http://localhost:8080/api/recheck/no-change/${r.id}`,
-             null,
-            {
-            params: { remark }
+            <textarea
+            placeholder="Write reason..."
+            value={remarks[r.id] || ""}
+            onChange={(e) =>
+            setRemarks(prev => ({
+            ...prev,
+            [r.id]: e.target.value
+           }))
            }
-          );
+           className="w-full mt-2 p-2 border rounded"
+           />
 
-          alert("No Change Saved ✅");
+            {/* ❌ NO CHANGE */}
+          <button
+ onClick={async () => {
 
-         setRechecks(prev => prev.filter(x => x.id !== r.id));
+ const remark = remarks[r.id];
 
-         }}
-         className="bg-gray-400 text-white px-3 py-1 rounded">  No Change
-        </button>
+ if (!remark) {
+   return alert("Reason required");
+ }
+
+ try {
+
+   await axios.put(
+   `http://localhost:8080/api/recheck/no-change/${r.id}`,
+   null,
+   {
+    params: { remark }
+   }
+   );
+
+   alert("No Change Saved ✅");
+
+   setRechecks(prev =>
+    prev.filter(x => x.id !== r.id)
+   );
+
+ } catch (err) {
+
+   alert("Error ❌");
+
+ }
+
+}}
+className="bg-gray-400 text-white px-3 py-1 rounded"
+>
+No Change
+</button>
         </div>
         </div>
         ))}

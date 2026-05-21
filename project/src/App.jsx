@@ -21,8 +21,6 @@ import LoginTypeSelection from
 import SignUpTypeSelection from
   "./pages/auth/SignUpTypeSelection";
 
-import AttendanceFlow from
-  "./pages/dashboard/professor/PAttendance/AttendanceFlow";
 
 import PublicSchoolPage from
   "./pages/public/PublicSchoolPage";
@@ -97,10 +95,7 @@ function App() {
           ATTENDANCE
       ====================================================== */}
 
-      <Route
-        path="/Attendence"
-        element={<AttendanceFlow />}
-      />
+     
 
       {/* ======================================================
           NOT FOUND

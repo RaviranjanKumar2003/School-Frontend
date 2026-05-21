@@ -1,5 +1,7 @@
-
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Typography,
@@ -9,43 +11,58 @@ import {
   Spinner,
 } from "@material-tailwind/react";
 
-import { StatisticsCard } from "@/widgets/cards";
-import { StatisticsChart } from "@/widgets/charts";
+import {
+  StatisticsCard,
+} from "@/widgets/cards";
+
+import {
+  StatisticsChart,
+} from "@/widgets/charts";
 
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+const BASE_URL =
+  "http://localhost:8080/api";
 
 export function Home() {
 
-  // ================= HOD DATA =================
+  // =====================================================
+  // ROLE & USER DATA
+  // =====================================================
+
+  const role =
+    localStorage
+      .getItem("userRole")
+      ?.toLowerCase();
+
   const hodData = JSON.parse(
     localStorage.getItem("hodData")
   );
 
-  console.log(
-    "Hod Details Now :",
-    hodData
+  const schoolAdminData = JSON.parse(
+    localStorage.getItem("schoolAdminData")
   );
 
-  // ================= SAFE SCHOOL ID =================
+  // =====================================================
+  // SCHOOL ID
+  // =====================================================
+
   const schoolId =
-    hodData?.school?.id ||
-    hodData?.schoolId;
+    role === "hod"
+      ? (
+          hodData?.school?.id ||
+          hodData?.schoolId
+        )
+      : schoolAdminData?.schoolId;
 
-  const hodId =
-    hodData?.id;
+  // =====================================================
+  // STATES
+  // =====================================================
 
-  console.log(
-    "School ID :",
-    schoolId
-  );
-
-  console.log(
-    "HOD ID :",
-    hodId
-  );
-
-  // ================= STATES =================
   const [loading, setLoading] =
     useState(true);
 
@@ -58,29 +75,42 @@ export function Home() {
   const [chartData, setChartData] =
     useState([]);
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
-  // ================= APEX STYLE FIX =================
+  // =====================================================
+  // APEX STYLE FIX
+  // =====================================================
+
   useEffect(() => {
 
     const style =
       document.createElement("style");
 
     style.innerHTML = `
+
       .apexcharts-menu {
         background: white !important;
         color: black !important;
-        border-radius: 8px;
+        border-radius: 10px !important;
       }
 
       .apexcharts-menu-item {
         color: black !important;
-        font-size: 12px;
       }
 
-      .apexcharts-menu-item:hover {
-        background: #f3f4f6 !important;
+      .apexcharts-tooltip {
+        color: black !important;
       }
+
+      .apexcharts-canvas {
+        width: 100% !important;
+      }
+
+      .apexcharts-svg {
+        width: 100% !important;
+      }
+
     `;
 
     document.head.appendChild(style);
@@ -91,7 +121,10 @@ export function Home() {
 
   }, []);
 
-  // ================= FETCH DATA =================
+  // =====================================================
+  // FETCH DATA
+  // =====================================================
+
   const fetchData = async () => {
 
     try {
@@ -100,250 +133,345 @@ export function Home() {
 
       const today =
         new Date()
-          .toLocaleDateString("en-CA");
+          .toISOString()
+          .split("T")[0];
 
       console.log(
-        "Fetching Dashboard Data..."
+        "TODAY DATE:",
+        today
       );
 
-      // ================= STUDENTS =================
-      let studentRes = { data: [] };
+      // =====================================================
+      // API CALLS
+      // =====================================================
 
-      try {
+      const [
+        studentRes,
+        teacherRes,
+        feeRes,
+        stuTodayRes,
+        stuWeeklyRes,
+        teacherTodayRes,
+        teacherWeeklyRes,
+      ] = await Promise.allSettled([
 
-        studentRes = await axios.get(
-          `http://localhost:8080/api/students/school/${schoolId}`
-        );
+        // =====================================================
+        // STUDENTS
+        // =====================================================
 
-        console.log(
-          "Students API Success"
-        );
+        axios.get(
+          `${BASE_URL}/students/school/${schoolId}`
+        ),
 
-      } catch (e) {
+        // =====================================================
+        // TEACHERS
+        // =====================================================
 
-        console.log(
-          "Students API Failed",
-          e
-        );
-      }
+        axios.get(
+          `${BASE_URL}/professors/by-school/${schoolId}`
+        ),
 
-      // ================= TEACHERS =================
-      let teacherRes = { data: [] };
+        // =====================================================
+        // FEES
+        // IMPORTANT FIX
+        // =====================================================
 
-      try {
+        axios.get(
+          `${BASE_URL}/fees/summary/${schoolId}`,
+          {
+            params: {
+              schoolId,
+            },
+          }
+        ),
 
-        teacherRes = await axios.get(
-          `http://localhost:8080/api/professors/by-hod/${schoolId}/${hodId}`
-        );
+        // =====================================================
+        // STUDENT DAILY
+        // =====================================================
 
-        console.log(
-          "Teachers API Success"
-        );
+        axios.get(
+          `${BASE_URL}/stu-attendance/summary/${schoolId}`,
+          {
+            params: {
+              attendanceDate: today,
+            },
+          }
+        ),
 
-      } catch (e) {
+        // =====================================================
+        // STUDENT WEEKLY
+        // =====================================================
 
-        console.log(
-          "Teachers API Failed",
-          e
-        );
-      }
+        axios.get(
+          `${BASE_URL}/stu-attendance/weekly-summary/${schoolId}`
+        ),
 
-      // ================= FEES =================
-      let feeRes = { data: {} };
+        // =====================================================
+        // TEACHER DAILY
+        // =====================================================
 
-      try {
+        axios.get(
+          `${BASE_URL}/attendance/teacher/summary/${schoolId}`,
+          {
+            params: {
+              attendanceDate: today,
+            },
+          }
+        ),
 
-        feeRes = await axios.get(
-          `http://localhost:8080/api/fees/summary/${schoolId}`
-        );
+        // =====================================================
+        // TEACHER WEEKLY
+        // =====================================================
 
-        console.log(
-          "Fees API Success"
-        );
+        axios.get(
+          `${BASE_URL}/attendance/teacher/weekly-summary/${schoolId}`
+        ),
+      ]);
 
-      } catch (e) {
+      // =====================================================
+      // STUDENTS
+      // =====================================================
 
-        console.log(
-          "Fee API Failed",
-          e
-        );
-      }
-
-      // ================= STUDENT DAILY =================
-      let stuTodayRes = {
-        data: {
-          present: 0,
-          absent: 0,
-        },
-      };
-
-      try {
-
-        stuTodayRes =
-          await axios.get(
-            `http://localhost:8080/api/stu-attendance/summary/${schoolId}?date=${today}`
-          );
-
-        console.log(
-          "Student Today API Success"
-        );
-
-      } catch (e) {
-
-        console.log(
-          "Student Today API Failed",
-          e
-        );
-      }
-
-      // ================= STUDENT WEEKLY =================
-      let stuWeeklyRes = {
-        data: [],
-      };
-
-      try {
-
-        stuWeeklyRes =
-          await axios.get(
-            `http://localhost:8080/api/stu-attendance/weekly-summary/${schoolId}`
-          );
-
-        console.log(
-          "Student Weekly API Success"
-        );
-
-      } catch (e) {
-
-        console.log(
-          "Student Weekly API Failed",
-          e
-        );
-      }
-
-      // ================= TEACHER DAILY =================
-      let teacherTodayRes = {
-        data: {
-          present: 0,
-          absent: 0,
-        },
-      };
-
-      try {
-
-        teacherTodayRes =
-          await axios.get(
-            `http://localhost:8080/api/attendance/teacher/summary/${schoolId}?date=${today}`
-          );
-
-        console.log(
-          "Teacher Today API Success"
-        );
-
-      } catch (e) {
-
-        console.log(
-          "Teacher Today API Failed",
-          e
-        );
-      }
-
-      // ================= TEACHER WEEKLY =================
-      let teacherWeeklyRes = {
-        data: [],
-      };
-
-      try {
-
-        teacherWeeklyRes =
-          await axios.get(
-            `http://localhost:8080/api/attendance/teacher/weekly-summary/${schoolId}`
-          );
-
-        console.log(
-          "Teacher Weekly API Success"
-        );
-
-      } catch (e) {
-
-        console.log(
-          "Teacher Weekly API Failed",
-          e
-        );
-      }
-
-      // ================= RESPONSE =================
       const students =
-        Array.isArray(studentRes.data)
-          ? studentRes.data
+        studentRes.status === "fulfilled"
+          ? (
+              Array.isArray(
+                studentRes.value?.data
+              )
+                ? studentRes.value.data
+                : []
+            )
           : [];
 
-      const teachers =
-        Array.isArray(teacherRes.data)
-          ? teacherRes.data
-          : [];
+      // =====================================================
+      // TEACHERS
+      // =====================================================
 
-      const fee =
-        feeRes.data || {};
+      let teachers = [];
+
+      if (
+        teacherRes.status ===
+        "fulfilled"
+      ) {
+
+        console.log(
+          "Teacher API:",
+          teacherRes.value.data
+        );
+
+        if (
+          Array.isArray(
+            teacherRes.value.data
+          )
+        ) {
+
+          teachers =
+            teacherRes.value.data;
+
+        } else if (
+          Array.isArray(
+            teacherRes.value.data?.data
+          )
+        ) {
+
+          teachers =
+            teacherRes.value.data.data;
+        }
+      }
+
+      // =====================================================
+      // FEES
+      // =====================================================
+
+      let fee = {};
+
+      if (
+        feeRes.status === "fulfilled"
+      ) {
+
+        fee =
+          feeRes.value?.data || {};
+
+      } else {
+
+        console.log(
+          "FEE API ERROR:",
+          feeRes.reason
+        );
+
+        fee = {
+          paidStudents: 0,
+          pendingStudents: 0,
+          totalFeeAmount: 0,
+          totalCollectionAmount: 0,
+          totalPendingAmount: 0,
+        };
+      }
+
+      // =====================================================
+      // STUDENT TODAY
+      // =====================================================
 
       const stuToday =
-        stuTodayRes.data || {};
+        stuTodayRes.status ===
+        "fulfilled"
+          ? (
+              stuTodayRes.value?.data || {}
+            )
+          : {};
+
+      // =====================================================
+      // STUDENT WEEKLY
+      // =====================================================
 
       const stuWeekly =
-        Array.isArray(
-          stuWeeklyRes.data
-        )
-          ? stuWeeklyRes.data
+        stuWeeklyRes.status ===
+        "fulfilled"
+          ? (
+              Array.isArray(
+                stuWeeklyRes.value?.data
+              )
+                ? stuWeeklyRes.value.data
+                : []
+            )
           : [];
+
+      // =====================================================
+      // TEACHER TODAY
+      // =====================================================
 
       const teacherToday =
-        teacherTodayRes.data || {};
+        teacherTodayRes.status ===
+        "fulfilled"
+          ? (
+              teacherTodayRes.value?.data || {}
+            )
+          : {};
+
+      // =====================================================
+      // TEACHER WEEKLY
+      // =====================================================
 
       const teacherWeekly =
-        Array.isArray(
-          teacherWeeklyRes.data
-        )
-          ? teacherWeeklyRes.data
+        teacherWeeklyRes.status ===
+        "fulfilled"
+          ? (
+              Array.isArray(
+                teacherWeeklyRes.value?.data
+              )
+                ? teacherWeeklyRes.value.data
+                : []
+            )
           : [];
 
-      // ================= DEBUG =================
+      // =====================================================
+      // DEBUG
+      // =====================================================
+
       console.log(
-        "Students Response :",
+        "Students:",
         students
       );
 
       console.log(
-        "Teachers Response :",
+        "Teachers:",
         teachers
       );
 
       console.log(
-        "Students Count :",
-        students.length
+        "Fee:",
+        fee
       );
 
       console.log(
-        "Teachers Count :",
-        teachers.length
+        "Teacher Weekly:",
+        teacherWeekly
       );
 
-      // ================= SET STATS =================
+      // =====================================================
+      // STATS
+      // =====================================================
+
       setStats({
 
         students:
-          Number(
-            students.length
-          ) || 0,
+          students.length || 0,
 
         teachers:
-          Number(
-            teachers.length
-          ) || 0,
+          teachers.length || 0,
       });
 
-      // ================= CHART DATA =================
+      // =====================================================
+      // STUDENT DATE LABELS
+      // =====================================================
+
+      const studentDates =
+        stuWeekly.map((d) =>
+          d?.date
+            ? new Date(
+                d.date
+              ).toLocaleDateString(
+                "en-IN",
+                {
+                  day: "numeric",
+                  month: "short",
+                }
+              )
+            : ""
+        );
+
+      // =====================================================
+      // SAFE TEACHER DATA
+      // =====================================================
+
+      const safeTeacherWeekly =
+        teacherWeekly.length > 0
+          ? teacherWeekly
+          : [
+              {
+                attendanceDate: today,
+
+                present:
+                  Number(
+                    teacherToday?.present
+                  ) || 0,
+
+                absent:
+                  Number(
+                    teacherToday?.absent
+                  ) || 0,
+              },
+            ];
+
+      // =====================================================
+      // SAFE TEACHER DATES
+      // =====================================================
+
+      const safeTeacherDates =
+        safeTeacherWeekly.map((d) =>
+          d?.attendanceDate
+            ? new Date(
+                d.attendanceDate
+              ).toLocaleDateString(
+                "en-IN",
+                {
+                  day: "numeric",
+                  month: "short",
+                }
+              )
+            : ""
+        );
+
+      // =====================================================
+      // CHARTS
+      // =====================================================
+
       setChartData([
 
-        // ================= FEE STATUS =================
+        // =====================================================
+        // FEE STATUS
+        // =====================================================
+
         {
           color: "blue",
 
@@ -353,27 +481,44 @@ export function Home() {
             "Paid vs Pending",
 
           chart: {
+
             type: "bar",
 
-            height: 220,
+            height: 320,
 
             series: [
               {
                 name: "Students",
 
                 data: [
-                  fee?.paidStudents || 0,
+                  Number(
+                    fee?.paidStudents
+                  ) || 0,
 
-                  fee?.pendingStudents || 0,
+                  Number(
+                    fee?.pendingStudents
+                  ) || 0,
                 ],
               },
             ],
 
             options: {
+
               chart: {
                 toolbar: {
                   show: true,
                 },
+              },
+
+              plotOptions: {
+                bar: {
+                  borderRadius: 6,
+                  columnWidth: "40%",
+                },
+              },
+
+              dataLabels: {
+                enabled: true,
               },
 
               xaxis: {
@@ -386,39 +531,62 @@ export function Home() {
           },
         },
 
-        // ================= COLLECTION =================
+        // =====================================================
+        // FEE COLLECTION
+        // =====================================================
+
         {
           color: "green",
 
-          title: "Collection",
+          title:
+            "Fee Collection",
 
           description:
             "Total / Collected / Pending",
 
           chart: {
+
             type: "bar",
 
-            height: 220,
+            height: 320,
 
             series: [
               {
                 name: "Amount",
 
                 data: [
-                  fee?.totalFeeAmount || 0,
+                  Number(
+                    fee?.totalFeeAmount
+                  ) || 0,
 
-                  fee?.totalCollectionAmount || 0,
+                  Number(
+                    fee?.totalCollectionAmount
+                  ) || 0,
 
-                  fee?.totalPendingAmount || 0,
+                  Number(
+                    fee?.totalPendingAmount
+                  ) || 0,
                 ],
               },
             ],
 
             options: {
+
               chart: {
                 toolbar: {
                   show: true,
                 },
+              },
+
+              plotOptions: {
+                bar: {
+                  borderRadius: 6,
+                  columnWidth: "40%",
+                },
+              },
+
+              dataLabels: {
+                enabled: true,
               },
 
               xaxis: {
@@ -432,7 +600,10 @@ export function Home() {
           },
         },
 
-        // ================= STUDENT DAILY =================
+        // =====================================================
+        // STUDENT DAILY
+        // =====================================================
+
         {
           color: "purple",
 
@@ -440,43 +611,46 @@ export function Home() {
             "Student Daily Attendance",
 
           description:
-            "Present vs Absent",
+            "Today Attendance",
 
           chart: {
-            type: "bar",
 
-            height: 220,
+            type: "pie",
+
+            height: 320,
 
             series: [
-              {
-                name: "Students",
+              Number(
+                stuToday?.present
+              ) || 0,
 
-                data: [
-                  stuToday?.present || 0,
-
-                  stuToday?.absent || 0,
-                ],
-              },
+              Number(
+                stuToday?.absent
+              ) || 0,
             ],
 
             options: {
-              chart: {
-                toolbar: {
-                  show: true,
-                },
+
+              labels: [
+                "Present",
+                "Absent",
+              ],
+
+              legend: {
+                position: "bottom",
               },
 
-              xaxis: {
-                categories: [
-                  "Present",
-                  "Absent",
-                ],
+              dataLabels: {
+                enabled: true,
               },
             },
           },
         },
 
-        // ================= STUDENT WEEKLY =================
+        // =====================================================
+        // STUDENT WEEKLY
+        // =====================================================
+
         {
           color: "orange",
 
@@ -487,9 +661,10 @@ export function Home() {
             "Last 7 Days",
 
           chart: {
+
             type: "line",
 
-            height: 220,
+            height: 320,
 
             series: [
               {
@@ -498,30 +673,62 @@ export function Home() {
                 data:
                   stuWeekly.map(
                     (d) =>
-                      d?.present || 0
+                      Number(
+                        d?.present
+                      ) || 0
+                  ),
+              },
+
+              {
+                name: "Absent",
+
+                data:
+                  stuWeekly.map(
+                    (d) =>
+                      Number(
+                        d?.absent
+                      ) || 0
                   ),
               },
             ],
 
             options: {
+
               chart: {
                 toolbar: {
                   show: true,
                 },
+
+                zoom: {
+                  enabled: false,
+                },
+              },
+
+              stroke: {
+                curve: "smooth",
+                width: 4,
+              },
+
+              markers: {
+                size: 5,
+              },
+
+              dataLabels: {
+                enabled: false,
               },
 
               xaxis: {
                 categories:
-                  stuWeekly.map(
-                    (d) =>
-                      d?.date || ""
-                  ),
+                  studentDates,
               },
             },
           },
         },
 
-        // ================= TEACHER DAILY =================
+        // =====================================================
+        // TEACHER DAILY
+        // =====================================================
+
         {
           color: "indigo",
 
@@ -529,43 +736,46 @@ export function Home() {
             "Teacher Daily Attendance",
 
           description:
-            "Present vs Absent",
+            "Today Attendance",
 
           chart: {
-            type: "bar",
 
-            height: 220,
+            type: "donut",
+
+            height: 320,
 
             series: [
-              {
-                name: "Teachers",
+              Number(
+                teacherToday?.present
+              ) || 0,
 
-                data: [
-                  teacherToday?.present || 0,
-
-                  teacherToday?.absent || 0,
-                ],
-              },
+              Number(
+                teacherToday?.absent
+              ) || 0,
             ],
 
             options: {
-              chart: {
-                toolbar: {
-                  show: true,
-                },
+
+              labels: [
+                "Present",
+                "Absent",
+              ],
+
+              legend: {
+                position: "bottom",
               },
 
-              xaxis: {
-                categories: [
-                  "Present",
-                  "Absent",
-                ],
+              dataLabels: {
+                enabled: true,
               },
             },
           },
         },
 
-        // ================= TEACHER WEEKLY =================
+        // =====================================================
+        // TEACHER WEEKLY
+        // =====================================================
+
         {
           color: "teal",
 
@@ -576,35 +786,61 @@ export function Home() {
             "Last 7 Days",
 
           chart: {
-            type: "line",
 
-            height: 220,
+            type: "area",
+
+            height: 320,
 
             series: [
               {
                 name: "Present",
 
                 data:
-                  teacherWeekly.map(
+                  safeTeacherWeekly.map(
                     (d) =>
-                      d?.present || 0
+                      Number(
+                        d?.present
+                      ) || 0
+                  ),
+              },
+
+              {
+                name: "Absent",
+
+                data:
+                  safeTeacherWeekly.map(
+                    (d) =>
+                      Number(
+                        d?.absent
+                      ) || 0
                   ),
               },
             ],
 
             options: {
+
               chart: {
                 toolbar: {
                   show: true,
                 },
               },
 
+              stroke: {
+                curve: "smooth",
+                width: 4,
+              },
+
+              markers: {
+                size: 5,
+              },
+
+              dataLabels: {
+                enabled: false,
+              },
+
               xaxis: {
                 categories:
-                  teacherWeekly.map(
-                    (d) =>
-                      d?.date || ""
-                  ),
+                  safeTeacherDates,
               },
             },
           },
@@ -614,7 +850,7 @@ export function Home() {
     } catch (err) {
 
       console.log(
-        "HOME DASHBOARD ERROR :",
+        "HOME DASHBOARD ERROR:",
         err
       );
 
@@ -624,71 +860,88 @@ export function Home() {
     }
   };
 
-  // ================= LOAD =================
+  // =====================================================
+  // LOAD
+  // =====================================================
+
   useEffect(() => {
 
-    if (
-      schoolId &&
-      hodId
-    ) {
+    if (schoolId) {
 
       fetchData();
     }
 
-  }, [
-    schoolId,
-    hodId,
-  ]);
+  }, [schoolId]);
 
-  // ================= LOADING =================
+  // =====================================================
+  // LOADING
+  // =====================================================
+
   if (loading) {
 
     return (
 
-      <div className="
-        flex
-        justify-center
-        items-center
-        h-[70vh]
-      ">
-        <Spinner className="h-10 w-10" />
+      <div
+        className="
+          flex
+          justify-center
+          items-center
+          h-[70vh]
+        "
+      >
+        <Spinner
+          className="
+            h-12
+            w-12
+          "
+        />
       </div>
     );
   }
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
 
     <div className="mt-6 px-3">
 
-      {/* ================= TOP CARDS ================= */}
+      {/* =====================================================
+          TOP CARDS
+      ===================================================== */}
+
       <div
         className="
           mb-8
           grid
           grid-cols-1
-          gap-4
           sm:grid-cols-2
           xl:grid-cols-3
+          gap-5
         "
       >
 
-        {/* ================= STUDENTS ================= */}
+        {/* STUDENTS */}
+
         <div
           onClick={() =>
             navigate(
               "/dashboard/hod/students"
             )
           }
-          className="cursor-pointer"
+          className="
+            cursor-pointer
+            hover:scale-[1.02]
+            transition-all
+          "
         >
 
           <StatisticsCard
             title="Total Students"
-
             value={String(
               stats.students || 0
             )}
-
             icon={
               <i
                 className="
@@ -702,23 +955,26 @@ export function Home() {
 
         </div>
 
-        {/* ================= TEACHERS ================= */}
+        {/* TEACHERS */}
+
         <div
           onClick={() =>
             navigate(
               "/dashboard/hod/teachers"
             )
           }
-          className="cursor-pointer"
+          className="
+            cursor-pointer
+            hover:scale-[1.02]
+            transition-all
+          "
         >
 
           <StatisticsCard
             title="Total Teachers"
-
             value={String(
               stats.teachers || 0
             )}
-
             icon={
               <i
                 className="
@@ -732,21 +988,24 @@ export function Home() {
 
         </div>
 
-        {/* ================= TOPPERS ================= */}
+        {/* TOPPERS */}
+
         <div
           onClick={() =>
             navigate(
               "/dashboard/hod/toppers"
             )
           }
-          className="cursor-pointer"
+          className="
+            cursor-pointer
+            hover:scale-[1.02]
+            transition-all
+          "
         >
 
           <StatisticsCard
             title="Toppers"
-
             value="View"
-
             icon={
               <i
                 className="
@@ -762,13 +1021,16 @@ export function Home() {
 
       </div>
 
-      {/* ================= CHARTS ================= */}
+      {/* =====================================================
+          CHARTS
+      ===================================================== */}
+
       <div
         className="
           grid
           grid-cols-1
-          gap-4
           md:grid-cols-2
+          gap-5
         "
       >
 
@@ -778,14 +1040,30 @@ export function Home() {
             <Card
               key={index}
               className="
-                shadow
+                rounded-2xl
                 border
+                shadow-lg
               "
             >
 
-              <CardHeader className="p-4">
+              <CardHeader
+                floated={false}
+                shadow={false}
+                className="
+                  rounded-none
+                  border-b
+                  bg-white
+                  p-4
+                  m-0
+                "
+              >
 
-                <Typography variant="h6">
+                <Typography
+                  variant="h6"
+                  className="
+                    font-bold
+                  "
+                >
                   {item.title}
                 </Typography>
 
@@ -800,11 +1078,28 @@ export function Home() {
 
               </CardHeader>
 
-              <CardBody>
+              <CardBody
+                className="
+                  p-4
+                "
+              >
 
-                <StatisticsChart
-                  {...item}
-                />
+                <div
+                  className="
+                    w-full
+                    overflow-x-auto
+                  "
+                >
+
+                  <StatisticsChart
+                    key={`${item.title}-${index}`}
+                    color={item.color}
+                    title={item.title}
+                    description={item.description}
+                    chart={item.chart}
+                  />
+
+                </div>
 
               </CardBody>
 

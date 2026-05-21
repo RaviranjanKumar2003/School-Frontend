@@ -10,12 +10,19 @@ import {
   Button,
 } from "@material-tailwind/react";
 
+import {
+  BookOpenIcon,
+  Squares2X2Icon,
+} from "@heroicons/react/24/solid";
+
 const BASE_URL = "http://localhost:8080/api";
 
 export default function SchoolDashboard() {
 
   // ================= GET SCHOOL =================
-  const hodData = JSON.parse(localStorage.getItem("hodData"));
+  const hodData = JSON.parse(
+    localStorage.getItem("hodData")
+  );
 
   console.log("School HOD Data :", hodData);
 
@@ -23,7 +30,8 @@ export default function SchoolDashboard() {
 
   // ================= STATES =================
   const [classes, setClasses] = useState([]);
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndex, setOpenIndex] =
+    useState(null);
 
   // ================= LOAD DATA =================
   useEffect(() => {
@@ -39,16 +47,56 @@ export default function SchoolDashboard() {
 
     try {
 
-      // ONLY CURRENT SCHOOL CLASSES
-      const res = await axios.get(
+      // ================= GET CLASSES =================
+      const classRes = await axios.get(
         `${BASE_URL}/classes/by-school/${schoolId}`
       );
 
-      setClasses(res.data || []);
+      const classData =
+        classRes.data || [];
+
+      // ================= GET SECTIONS =================
+      const updatedClasses =
+        await Promise.all(
+
+          classData.map(async (cls) => {
+
+            try {
+
+              const sectionRes =
+                await axios.get(
+                  `${BASE_URL}/sections/${schoolId}/${cls.id}`
+                );
+
+              return {
+                ...cls,
+                sections:
+                  sectionRes.data || [],
+              };
+
+            } catch (err) {
+
+              console.error(
+                "Section Fetch Error :",
+                err
+              );
+
+              return {
+                ...cls,
+                sections: [],
+              };
+            }
+          })
+        );
+
+      setClasses(updatedClasses);
 
     } catch (err) {
 
-      console.error("Fetch Classes Error:", err);
+      console.error(
+        "Fetch Classes Error:",
+        err
+      );
 
     }
   };
@@ -56,15 +104,19 @@ export default function SchoolDashboard() {
   // ================= TOGGLE =================
   const toggleDetails = (index) => {
 
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenIndex(
+      openIndex === index
+        ? null
+        : index
+    );
 
   };
 
   return (
 
-    <div className="p-6 flex flex-col gap-6 bg-gray-100 min-h-screen">
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col gap-6">
 
-      {/* TOP DASHBOARD CARD */}
+      {/* ================= TOP CARD ================= */}
       <Card className="shadow-lg border border-blue-gray-100">
 
         <CardBody className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -79,7 +131,8 @@ export default function SchoolDashboard() {
             </Typography>
 
             <Typography className="text-gray-600 mt-1">
-              Principal / HOD can only monitor classes & subjects
+              Principal / HOD can monitor classes,
+              sections & subjects
             </Typography>
 
           </div>
@@ -98,66 +151,111 @@ export default function SchoolDashboard() {
 
       </Card>
 
-      {/* CLASS LIST */}
+      {/* ================= CLASS LIST ================= */}
       {classes.map((cls, index) => {
 
-        const hasComputer = cls.subjects?.some(
-          (s) =>
-            s?.subjectName?.toLowerCase() === "computer science"
-        );
+        const hasComputer =
+          cls.subjects?.some(
+            (s) =>
+              s?.subjectName?.toLowerCase() ===
+              "computer science"
+          );
 
         return (
 
           <Card
             key={cls.id}
-            className="shadow-md border border-blue-gray-50"
+            className="shadow-md border border-blue-gray-50 overflow-hidden"
           >
 
-            {/* HEADER */}
+            {/* ================= HEADER ================= */}
             <CardHeader
               floated={false}
               shadow={false}
-              className="m-0 rounded-none bg-gradient-to-r from-blue-600 to-indigo-600 p-5 flex justify-between items-center"
+              className="m-0 rounded-none bg-gradient-to-r from-blue-600 to-indigo-600 p-5"
             >
 
-              <div>
+              <div className="flex justify-between items-start flex-wrap gap-4">
 
-                <Typography
-                  variant="h6"
-                  color="white"
-                  className="font-bold"
-                >
-                  {cls.className}
-                </Typography>
+                {/* ================= LEFT ================= */}
+                <div>
 
-                <Typography
-                  color="white"
-                  className="text-sm opacity-80"
-                >
-                  Class Number : {cls.classNumber}
-                </Typography>
+                  <Typography
+                    variant="h5"
+                    color="white"
+                    className="font-bold"
+                  >
+                    {cls.className}
+                  </Typography>
+
+                  <Typography
+                    color="white"
+                    className="text-sm opacity-80 mt-1"
+                  >
+                    Sections Overview
+                  </Typography>
+
+                  {/* ================= SECTIONS ================= */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+
+                    {cls.sections?.length > 0 ? (
+
+                      cls.sections.map((sec) => (
+
+                        <div
+                          key={sec.id}
+                          className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-medium border border-white/20"
+                        >
+
+                          {sec.sectionName}
+
+                        </div>
+
+                      ))
+
+                    ) : (
+
+                      <Typography
+                        color="white"
+                        className="text-sm opacity-80"
+                      >
+                        No Sections Available
+                      </Typography>
+
+                    )}
+
+                  </div>
+
+                </div>
+
+                {/* ================= RIGHT ================= */}
+                <div className="flex items-center gap-2 flex-wrap">
+
+                  <Chip
+                    value={`${cls.subjects?.length || 0} Subjects`}
+                    className="bg-white text-blue-700"
+                  />
+
+                  <Chip
+                    value={`${cls.sections?.length || 0} Sections`}
+                    className="bg-green-100 text-green-700"
+                  />
+
+                </div>
 
               </div>
 
-              <Chip
-                value={`${cls.subjects?.length || 0} Subjects`}
-                className="bg-white text-blue-700"
-              />
-
             </CardHeader>
 
-            {/* BODY */}
+            {/* ================= BODY ================= */}
             <CardBody>
 
-              {/* TOP SECTION */}
+              {/* ================= TOP ACTIONS ================= */}
               <div className="flex justify-between items-center flex-wrap gap-3">
 
                 <div>
 
-                  <Typography
-                    variant="small"
-                    className="font-semibold text-blue-gray-700"
-                  >
+                  <Typography className="font-semibold text-blue-gray-700">
                     Subject Management
                   </Typography>
 
@@ -174,14 +272,18 @@ export default function SchoolDashboard() {
                   size="sm"
                   color="blue"
                   variant="gradient"
-                  onClick={() => toggleDetails(index)}
+                  onClick={() =>
+                    toggleDetails(index)
+                  }
                 >
-                  {openIndex === index ? "Hide Subjects" : "View Subjects"}
+                  {openIndex === index
+                    ? "Hide Subjects"
+                    : "View Subjects"}
                 </Button>
 
               </div>
 
-              {/* SUBJECTS */}
+              {/* ================= SUBJECTS ================= */}
               {openIndex === index && (
 
                 <div className="mt-5">
@@ -200,16 +302,26 @@ export default function SchoolDashboard() {
 
                     <div className="flex flex-wrap gap-3">
 
-                      {cls.subjects.map((sub, i) => (
+                      {cls.subjects.map(
+                        (sub, i) => (
 
-                        <Chip
-                          key={i}
-                          value={sub.subjectName}
-                          color="blue"
-                          className="rounded-full"
-                        />
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full"
+                          >
 
-                      ))}
+                            <BookOpenIcon className="h-4 w-4 text-blue-700" />
+
+                            <Typography
+                              variant="small"
+                              className="font-medium text-blue-gray-800"
+                            >
+                              {sub.subjectName}
+                            </Typography>
+
+                          </div>
+                        )
+                      )}
 
                     </div>
 
@@ -219,7 +331,7 @@ export default function SchoolDashboard() {
 
               )}
 
-              {/* FEATURES */}
+              {/* ================= FEATURES ================= */}
               <div className="mt-6 flex gap-3 flex-wrap">
 
                 <Chip
@@ -230,6 +342,11 @@ export default function SchoolDashboard() {
                 <Chip
                   value="✔ Practical Classes"
                   color="blue"
+                />
+
+                <Chip
+                  value="✔ Smart Sections"
+                  color="orange"
                 />
 
                 {hasComputer && (
@@ -243,6 +360,55 @@ export default function SchoolDashboard() {
 
               </div>
 
+              {/* ================= SUMMARY ================= */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+
+                <div className="bg-gray-50 rounded-xl p-4 border">
+
+                  <div className="flex items-center gap-3">
+
+                    <Squares2X2Icon className="h-8 w-8 text-indigo-600" />
+
+                    <div>
+
+                      <Typography className="font-semibold text-blue-gray-800">
+                        Total Sections
+                      </Typography>
+
+                      <Typography className="text-sm text-gray-600">
+                        {cls.sections?.length || 0} Sections Available
+                      </Typography>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4 border">
+
+                  <div className="flex items-center gap-3">
+
+                    <BookOpenIcon className="h-8 w-8 text-blue-600" />
+
+                    <div>
+
+                      <Typography className="font-semibold text-blue-gray-800">
+                        Total Subjects
+                      </Typography>
+
+                      <Typography className="text-sm text-gray-600">
+                        {cls.subjects?.length || 0} Subjects Assigned
+                      </Typography>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
             </CardBody>
 
           </Card>
@@ -250,7 +416,7 @@ export default function SchoolDashboard() {
         );
       })}
 
-      {/* EMPTY STATE */}
+      {/* ================= EMPTY STATE ================= */}
       {classes.length === 0 && (
 
         <Card className="shadow-md">
