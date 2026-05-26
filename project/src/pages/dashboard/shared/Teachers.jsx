@@ -9,7 +9,8 @@ export default function Teachers() {
 
     const [schoolClasses, setSchoolClasses] = useState([]);
 
-    const [updateAssignments, setUpdateAssignments] = useState(true);
+    // const [updateAssignments, setUpdateAssignments] = useState(true);
+    const [ updateAssignmentsEnabled, setUpdateAssignmentsEnabled] = useState(true);
 
     const [userData, setUserData] = useState(null);
 
@@ -47,10 +48,10 @@ export default function Teachers() {
 
 
 useEffect(() => {
-    if (updateAssignments) {
+    if (updateAssignmentsEnabled) {
         fetchSchoolClasses();
     }
-}, [updateAssignments]);
+}, [updateAssignmentsEnabled]);
 
 const isChecked = (classId, subjectName) => {  // cls
   
@@ -232,97 +233,240 @@ const isChecked = (classId, subjectName) => {  // cls
 
     // ================= UPDATE =================
     const updateTeacher = async (e) => {
+
     e.preventDefault();
 
     try {
+
+        // ================= VALIDATION =================
         if (!editingTeacher?.id) {
+
             alert("Teacher ID missing");
             return;
         }
 
         if (!userData?.schoolId) {
+
             alert("School ID missing");
             return;
         }
 
+        // ================= ROLE =================
+        const role =
+            localStorage
+                .getItem("userRole")
+                ?.toLowerCase();
+
+        // ================= FORM DATA =================
         const formData = new FormData();
 
-        // ================= BASIC FIELDS =================
-        formData.append("name", editingTeacher?.name || "");
-        formData.append("email", editingTeacher?.email || "");
-        formData.append("phone", editingTeacher?.phone || "");
-        formData.append("designation", editingTeacher?.designation || "");
-        formData.append("qualification", editingTeacher?.qualification || "");
-        formData.append("experience", editingTeacher?.experience || "");
-        formData.append("joiningDate", editingTeacher?.joiningDate || "");
+        // =================================================
+        // BASIC FIELDS
+        // =================================================
+        formData.append(
+            "name",
+            editingTeacher?.name || ""
+        );
 
-        // ================= IDs =================
-        formData.append("schoolId", userData?.schoolId);
+        formData.append(
+            "email",
+            editingTeacher?.email || ""
+        );
 
-        const hodIdFinal = editingTeacher?.hodId || userData?.id;
+        formData.append(
+            "phone",
+            editingTeacher?.phone || ""
+        );
 
-        if (!hodIdFinal) {
-            alert("HOD ID missing");
-            return;
+        formData.append(
+            "designation",
+            editingTeacher?.designation || ""
+        );
+
+        formData.append(
+            "qualification",
+            editingTeacher?.qualification || ""
+        );
+
+        formData.append(
+            "experience",
+            editingTeacher?.experience || ""
+        );
+
+        formData.append(
+            "joiningDate",
+            editingTeacher?.joiningDate || ""
+        );
+
+        // =================================================
+        // IDs
+        // =================================================
+        formData.append(
+            "schoolId",
+            userData?.schoolId
+        );
+
+        // ================= HOD ID =================
+        const hodIdFinal =
+            editingTeacher?.hodId ||
+            userData?.id;
+
+        if (hodIdFinal) {
+
+            formData.append(
+                "hodId",
+                hodIdFinal
+            );
         }
 
-        formData.append("hodId", hodIdFinal);
+        // ================= SCHOOL ADMIN ID =================
+        if (role === "schooladmin") {
 
-        // ================= ⭐ NEW FLAG (IMPORTANT) =================
-        const updateAssignments = editingTeacher?.updateAssignments ?? true;
+            formData.append(
+                "schoolAdminId",
+                userData?.id
+            );
+        }
 
-        formData.append("updateAssignments", updateAssignments);
+        // =================================================
+        // UPDATE ASSIGNMENTS FLAG
+        // =================================================
+        formData.append(
+            "updateAssignmentsEnabled",
+            updateAssignmentsEnabled
+        );
 
-        // ================= ASSIGNMENTS =================
+        // =================================================
+        // ASSIGNMENTS
+        // =================================================
         const assignments =
-    Array.isArray(editingTeacher?.assignments)
-        ? editingTeacher.assignments
-        : [];
+            Array.isArray(editingTeacher?.assignments)
+                ? editingTeacher.assignments
+                : [];
 
-// ✅ CLEAN PAYLOAD
-const cleanedAssignments = assignments.map(a => ({
-    classId: a.classId,
-    className: a.className,
-    subjectName: a.subjectName
-}));
+        // ================= REMOVE DUPLICATES =================
+        const uniqueAssignments = [];
 
-formData.append(
-    "assignments",
-    JSON.stringify(cleanedAssignments)
-);
+        assignments.forEach((a) => {
 
-        // ================= IMAGE =================
+            const exists =
+                uniqueAssignments.some(
+
+                    (u) =>
+
+                        String(u.classId) ===
+                            String(a.classId)
+
+                        &&
+
+                        String(u.subjectName)
+                            .trim()
+                            .toLowerCase()
+
+                        ===
+
+                        String(a.subjectName)
+                            .trim()
+                            .toLowerCase()
+                );
+
+            if (!exists) {
+
+                uniqueAssignments.push({
+
+                    classId: a.classId,
+
+                    className: a.className,
+
+                    sectionName:
+                        a.sectionName || "",
+
+                    subjectName:
+                        a.subjectName,
+                });
+            }
+        });
+
+        // ================= SEND JSON =================
+        formData.append(
+            "assignments",
+            JSON.stringify(uniqueAssignments)
+        );
+
+        // =================================================
+        // IMAGE
+        // =================================================
         if (image instanceof File) {
-            formData.append("image", image);
+
+            formData.append(
+                "image",
+                image
+            );
         }
 
-        // ================= DEBUG =================
+        // =================================================
+        // DEBUG
+        // =================================================
+        console.log(
+            "=========== UPDATE PAYLOAD ==========="
+        );
+
         for (let pair of formData.entries()) {
-            console.log(pair[0], pair[1]);
+
+            console.log(
+                pair[0],
+                pair[1]
+            );
         }
 
-        // ================= API CALL =================
+        // =================================================
+        // API CALL
+        // =================================================
         const res = await axios.put(
+
             `${BASE_URL}/${editingTeacher.id}`,
+
             formData,
+
             {
                 headers: {
-                    "Content-Type": "multipart/form-data",
+                    "Content-Type":
+                        "multipart/form-data",
                 },
             }
         );
 
-        alert("✅ Updated Successfully");
+        console.log(
+            "UPDATE RESPONSE :",
+            res.data
+        );
+
+        // =================================================
+        // SUCCESS
+        // =================================================
+        alert(
+            "✅ Teacher Updated Successfully"
+        );
 
         setEditingTeacher(null);
+
         setImage(null);
+
         setPreview(null);
 
         fetchTeachers();
 
     } catch (err) {
-        console.log("UPDATE ERROR:", err?.response?.data || err);
-        alert("❌ Update failed (check console)");
+
+        console.log(
+            "UPDATE ERROR:",
+            err?.response?.data || err
+        );
+
+        alert(
+            err?.response?.data ||
+            "❌ Update failed"
+        );
     }
 };
 
@@ -651,20 +795,20 @@ const filteredTeachers = safeTeachers.filter((t) =>
 
     <button
         type="button"
-        onClick={() => setUpdateAssignments(!updateAssignments)}
+        onClick={() => setUpdateAssignmentsEnabled(!updateAssignmentsEnabled)}
         className={`px-4 py-2 rounded-full font-semibold transition ${
-            updateAssignments
+            updateAssignmentsEnabled
                 ? "bg-green-600 text-white"
                 : "bg-red-500 text-white"
         }`}
     >
-        {updateAssignments ? "ON" : "OFF"}
+        {updateAssignmentsEnabled ? "ON" : "OFF"}
     </button>
 
 </div>
 
 {/* ================= ASSIGNMENTS SHOW  subjectId ================= */}
-{updateAssignments && (
+{updateAssignmentsEnabled && (
     <div className="md:col-span-2 bg-gray-50 p-4 rounded-xl border">
 
         <h3 className="font-bold mb-3 text-gray-700">

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Scanner } from "@yudiel/react-qr-scanner";
+
+import Swal from "sweetalert2";
 
 import {
   FaPlus,
@@ -54,6 +57,9 @@ function StuAttendance() {
 
   const [qrStudentId, setQrStudentId] =
     useState("");
+
+  const [cameraOpen, setCameraOpen] =
+    useState(false);
 
   const [searchText, setSearchText] =
     useState("");
@@ -256,8 +262,8 @@ function StuAttendance() {
 
         const res = await axios.get(
 
-  `${BASE_URL}/students/school/${schoolId}/class/${selectedClass.id}`
-);
+          `${BASE_URL}/students/school/${schoolId}/class/${selectedClass.id}`
+        );
 
         const filtered =
           res.data.filter(
@@ -308,7 +314,6 @@ function StuAttendance() {
         const initial = {};
 
         mappedStudents.forEach((s) => {
-
           initial[s.id] = "P";
         });
 
@@ -477,6 +482,71 @@ function StuAttendance() {
     }
   };
 
+//======================== NEW Auto absent on QR Click
+  const handleQrModeStart = async () => {
+
+  if (
+    !attendanceDate ||
+    !selectedSection
+  ) {
+
+    alert(
+      "Please select Date & Section"
+    );
+
+    return;
+  }
+
+  try {
+
+    setLoading(true);
+
+    // SABKO ABSENT
+    const payload =
+      students.map((s) => ({
+
+        studentId: s.id,
+
+        status: "A",
+      }));
+
+    await axios.post(
+
+      `${BASE_URL}/stu-attendance/save?schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}&takenById=${user.id}&takenByName=${encodeURIComponent(user.name)}&takenByRole=${user.role}`,
+
+      payload
+    );
+
+    // QR BOX OPEN
+    setShowQrBox(true);
+
+    Swal.fire({
+      icon: "success",
+      title: "QR Mode Started",
+      text:
+        "All students marked Absent initially",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    Swal.fire({
+      icon: "error",
+      title: "Failed",
+      text:
+        err?.response?.data ||
+        "Could not start QR attendance",
+    });
+
+  } finally {
+
+    setLoading(false);
+  }
+};
+
   // =========================================================
   // SAVE ATTENDANCE
   // =========================================================
@@ -530,7 +600,7 @@ function StuAttendance() {
           window.confirm(
 
             `Attendance already created by ${existingData?.takenByName} (${existingData?.takenByRole}).
-Do you want to update attendance ?`
+            Do you want to update attendance ?`
           );
 
         if (!confirmUpdate) {
@@ -644,6 +714,81 @@ Do you want to update attendance ?`
         setLoading(false);
       }
     };
+
+    // =========================================================
+    // HANDLE QR SCAN
+    // =========================================================
+
+    const handleQrAttendanceAuto =
+  async (studentId) => {
+
+    if (
+      !studentId ||
+      !attendanceDate ||
+      !selectedSection
+    ) {
+
+      alert(
+        "Select Date & Section First"
+      );
+
+      return;
+    }
+
+    try {
+
+      const res =
+        await axios.post(
+
+          `${BASE_URL}/stu-attendance/scan-qr?studentId=${studentId}&schoolId=${schoolId}&classId=${selectedClass.id}&section=${selectedSection}&attendanceDate=${attendanceDate}&takenById=${user.id}&takenByName=${encodeURIComponent(user.name)}&takenByRole=${user.role}`
+        );
+
+      const found =
+        students.find(
+          (s) =>
+            s.studentId ===
+            studentId
+        );
+
+      if (found) {
+
+  setAttendance((prev) => ({
+
+    ...prev,
+
+    [found.id]: "P",
+  }));
+
+  Swal.fire({
+    icon: "success",
+    title: "Attendance Marked",
+    html: `
+      <b>${
+        found.fullName ||
+        `${found.studName} ${found.studLastName}`
+      }</b><br/>
+      Roll No : ${found.studRollNo}
+    `,
+    confirmButtonColor: "#2563eb",
+    timer: 2000,
+    showConfirmButton: false,
+  });
+}
+
+    } catch (err) {
+
+  console.error(err);
+
+  Swal.fire({
+    icon: "error",
+    title: "QR Attendance Failed",
+    text:
+      err?.response?.data ||
+      "Something went wrong",
+    confirmButtonColor: "#dc2626",
+  });
+}
+  };
 
   // =========================================================
   // BACK
@@ -953,11 +1098,7 @@ Do you want to update attendance ?`
                 {mode === "take" && (
 
                   <button
-                    onClick={() =>
-                      setShowQrBox(
-                        !showQrBox
-                      )
-                    }
+                    onClick={handleQrModeStart}
                     className="bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-3 flex items-center justify-center gap-2 w-full"
                   >
 
@@ -972,48 +1113,56 @@ Do you want to update attendance ?`
 
               {/* QR BOX */}
 
-              {mode === "take" &&
-                showQrBox && (
+{mode === "take" && showQrBox && (
 
-                <div className="bg-green-50 border border-green-300 rounded-2xl p-4 sm:p-5 mb-6">
+  <div className="bg-green-50 border border-green-300 rounded-2xl p-4 sm:p-5 mb-6">
 
-                  <h3 className="font-bold text-base sm:text-lg mb-3">
+    <h3 className="font-bold text-base sm:text-lg mb-3">
+      Scan Student QR
+    </h3>
 
-                    Scan QR / Enter Student ID
+    <div className="overflow-hidden rounded-2xl">
 
-                  </h3>
+      <Scanner
+  constraints={{
+    facingMode: "environment",
+  }}
 
-                  <div className="flex flex-col sm:flex-row gap-3">
+  allowMultiple={false}
+  scanDelay={2000}
 
-                    <input
-                      type="text"
-                      placeholder="Enter Student ID"
-                      value={qrStudentId}
-                      onChange={(e) =>
-                        setQrStudentId(
-                          e.target.value
-                        )
-                      }
-                      className="border p-3 rounded-xl flex-1"
-                    />
+  onScan={(result) => {
 
-                    <button
-                      onClick={
-                        handleQrAttendance
-                      }
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl"
-                    >
+    if (result?.[0]?.rawValue) {
 
-                      Mark Present
+      const scannedId =
+        result[0].rawValue;
 
-                    </button>
+      setQrStudentId(scannedId);
 
-                  </div>
+      handleQrAttendanceAuto(
+        scannedId
+      );
+    }
+  }}
 
-                </div>
-              )}
+  onError={(err) => {
+    console.log(err);
+  }}
 
-              {/* TAKEN INFO */}
+  styles={{
+    container: {
+      width: "100%",
+    },
+  }}
+/>
+
+    </div>
+
+  </div>
+)}
+
+              {/* TAKEN INFO Scanner */}
 
               {takenInfo && (
 
@@ -1170,7 +1319,7 @@ Do you want to update attendance ?`
 
               {/* SAVE */}
 
-              {mode === "take" && (
+              {mode === "take" && !showQrBox && (
 
                 <div className="text-center mt-8">
 

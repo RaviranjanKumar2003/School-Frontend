@@ -8,6 +8,8 @@ import {
   Button,
 } from "@material-tailwind/react";
 
+import { useParams, useNavigate } from "react-router-dom";
+
 import {
   BuildingOffice2Icon,
   UserCircleIcon,
@@ -17,6 +19,10 @@ import {
 } from "@heroicons/react/24/solid";
 
 export default function Schools() {
+
+  const { id } = useParams();
+const navigate = useNavigate();
+const isEdit = Boolean(id);
 
   const [schools, setSchools] = useState([]);
 
@@ -39,6 +45,7 @@ export default function Schools() {
     adminPhone: "",
 
   });
+  
 
   // ================= FETCH =================
   const fetchSchools = async () => {
@@ -64,6 +71,36 @@ export default function Schools() {
     fetchSchools();
 
   }, []);
+
+
+  const fetchSchoolById = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/schools/${id}`);
+    const data = await res.json();
+
+    setForm({
+      schoolName: data.schoolName || "",
+      schoolCode: data.schoolCode || "",
+      address: data.address || "",
+      email: data.email || "",
+      phone: data.phone || "",
+
+      adminName: data.schoolAdmin?.name || "",
+      adminUsername: data.schoolAdmin?.username || "",
+      adminPassword: "",
+      adminEmail: data.schoolAdmin?.email || "",
+      adminPhone: data.schoolAdmin?.phone || "",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  useEffect(() => {
+  if (isEdit) {
+    fetchSchoolById();
+  }
+}, [id]);
 
   // ================= HANDLE CHANGE =================
   const handleChange = (e) => {

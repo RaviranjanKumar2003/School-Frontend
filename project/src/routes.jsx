@@ -27,6 +27,9 @@ import {
   IdentificationIcon,
   PhoneArrowUpRightIcon,
   ClockIcon,
+  BuildingOffice2Icon,
+  PhotoIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
 
 import { lazy, Suspense } from "react";
@@ -109,8 +112,12 @@ const SchoolManagement = lazy(() =>
   import("@/pages/dashboard/superadmin/Schools")
 );
 
+const UpdateSchool = lazy(() =>
+  import("@/pages/dashboard/superadmin/UpdateSchool")
+);
+
 const SchoolAdminPage = lazy(() =>
-  import("@/pages/dashboard/superadmin/SchoolAdmins")
+  import("@/pages/dashboard/SuperAdmin/SchoolOverview")
 );
 
 /* =========================================================
@@ -152,6 +159,31 @@ const CreateStudent = lazy(() =>
 const StudentPromotion = lazy(() =>
   import("@/pages/dashboard/SchoolAdmin/StudentPromotion")
 );
+
+const TimeTable = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/TimeTable")
+);
+
+const Periods = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/Periods")
+);
+
+const OurFacilities = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/OurFacilities")
+);
+
+const OurGallery = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/OurGallery")
+);
+
+const SchoolStatistics = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/SchoolStatistics")
+);
+
+const Testimonials = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/Testimonials")
+);
+
 /* =========================================================
    HOD
 ========================================================= */
@@ -232,6 +264,10 @@ const ProfessorEvents = lazy(() =>
   import("@/pages/dashboard/professor/ProfessorEvents")
 );
 
+const TeacherTimeTable = lazy(() =>
+  import("@/pages/dashboard/professor/TeacherTimeTable")
+);
+
 /* =========================================================
    STUDENT
 ========================================================= */
@@ -261,6 +297,11 @@ const ArchivedNotifications = lazy(() =>
 const StudentEvents = lazy(() =>
   import("@/pages/dashboard/student/StudentEvents")
 );
+
+const StuTimeTable = lazy(() =>
+  import("@/pages/dashboard/student/StuTimeTable")
+);
+
 /* =========================================================
    AUTH
 ========================================================= */
@@ -521,6 +562,12 @@ export const routes = [
         path: "/professor/events",
         element: Load(ProfessorEvents),
       },
+      {
+       icon: <CalendarDaysIcon {...icon} />,
+       name: "Time Table",
+       path: "/professor/teacherTimeTable",
+       element: Load(TeacherTimeTable),
+      },
     ],
   },
 
@@ -596,6 +643,12 @@ export const routes = [
         name: "Payment",
         path: "/student/student-fee",
         element: <Suspense fallback={<LoadingSpinner />}><StudentFee /></Suspense>,
+      },
+      {
+       icon: <CalendarDaysIcon {...icon} />,
+       name: "Time Table",
+       path: "/student/stuTimeTable",
+       element: Load(StuTimeTable),
       },
     ],
   },
@@ -707,11 +760,17 @@ export const routes = [
         path: "/superadmin/schools",
         element: Load(SchoolManagement),
       },
+      {
+  icon: <BuildingLibraryIcon {...icon} />,
+  name: "Edit School",
+  path: "/superadmin/updateSchool/:id",
+  element: Load(UpdateSchool),
+},
 
       {
         icon: <UserGroupIcon {...icon} />,
-        name: "School Admins",
-        path: "/superadmin/admins",
+        name: "School Overview",
+        path: "/superadmin/admins/:id",
         element: Load(SchoolAdminPage),
       },
     ],
@@ -860,18 +919,54 @@ export const routes = [
       },
 
       {
-        icon: <CalendarDaysIcon {...icon} />,
-        name: "Attendance",
-        path: "/schooladmin/attendance",
-        element: Load(Attendance),
-      },
-
+  icon: <ClipboardDocumentCheckIcon {...icon} />,
+  name: "Attendance",
+  path: "/schooladmin/attendance",
+  element: Load(Attendance),
+},
       {
         icon: <PhoneIcon {...icon} />,
         name: "Receptionists",
         path: "/schooladmin/receptionists",
         element: Load(Receptionists),
       },
+      {
+        icon: <ClockIcon {...icon} />,
+        name: "Periods",
+        path: "/schooladmin/periods",
+        element: Load(Periods),
+      },
+      {
+  icon: <TableCellsIcon {...icon} />,
+  name: "Time Table",
+  path: "/schooladmin/timetable",
+  element: Load(TimeTable),
+},
+      {
+  icon: <BuildingOffice2Icon {...icon} />,
+  name: "Our Facilities",
+  path: "/schooladmin/ourFacilities",
+  element: Load(OurFacilities),
+},
+{
+  icon: <PhotoIcon {...icon} />,
+  name: "Our Gallery",
+  path: "/schooladmin/ourGallery",
+  element: Load(OurGallery),
+},
+{
+  icon: <ChartBarIcon {...icon} />,
+  name: "School Statistics",
+  path: "/schooladmin/schoolStatistics",
+  element: Load(SchoolStatistics),
+},
+{
+  icon: <ChatBubbleLeftRightIcon {...icon} />,
+  name: "Testimonials",
+  path: "/schooladmin/testimonials",
+  element: Load(Testimonials),
+},
+      
     ],
   },
 

@@ -1,8 +1,12 @@
 // ======================================================
 // PublicSchoolPage.jsx
-// Dynamic Public School Page
-// URL => /school/:slug
+// FULL PREMIUM DYNAMIC PUBLIC SCHOOL PAGE
 // ======================================================
+
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Card,
@@ -11,25 +15,83 @@ import {
   Button,
   Input,
   Textarea,
-  Carousel,
+  Chip,
+  Avatar,
 } from "@material-tailwind/react";
 
 import {
+
   BuildingOffice2Icon,
   PhoneIcon,
   MapPinIcon,
   AcademicCapIcon,
   EnvelopeIcon,
+  ComputerDesktopIcon,
+  TrophyIcon,
+  CheckCircleIcon,
+  StarIcon,
+  UserGroupIcon,
+  BuildingLibraryIcon,
+  TruckIcon,
+  PlayCircleIcon,
+
+  // ADD THESE ↓↓↓
+
+  BookOpenIcon,
+  PresentationChartBarIcon,
+  BeakerIcon,
+  ClipboardDocumentCheckIcon,
+  DevicePhoneMobileIcon,
+  WifiIcon,
+  GlobeAltIcon,
+  VideoCameraIcon,
+  TvIcon,
+  CpuChipIcon,
+  ShieldCheckIcon,
+  HeartIcon,
+  FireIcon,
+  HomeModernIcon,
+  FlagIcon,
+  SunIcon,
+  CakeIcon,
+  BoltIcon,
+  MusicalNoteIcon,
+  PaintBrushIcon,
+  MicrophoneIcon,
+  SparklesIcon,
+
 } from "@heroicons/react/24/solid";
+
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaYoutube,
+  FaBus,
+  FaWifi,
+  FaSwimmingPool,
+  FaBook,
+} from "react-icons/fa";
 
 import {
   useParams,
 } from "react-router-dom";
 
+import { motion } from "framer-motion";
+
+import CountUp from "react-countup";
+
 import {
-  useEffect,
-  useState,
-} from "react";
+  Swiper,
+  SwiperSlide,
+} from "swiper/react";
+
+import {
+  Autoplay,
+  Pagination,
+} from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/pagination";
 
 // ======================================================
 // BASE URL
@@ -57,17 +119,44 @@ export default function PublicSchoolPage() {
   const [school, setSchool] =
     useState(null);
 
+  const [statistics, setStatistics] =
+    useState(null);
+
+  const [testimonials, setTestimonials] =
+    useState([]);
+
+  const [facilities, setFacilities] =
+    useState([]);
+
+//============================================================= GALLERY STATES
+
+const [gallery, setGallery] =
+  useState([]);
+
+const [previewOpen, setPreviewOpen] =
+  useState(false);
+
+const [selectedVideo, setSelectedVideo] =
+  useState(null);
+
+//=============================================================================  
+
   const [loading, setLoading] =
     useState(true);
-
-  const [success, setSuccess] =
-    useState("");
 
   const [error, setError] =
     useState("");
 
+  const [success, setSuccess] =
+    useState("");
+
+  const [
+    testimonialSuccess,
+    setTestimonialSuccess,
+  ] = useState("");
+
   // ======================================================
-  // FORM DATA
+  // INQUIRY FORM
   // ======================================================
 
   const [formData, setFormData] =
@@ -81,11 +170,31 @@ export default function PublicSchoolPage() {
 
       email: "",
 
+      classApplying: "",
+
       message: "",
     });
 
   // ======================================================
-  // FETCH SCHOOL
+  // TESTIMONIAL FORM
+  // ======================================================
+
+  const [
+    testimonialForm,
+    setTestimonialForm,
+  ] = useState({
+
+    name: "",
+
+    role: "",
+
+    message: "",
+
+    rating: 5,
+  });
+
+  // ======================================================
+  // FETCH
   // ======================================================
 
   useEffect(() => {
@@ -94,9 +203,7 @@ export default function PublicSchoolPage() {
 
   }, [slug]);
 
-  // ======================================================
-  // FETCH SCHOOL API
-  // ======================================================
+//============================================================= FETCH SCHOOL=
 
   const fetchSchool = async () => {
 
@@ -104,12 +211,8 @@ export default function PublicSchoolPage() {
 
       setLoading(true);
 
-      setError("");
-
       const response = await fetch(
-
         `${BASE_URL}/public/schools/${slug}`
-
       );
 
       if (!response.ok) {
@@ -123,15 +226,23 @@ export default function PublicSchoolPage() {
         await response.json();
 
       console.log(
-        "PUBLIC SCHOOL DATA = ",
+        "SCHOOL DATA = ",
         data
       );
 
-      setSchool(data);
+    setSchool(data);
+    // Statistics
+    fetchStatistics(data.id);
+    // GALLERY
+    fetchGallery(data.id);
+    // TESTIMONIALS
+    fetchTestimonials(data.id);
+    // FACILITIES
+    fetchFacilities(data.id);
 
     } catch (err) {
 
-      console.error(err);
+      console.log(err);
 
       setError(
         "Failed to load school"
@@ -143,9 +254,146 @@ export default function PublicSchoolPage() {
     }
   };
 
-  // ======================================================
-  // HANDLE INPUT
-  // ======================================================
+
+//==================================================== FETCH GALLERY
+
+const fetchGallery = async (
+  schoolId
+) => {
+
+  try {
+
+    const response =
+      await fetch(
+        `${BASE_URL}/gallery/school/${schoolId}`
+      );
+
+    if (response.ok) {
+
+      const data =
+        await response.json();
+
+      // ONLY ACTIVE ITEMS
+
+      const activeGallery =
+        (data || []).filter(
+          (item) =>
+            item.active === true
+        );
+
+      setGallery(activeGallery);
+    }
+
+  } catch (err) {
+
+    console.log(err);
+  }
+};
+
+
+//=================================================== FETCH STATISTICS
+
+  const fetchStatistics = async (
+    schoolId
+  ) => {
+
+    try {
+
+      const response =
+        await fetch(
+
+          `${BASE_URL}/statistics/school/${schoolId}`
+
+        );
+
+      if (response.ok) {
+
+        const data =
+          await response.json();
+
+        setStatistics(data);
+      }
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
+
+//========================================================= FETCH TESTIMONIALS
+
+  const fetchTestimonials = async (
+    schoolId
+  ) => {
+
+    try {
+
+      const response =
+        await fetch(
+
+          `${BASE_URL}/testimonials/school/${schoolId}`
+
+        );
+
+      if (response.ok) {
+
+        const data =
+          await response.json();
+
+        const activeTestimonials =
+          data.filter(
+            (item) =>
+              item.active === true
+          );
+
+        setTestimonials(
+          activeTestimonials
+        );
+      }
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
+
+
+//================================================================ FETCH FACILITIES
+
+const fetchFacilities = async (
+  schoolId
+) => {
+
+  try {
+
+    const response =
+      await fetch(
+        `${BASE_URL}/facilities/school/${schoolId}`
+      );
+
+    if (response.ok) {
+
+      const data =
+        await response.json();
+
+      const activeFacilities =
+        (data || []).filter(
+          (item) =>
+            item.active === true
+        );
+
+      setFacilities(
+        activeFacilities
+      );
+    }
+
+  } catch (err) {
+
+    console.log(err);
+  }
+};
+
+//====================== HANDLE INPUT
 
   const handleChange = (e) => {
 
@@ -158,40 +406,54 @@ export default function PublicSchoolPage() {
     });
   };
 
-  // ======================================================
-  // SUBMIT INQUIRY
-  // ======================================================
+//========================================== HANDLE TESTIMONIAL INPUT
+
+  const handleTestimonialChange = (
+    e
+  ) => {
+
+    setTestimonialForm({
+
+      ...testimonialForm,
+
+      [e.target.name]:
+        e.target.value,
+    });
+  };
+
+//=============================================== SUBMIT INQUIRY
 
   const handleSubmit = async (e) => {
 
     e.preventDefault();
 
-    setError("");
     setSuccess("");
+    setError("");
 
     try {
 
-      const response = await fetch(
+      const response =
+        await fetch(
 
-        `${BASE_URL}/inquiries`,
+          `${BASE_URL}/inquiries`,
 
-        {
-          method: "POST",
+          {
+            method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-          body: JSON.stringify({
+            body: JSON.stringify({
 
-            ...formData,
+              ...formData,
 
-            schoolCode:
-              school?.schoolCode,
-          }),
-        }
-      );
+              schoolCode:
+                school?.schoolCode,
+            }),
+          }
+        );
 
       if (!response.ok) {
 
@@ -204,8 +466,6 @@ export default function PublicSchoolPage() {
         "Inquiry submitted successfully"
       );
 
-      // RESET FORM
-
       setFormData({
 
         studentName: "",
@@ -216,22 +476,105 @@ export default function PublicSchoolPage() {
 
         email: "",
 
+        classApplying: "",
+
         message: "",
       });
 
     } catch (err) {
 
-      console.error(err);
+      console.log(err);
 
       setError(
-        err.message
+        "Failed to submit inquiry"
       );
     }
   };
 
-  // ======================================================
-  // LOADING
-  // ======================================================
+//========================================================== SUBMIT TESTIMONIAL
+
+  const handleTestimonialSubmit =
+    async (e) => {
+
+      e.preventDefault();
+
+      try {
+
+        const response =
+          await fetch(
+
+            `${BASE_URL}/testimonials`,
+
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+
+                ...testimonialForm,
+
+                active: false,
+
+                schoolId:
+                  school?.id,
+              }),
+            }
+          );
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Failed"
+          );
+        }
+
+        setTestimonialSuccess(
+          "Thank you! Your testimonial submitted for approval."
+        );
+
+        setTestimonialForm({
+
+          name: "",
+
+          role: "",
+
+          message: "",
+
+          rating: 5,
+        });
+
+      } catch (err) {
+
+        console.log(err);
+      }
+    };
+
+
+//==================================== OPEN VIDEO PREVIEW
+
+const openVideoPreview = (
+  item
+) => {
+
+  setSelectedVideo(item);
+
+  setPreviewOpen(true);
+};
+
+//=================================== CLOSE VIDEO PREVIEW
+
+const closeVideoPreview = () => {
+
+  setPreviewOpen(false);
+
+  setSelectedVideo(null);
+};
+
+//========================================= LOADING
 
   if (loading) {
 
@@ -243,7 +586,6 @@ export default function PublicSchoolPage() {
           flex
           items-center
           justify-center
-          bg-gray-100
         "
       >
 
@@ -253,7 +595,7 @@ export default function PublicSchoolPage() {
             w-16
             rounded-full
             border-4
-            border-blue-600
+            border-blue-700
             border-t-transparent
             animate-spin
           "
@@ -263,9 +605,7 @@ export default function PublicSchoolPage() {
     );
   }
 
-  // ======================================================
-  // ERROR
-  // ======================================================
+//======================================== ERROR
 
   if (error && !school) {
 
@@ -277,7 +617,6 @@ export default function PublicSchoolPage() {
           flex
           items-center
           justify-center
-          bg-gray-100
         "
       >
 
@@ -292,69 +631,388 @@ export default function PublicSchoolPage() {
     );
   }
 
-  // ======================================================
-  // DEFAULT IMAGE
-  // ======================================================
+//=============================== DEFAULT IMAGE
 
   const defaultImage =
     "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1400";
 
-  // ======================================================
-  // COVER IMAGE URL
-  // ======================================================
 
-  const getCoverImageUrl = (
+
+//================================ IMAGE URL
+
+  const getImageUrl = (
     imageName
   ) => {
 
     if (!imageName)
       return defaultImage;
 
-    // FULL URL ALREADY EXISTS
-
     if (
-      imageName.startsWith("http")
+      imageName.startsWith(
+        "http"
+      )
     ) {
 
       return imageName;
     }
 
-    // LOCAL FILE
-
     return `${BASE_URL}/schools/cover/get-file/${imageName}`;
   };
 
+
+
+//============================== FACILITY ICONS
+
+const facilityIcons = {
+
+  library: BookOpenIcon,
+  computer: ComputerDesktopIcon,
+  smartclass: PresentationChartBarIcon,
+  classroom: AcademicCapIcon,
+  laboratory: BeakerIcon,
+  science: BeakerIcon,
+  exam: ClipboardDocumentCheckIcon,
+  digital: DevicePhoneMobileIcon,
+
+  wifi: WifiIcon,
+  internet: GlobeAltIcon,
+  cctv: VideoCameraIcon,
+  projector: TvIcon,
+  ai: CpuChipIcon,
+
+  transport: TruckIcon,
+  bus: TruckIcon,
+  parking: TruckIcon,
+
+  security: ShieldCheckIcon,
+  medical: HeartIcon,
+  firstaid: HeartIcon,
+  fire: FireIcon,
+
+  hostel: HomeModernIcon,
+  campus: BuildingOffice2Icon,
+  playground: FlagIcon,
+  garden: SunIcon,
+  cafeteria: CakeIcon,
+  canteen: CakeIcon,
+
+  sports: TrophyIcon,
+  cricket: TrophyIcon,
+  football: TrophyIcon,
+  basketball: TrophyIcon,
+  gym: BoltIcon,
+  yoga: SparklesIcon,
+
+  music: MusicalNoteIcon,
+  dance: SparklesIcon,
+  art: PaintBrushIcon,
+  auditorium: MicrophoneIcon,
+
+  default: BuildingOffice2Icon,
+};
+
+
+
+
+//=============================== STATS ARRAY
+
+  const stats = [
+
+    {
+      label: "Students",
+      value:
+        statistics?.totalStudents ||
+        0,
+    },
+
+    {
+      label: "Teachers",
+      value:
+        statistics?.totalTeachers ||
+        0,
+    },
+
+    {
+      label: "Classrooms",
+      value:
+        statistics?.totalClassrooms ||
+        0,
+    },
+
+    {
+      label: "Labs",
+      value:
+        statistics?.totalLabs ||
+        0,
+    },
+
+    {
+      label: "Libraries",
+      value:
+        statistics?.totalLibraries ||
+        0,
+    },
+
+    {
+      label: "Buses",
+      value:
+        statistics?.totalBuses ||
+        0,
+    },
+  ];
+
+
   // ======================================================
-  // UI
+//================================== UI
   // ======================================================
 
   return (
 
-    <section
-      className="
-        min-h-screen
-        bg-gradient-to-br
-        from-blue-50
-        via-white
-        to-cyan-50
-      "
-    >
+    <div className="bg-white overflow-hidden">
 
-      {/* ======================================================
-          HERO SECTION
-      ====================================================== */}
+      {/* ====================================================== */}
+      {/* HERO */}
+      {/* ====================================================== */}
 
-      <div
-        className="
-          bg-gradient-to-r
-          from-blue-700
-          via-indigo-700
-          to-cyan-600
-          text-white
-          py-20
-          px-6
-        "
-      >
+      <section className="relative h-screen">
+
+        <Swiper
+          modules={[
+            Autoplay,
+            Pagination,
+          ]}
+          autoplay={{
+            delay: 4000,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          loop
+          className="h-full"
+        >
+
+          {
+            school?.coverImages
+              ?.length > 0 ? (
+
+              school.coverImages.map(
+                (
+                  img,
+                  index
+                ) => (
+
+                  <SwiperSlide
+                    key={index}
+                  >
+
+                    <div className="relative h-screen">
+
+                      <img
+                        src={getImageUrl(
+                          img
+                        )}
+                        alt="school"
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                        "
+                      />
+
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-black/60
+                        "
+                      />
+
+                    </div>
+
+                  </SwiperSlide>
+                )
+              )
+
+            ) : (
+
+              <SwiperSlide>
+
+                <img
+                  src={defaultImage}
+                  alt="school"
+                  className="
+                    h-full
+                    w-full
+                    object-cover
+                  "
+                />
+
+              </SwiperSlide>
+            )
+          }
+
+        </Swiper>
+
+        {/* HERO CONTENT */}
+
+        <div
+          className="
+            absolute
+            inset-0
+            z-20
+            flex
+            items-center
+          "
+        >
+
+          <div
+            className="
+              max-w-7xl
+              mx-auto
+              px-6
+              w-full
+            "
+          >
+
+            <motion.div
+
+              initial={{
+                opacity: 0,
+                y: 50,
+              }}
+
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+
+              transition={{
+                duration: 0.8,
+              }}
+            >
+
+              <Chip
+                value={
+                  school?.board ||
+                  "Premium School"
+                }
+                className="
+                  w-fit
+                  mb-6
+                  bg-white/20
+                "
+              />
+
+              <Typography
+                variant="h1"
+                className="
+                  text-white
+                  text-5xl
+                  md:text-7xl
+                  font-black
+                "
+              >
+                {
+                  school?.schoolName
+                }
+              </Typography>
+
+              <Typography
+                className="
+                  text-blue-100
+                  mt-8
+                  text-xl
+                  max-w-3xl
+                "
+              >
+                {
+                  school?.description ||
+                  "Quality education with innovation and excellence."
+                }
+              </Typography>
+
+              <div
+                className="
+                  flex
+                  flex-wrap
+                  gap-4
+                  mt-10
+                "
+              >
+
+                <Button
+  size="lg"
+  className="
+    rounded-full
+    bg-white
+    text-blue-700
+    hover:scale-105
+    transition-all
+    duration-300
+  "
+  onClick={() => {
+
+    const section =
+      document.getElementById(
+        "admission-inquiry"
+      );
+
+    if (section) {
+
+      section.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }}
+>
+  Apply Admission
+</Button>
+
+                <Button
+  size="lg"
+  variant="outlined"
+  className="
+    rounded-full
+    border-white
+    text-white
+    hover:bg-white
+    hover:text-blue-700
+    transition-all
+    duration-300
+  "
+  onClick={() => {
+
+    const section =
+      document.getElementById(
+        "contact-school"
+      );
+
+    if (section) {
+
+      section.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }}
+>
+  Contact School
+</Button>
+
+              </div>
+
+            </motion.div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ====================================================== */}
+      {/* ABOUT */}
+      {/* ====================================================== */}
+
+      <section className="py-24 px-6 bg-white">
 
         <div
           className="
@@ -362,205 +1020,230 @@ export default function PublicSchoolPage() {
             mx-auto
             grid
             lg:grid-cols-2
-            gap-12
+            gap-16
             items-center
           "
         >
 
-          {/* ======================================================
-              LEFT CONTENT
-          ====================================================== */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: -50,
+            }}
+            whileInView={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              duration: 0.7,
+            }}
+            viewport={{
+              once: true,
+            }}
+          >
 
-          <div>
-
-            <div
+            <Typography
+              variant="h2"
               className="
-                flex
-                items-center
-                gap-4
-                mb-6
+                font-black
+                text-5xl
               "
             >
-
-              <BuildingOffice2Icon
-                className="h-12 w-12"
-              />
-
-              <Typography
-                variant="h1"
-                className="
-                  text-4xl
-                  md:text-5xl
-                  font-black
-                "
-              >
-                {school?.schoolName}
-              </Typography>
-
-            </div>
+              About School
+            </Typography>
 
             <Typography
               className="
+                mt-8
+                text-gray-600
                 text-lg
-                text-blue-100
                 leading-relaxed
               "
             >
-              Welcome to our school.
-              We focus on quality education,
-              discipline, technology,
-              and holistic student growth.
+              {
+                school?.about ||
+                school?.description
+              }
             </Typography>
-
-            {/* INFO */}
 
             <div
               className="
-                mt-8
-                space-y-4
+                grid
+                grid-cols-2
+                gap-5
+                mt-10
               "
             >
 
-              {/* PHONE */}
+              <Card className="rounded-3xl shadow-xl">
 
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
+                <CardBody>
 
-                <PhoneIcon
-                  className="h-5 w-5"
-                />
+                  <Typography className="text-gray-500">
+                    Established
+                  </Typography>
 
-                <span>
-                  {school?.phone ||
-                    "Not Available"}
-                </span>
+                  <Typography
+                    className="
+                      text-3xl
+                      font-black
+                      mt-2
+                    "
+                  >
+                    {
+                      school?.establishedYear ||
+                      "2000"
+                    }
+                  </Typography>
 
-              </div>
+                </CardBody>
 
-              {/* EMAIL */}
+              </Card>
 
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
+              <Card className="rounded-3xl shadow-xl">
 
-                <EnvelopeIcon
-                  className="h-5 w-5"
-                />
+                <CardBody>
 
-                <span>
-                  {school?.email ||
-                    "No Email"}
-                </span>
+                  <Typography className="text-gray-500">
+                    Medium
+                  </Typography>
 
-              </div>
+                  <Typography
+                    className="
+                      text-3xl
+                      font-black
+                      mt-2
+                    "
+                  >
+                    {
+                      school?.medium ||
+                      "English"
+                    }
+                  </Typography>
 
-              {/* ADDRESS */}
+                </CardBody>
 
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
-
-                <MapPinIcon
-                  className="h-5 w-5"
-                />
-
-                <span>
-                  {school?.address ||
-                    "Address not available"}
-                </span>
-
-              </div>
+              </Card>
 
             </div>
 
-          </div>
+          </motion.div>
 
-          {/* ======================================================
-              RIGHT IMAGE / CAROUSEL
-          ====================================================== */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: 50,
+            }}
+            whileInView={{
+              opacity: 1,
+              x: 0,
+            }}
+            transition={{
+              duration: 0.7,
+            }}
+            viewport={{
+              once: true,
+            }}
+          >
+
+            <img
+              src={
+                school?.coverImages
+                  ?.length > 0
+                  ? getImageUrl(
+                      school
+                        ?.coverImages[0]
+                    )
+                  : defaultImage
+              }
+              alt="about"
+              className="
+                rounded-[40px]
+                shadow-2xl
+              "
+            />
+
+          </motion.div>
+
+        </div>
+
+      </section>
+
+      {/* ====================================================== */}
+      {/* STATS */}
+      {/* ====================================================== */}
+
+      <section
+        className="
+          py-24
+          bg-gradient-to-r
+          from-blue-700
+          to-cyan-600
+          px-6
+        "
+      >
+
+        <div className="max-w-7xl mx-auto">
+
+          <Typography
+            variant="h2"
+            className="
+              text-center
+              text-white
+              font-black
+              text-5xl
+            "
+          >
+            School Statistics
+          </Typography>
 
           <div
             className="
-              rounded-3xl
-              overflow-hidden
-              shadow-2xl
-              bg-white
+              grid
+              md:grid-cols-2
+              lg:grid-cols-3
+              gap-8
+              mt-16
             "
           >
 
             {
-              school?.coverImages &&
-              school.coverImages.length > 0 ? (
+              stats.map(
+                (item, index) => (
 
-                <Carousel
-                  autoplay
-                  loop
-                  className="h-[420px]"
-                >
+                  <Card
+                    key={index}
+                    className="
+                      bg-white/10
+                      backdrop-blur-xl
+                      text-white
+                      rounded-[32px]
+                    "
+                  >
 
-                  {
-                    school.coverImages.map(
-                      (img, index) => (
+                    <CardBody className="text-center">
 
-                        <img
-                          key={index}
-
-                          src={getCoverImageUrl(img)}
-
-                          alt={`school-${index}`}
-
-                          className="
-                            h-full
-                            w-full
-                            object-cover
-                          "
-
-                          onError={(e) => {
-
-                            console.log(
-                              "IMAGE FAILED = ",
-                              img
-                            );
-
-                            e.target.onerror =
-                              null;
-
-                            e.target.src =
-                              defaultImage;
-                          }}
+                      <Typography
+                        className="
+                          text-6xl
+                          font-black
+                        "
+                      >
+                        <CountUp
+                          end={item.value}
+                          duration={3}
                         />
-                      )
-                    )
-                  }
+                        +
+                      </Typography>
 
-                </Carousel>
+                      <Typography className="mt-4">
+                        {item.label}
+                      </Typography>
 
-              ) : (
+                    </CardBody>
 
-                <img
-                  src={defaultImage}
-                  alt="school"
-
-                  className="
-                    h-[420px]
-                    w-full
-                    object-cover
-                  "
-                />
-
+                  </Card>
+                )
               )
             }
 
@@ -568,171 +1251,1068 @@ export default function PublicSchoolPage() {
 
         </div>
 
-      </div>
+      </section>
 
-      {/* ======================================================
-          FEATURES
-      ====================================================== */}
+{/* ====================================================== */}
+{/* FACILITIES */}
+{/* ====================================================== */}
 
-      <div
+<section
+  className="
+    py-28
+    px-6
+    bg-gradient-to-b
+    from-white
+    via-blue-50/40
+    to-white
+    relative
+    overflow-hidden
+  "
+>
+
+  {/* BG BLUR */}
+
+  <div
+    className="
+      absolute
+      top-0
+      left-0
+      h-72
+      w-72
+      bg-blue-200/30
+      blur-3xl
+      rounded-full
+    "
+  />
+
+  <div
+    className="
+      absolute
+      bottom-0
+      right-0
+      h-72
+      w-72
+      bg-cyan-200/30
+      blur-3xl
+      rounded-full
+    "
+  />
+
+  <div className="max-w-7xl mx-auto relative z-10">
+
+    {/* HEADING */}
+
+    <div className="text-center">
+
+      <Chip
+        value="PREMIUM CAMPUS"
         className="
-          max-w-7xl
           mx-auto
-          px-6
-          py-20
+          w-fit
+          bg-blue-100
+          text-blue-700
+          mb-6
+        "
+      />
+
+      <Typography
+        variant="h2"
+        className="
+          text-5xl
+          md:text-6xl
+          font-black
+          text-gray-900
         "
       >
+        School Facilities
+      </Typography>
 
-        <Typography
-          variant="h2"
-          className="
-            text-center
-            font-black
-            mb-14
-          "
-        >
-          Why Choose Us?
-        </Typography>
+      <Typography
+        className="
+          mt-6
+          text-gray-600
+          max-w-3xl
+          mx-auto
+          text-lg
+          leading-relaxed
+        "
+      >
+        Modern infrastructure &
+        world-class facilities designed
+        for future-ready education.
+      </Typography>
+
+    </div>
+
+    {/* GRID */}
+
+    {
+      facilities?.length > 0 ? (
 
         <div
           className="
             grid
-            md:grid-cols-3
+            md:grid-cols-2
+            xl:grid-cols-3
             gap-8
+            mt-20
           "
         >
 
-          {/* CARD 1 */}
+          {
+            facilities.map(
+              (
+                facility,
+                index
+              ) => {
 
-          <Card
+                const Icon =
+                  facilityIcons[
+                    facility.icon
+                  ] ||
+                  BuildingOffice2Icon;
+
+                return (
+
+                  <motion.div
+                    key={facility.id}
+                    initial={{
+                      opacity: 0,
+                      y: 40,
+                    }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      delay:
+                        index * 0.1,
+                    }}
+                    viewport={{
+                      once: true,
+                    }}
+                    whileHover={{
+                      y: -10,
+                    }}
+                  >
+
+                    <Card
+                      className="
+                        rounded-[36px]
+                        border
+                        border-white
+                        bg-white/80
+                        backdrop-blur-xl
+                        shadow-xl
+                        hover:shadow-2xl
+                        transition-all
+                        overflow-hidden
+                        h-full
+                        group
+                      "
+                    >
+
+                      <CardBody className="p-10 relative">
+
+                        {/* GLOW */}
+
+                        <div
+                          className="
+                            absolute
+                            top-0
+                            right-0
+                            h-32
+                            w-32
+                            bg-blue-100
+                            blur-3xl
+                            opacity-0
+                            group-hover:opacity-100
+                            transition-all
+                          "
+                        />
+
+                        {/* ICON */}
+
+                        <div
+                          className="
+                            h-24
+                            w-24
+                            rounded-[28px]
+                            bg-gradient-to-br
+                            from-blue-600
+                            to-cyan-500
+                            flex
+                            items-center
+                            justify-center
+                            shadow-2xl
+                            relative
+                            z-10
+                          "
+                        >
+
+                          <Icon
+                            className="
+                              h-12
+                              w-12
+                              text-white
+                            "
+                          />
+
+                        </div>
+
+                        {/* COUNT */}
+
+                        <div className="mt-8">
+
+                          <Chip
+                            value={`Total ${facility.totalCount}`}
+                            className="
+                              w-fit
+                              bg-blue-50
+                              text-blue-700
+                            "
+                          />
+
+                        </div>
+
+                        {/* TITLE */}
+
+                        <Typography
+                          variant="h4"
+                          className="
+                            font-black
+                            mt-6
+                            text-gray-900
+                          "
+                        >
+                          {facility.title}
+                        </Typography>
+
+                        {/* DESC */}
+
+                        <Typography
+                          className="
+                            mt-5
+                            text-gray-600
+                            leading-relaxed
+                            text-lg
+                          "
+                        >
+                          {
+                            facility.description
+                          }
+                        </Typography>
+
+                        {/* ACTIVE */}
+
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-2
+                            mt-8
+                          "
+                        >
+
+                          <CheckCircleIcon
+                            className="
+                              h-5
+                              w-5
+                              text-green-500
+                            "
+                          />
+
+                          <Typography
+                            className="
+                              text-green-600
+                              font-semibold
+                            "
+                          >
+                            Premium Facility
+                          </Typography>
+
+                        </div>
+
+                      </CardBody>
+
+                    </Card>
+
+                  </motion.div>
+                );
+              }
+            )
+          }
+
+        </div>
+
+      ) : (
+
+        <div className="text-center py-24">
+
+          <Typography
+            variant="h5"
+            className="text-gray-500"
+          >
+            No Facilities Available
+          </Typography>
+
+        </div>
+      )
+    }
+
+  </div>
+
+</section>
+
+{/* ====================================================== */}
+{/* GALLERY */}
+{/* ====================================================== */}
+
+<section className="py-24 px-6 bg-white">
+
+  <div className="max-w-7xl mx-auto">
+
+    <Typography
+      variant="h2"
+      className="
+        text-center
+        font-black
+        text-5xl
+      "
+    >
+      School Gallery
+    </Typography>
+
+    <Typography
+      className="
+        text-center
+        text-gray-500
+        mt-5
+        max-w-2xl
+        mx-auto
+      "
+    >
+      Explore moments, achievements,
+      campus life & activities.
+    </Typography>
+
+    {
+      gallery?.length > 0 ? (
+
+        <div
+          className="
+            grid
+            md:grid-cols-2
+            lg:grid-cols-3
+            gap-8
+            mt-16
+          "
+        >
+
+          {
+            gallery.map(
+              (
+                item,
+                index
+              ) => (
+
+                <motion.div
+                  key={index}
+                  whileHover={{
+                    y: -10,
+                  }}
+                  className="
+                    rounded-[32px]
+                    overflow-hidden
+                    shadow-2xl
+                    bg-white
+                    group
+                    cursor-pointer
+                  "
+                >
+
+                  {/* VIDEO */}
+
+                  {
+                    item.type ===
+                    "VIDEO" ? (
+
+                      <div
+                        className="
+                          relative
+                          h-[320px]
+                        "
+                        onClick={() =>
+                          openVideoPreview(
+                            item
+                          )
+                        }
+                      >
+
+                        {/* THUMBNAIL */}
+
+                        <img
+                          src={
+                            item.thumbnail ||
+                            "https://via.placeholder.com/600x400?text=Video"
+                          }
+                          alt={
+                            item.title
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                          "
+                        />
+
+                        {/* OVERLAY */}
+
+                        <div
+                          className="
+                            absolute
+                            inset-0
+                            bg-black/30
+                            group-hover:bg-black/40
+                            transition-all
+                            flex
+                            items-center
+                            justify-center
+                          "
+                        >
+
+                          <PlayCircleIcon
+                            className="
+                              h-24
+                              w-24
+                              text-white
+                              drop-shadow-2xl
+                            "
+                          />
+
+                        </div>
+
+                      </div>
+
+                    ) : (
+
+                      // IMAGE
+
+                      <div
+                        className="
+                          overflow-hidden
+                          h-[320px]
+                        "
+                      >
+
+                        <img
+                          src={
+                            item.fileName
+                          }
+                          alt={
+                            item.title
+                          }
+                          className="
+                            h-full
+                            w-full
+                            object-cover
+                            group-hover:scale-110
+                            transition-all
+                            duration-700
+                          "
+                        />
+
+                      </div>
+                    )
+                  }
+
+                  {/* CONTENT */}
+
+                  <div className="p-6">
+
+                    <div className="flex items-center justify-between">
+
+                      <Chip
+                        value={
+                          item.type
+                        }
+                        color={
+                          item.type ===
+                          "VIDEO"
+                            ? "purple"
+                            : "green"
+                        }
+                      />
+
+                      <Chip
+                        value="ACTIVE"
+                        color="green"
+                      />
+
+                    </div>
+
+                    <Typography
+                      variant="h5"
+                      className="
+                        font-black
+                        mt-5
+                      "
+                    >
+                      {item.title}
+                    </Typography>
+
+                    <Typography
+                      className="
+                        mt-3
+                        text-gray-600
+                        line-clamp-3
+                      "
+                    >
+                      {
+                        item.description
+                      }
+                    </Typography>
+
+                  </div>
+
+                </motion.div>
+              )
+            )
+          }
+
+        </div>
+
+      ) : (
+
+        <div
+          className="
+            text-center
+            py-20
+          "
+        >
+
+          <Typography
+            variant="h5"
+            className="text-gray-500"
+          >
+            No Gallery Available
+          </Typography>
+
+        </div>
+      )
+    }
+
+  </div>
+
+</section>
+
+{/* ====================================================== */}
+{/* TESTIMONIALS What Parents Say*/}
+{/* ====================================================== */}
+
+<section
+  className="
+    relative
+    py-32
+    px-6
+    overflow-hidden
+    bg-[#030712]
+  "
+>
+
+  {/* BACKGROUND EFFECTS */}
+
+  <div
+    className="
+      absolute
+      top-[-120px]
+      left-[-120px]
+      h-[350px]
+      w-[350px]
+      rounded-full
+      bg-cyan-500/20
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      absolute
+      bottom-[-120px]
+      right-[-120px]
+      h-[350px]
+      w-[350px]
+      rounded-full
+      bg-blue-600/20
+      blur-3xl
+    "
+  />
+
+  <div className="max-w-7xl mx-auto relative z-10">
+
+    {/* HEADER */}
+
+    <div className="text-center">
+
+      <Typography
+        className="
+          text-cyan-400
+          font-bold
+          tracking-[6px]
+          uppercase
+        "
+      >
+        Testimonials
+      </Typography>
+
+      <Typography
+        variant="h1"
+        className="
+          mt-6
+          text-white
+          text-5xl
+          md:text-7xl
+          font-black
+          leading-tight
+        "
+      >
+        Parents Love
+        <span
+          className="
+            block
+            bg-gradient-to-r
+            from-cyan-400
+            to-blue-500
+            bg-clip-text
+            text-transparent
+          "
+        >
+          Our School
+        </span>
+      </Typography>
+
+      <Typography
+        className="
+          mt-8
+          text-gray-400
+          max-w-3xl
+          mx-auto
+          text-lg
+          leading-relaxed
+        "
+      >
+        Real stories from parents and
+        students about academic
+        excellence, discipline, campus
+        life and modern education.
+      </Typography>
+
+    </div>
+
+    {/* CARDS */}
+
+    <div
+      className="
+        grid
+        md:grid-cols-2
+        xl:grid-cols-3
+        gap-10
+        mt-24
+      "
+    >
+
+      {
+        testimonials?.length > 0 ? (
+
+          testimonials.map(
+            (
+              item,
+              index
+            ) => (
+
+              <motion.div
+                key={index}
+                initial={{
+                  opacity: 0,
+                  y: 50,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.5,
+                  delay:
+                    index * 0.15,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                whileHover={{
+                  y: -12,
+                }}
+              >
+
+                <div
+                  className="
+                    relative
+                    h-full
+                    rounded-[40px]
+                    border
+                    border-white/10
+                    bg-white/5
+                    backdrop-blur-2xl
+                    overflow-hidden
+                    group
+                    transition-all
+                    duration-500
+                    hover:border-cyan-400/40
+                    hover:shadow-[0_0_50px_rgba(34,211,238,0.25)]
+                  "
+                >
+
+                  {/* TOP LIGHT */}
+
+                  <div
+                    className="
+                      absolute
+                      inset-x-0
+                      top-0
+                      h-[2px]
+                      bg-gradient-to-r
+                      from-transparent
+                      via-cyan-400
+                      to-transparent
+                    "
+                  />
+
+                  {/* CONTENT */}
+
+                  <div className="p-10">
+
+                    {/* STARS */}
+
+                    <div className="flex gap-1">
+
+                      {
+                        [...Array(
+                          item.rating || 5
+                        )].map(
+                          (_, i) => (
+
+                            <StarIcon
+                              key={i}
+                              className="
+                                h-5
+                                w-5
+                                text-yellow-400
+                              "
+                            />
+                          )
+                        )
+                      }
+
+                    </div>
+
+                    {/* QUOTE */}
+
+                    <div
+                      className="
+                        mt-8
+                        text-[90px]
+                        leading-none
+                        font-black
+                        text-cyan-400/20
+                      "
+                    >
+                      “
+                    </div>
+
+                    {/* MESSAGE */}
+
+                    <Typography
+                      className="
+                        -mt-10
+                        text-gray-200
+                        text-lg
+                        leading-relaxed
+                        min-h-[180px]
+                        relative
+                        z-10
+                      "
+                    >
+                      {item.message}
+                    </Typography>
+
+                    {/* USER SECTION */}
+
+                    <div
+                      className="
+                        mt-10
+                        flex
+                        items-center
+                        gap-5
+                      "
+                    >
+
+                      {/* IMAGE */}
+
+                      <div className="relative">
+
+                        {
+                          item.image ? (
+
+                            <img
+                              src={getImageUrl(
+                                item.image
+                              )}
+                              alt={item.name}
+                              className="
+                                h-20
+                                w-20
+                                rounded-2xl
+                                object-cover
+                                border
+                                border-cyan-400/40
+                              "
+                            />
+
+                          ) : (
+
+                            <div
+                              className="
+                                h-20
+                                w-20
+                                rounded-2xl
+                                bg-gradient-to-r
+                                from-cyan-500
+                                to-blue-600
+                                flex
+                                items-center
+                                justify-center
+                                text-white
+                                text-3xl
+                                font-black
+                              "
+                            >
+                              {
+                                item?.name
+                                  ?.charAt(0)
+                                  ?.toUpperCase()
+                              }
+                            </div>
+
+                          )
+                        }
+
+                        {/* ONLINE DOT */}
+
+                        <div
+                          className="
+                            absolute
+                            -bottom-1
+                            -right-1
+                            h-5
+                            w-5
+                            rounded-full
+                            bg-green-400
+                            border-2
+                            border-[#030712]
+                          "
+                        />
+
+                      </div>
+
+                      {/* INFO */}
+
+                      <div>
+
+                        <Typography
+                          variant="h5"
+                          className="
+                            text-white
+                            font-black
+                          "
+                        >
+                          {item.name}
+                        </Typography>
+
+                        <Typography
+                          className="
+                            mt-1
+                            text-cyan-400
+                            font-medium
+                          "
+                        >
+                          {item.role}
+                        </Typography>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </motion.div>
+            )
+          )
+
+        ) : (
+
+          <div
             className="
-              rounded-3xl
-              shadow-xl
-              hover:shadow-2xl
-              transition-all
+              col-span-full
+              text-center
+              py-20
             "
           >
 
-            <CardBody className="text-center">
+            <Typography
+              variant="h4"
+              className="
+                text-gray-400
+                font-bold
+              "
+            >
+              No Testimonials Available
+            </Typography>
 
-              <AcademicCapIcon
-                className="
-                  h-16
-                  w-16
-                  mx-auto
-                  text-blue-700
-                  mb-5
-                "
-              />
+          </div>
 
-              <Typography
-                variant="h5"
-                className="font-bold"
-              >
-                Quality Education
-              </Typography>
+        )
+      }
 
-              <Typography
-                className="
-                  mt-4
-                  text-gray-600
-                "
-              >
-                Modern curriculum,
-                smart learning,
-                and experienced faculty.
-              </Typography>
+    </div>
 
-            </CardBody>
+  </div>
 
-          </Card>
+</section>
 
-          {/* CARD 2 */}
 
-          <Card
-            className="
-              rounded-3xl
-              shadow-xl
-              hover:shadow-2xl
-              transition-all
-            "
-          >
+{/* ====================================================== */}
+{/* ADD TESTIMONIAL */}
+{/* ====================================================== */}
 
-            <CardBody className="text-center">
+      <section
+        className="
+          py-24
+          px-6
+          bg-white
+        "
+      >
 
-              <BuildingOffice2Icon
-                className="
-                  h-16
-                  w-16
-                  mx-auto
-                  text-indigo-700
-                  mb-5
-                "
-              />
-
-              <Typography
-                variant="h5"
-                className="font-bold"
-              >
-                Smart Campus
-              </Typography>
-
-              <Typography
-                className="
-                  mt-4
-                  text-gray-600
-                "
-              >
-                Smart classrooms,
-                labs,
-                activities,
-                and digital systems.
-              </Typography>
-
-            </CardBody>
-
-          </Card>
-
-          {/* CARD 3 */}
+        <div className="max-w-4xl mx-auto">
 
           <Card
             className="
-              rounded-3xl
-              shadow-xl
-              hover:shadow-2xl
-              transition-all
+              rounded-[40px]
+              shadow-2xl
             "
           >
 
-            <CardBody className="text-center">
-
-              <PhoneIcon
-                className="
-                  h-16
-                  w-16
-                  mx-auto
-                  text-cyan-700
-                  mb-5
-                "
-              />
+            <CardBody className="p-10">
 
               <Typography
-                variant="h5"
-                className="font-bold"
-              >
-                Parent Support
-              </Typography>
-
-              <Typography
+                variant="h2"
                 className="
-                  mt-4
-                  text-gray-600
+                  text-center
+                  font-black
+                  mb-10
                 "
               >
-                Fast inquiry support
-                and parent-school
-                communication.
+                Share Your Experience
               </Typography>
+
+              <form
+                onSubmit={
+                  handleTestimonialSubmit
+                }
+                className="space-y-6"
+              >
+
+                <Input
+                  size="lg"
+                  label="Your Name"
+                  name="name"
+                  value={
+                    testimonialForm.name
+                  }
+                  onChange={
+                    handleTestimonialChange
+                  }
+                  required
+                />
+
+                <Input
+                  size="lg"
+                  label="Role (Parent / Student)"
+                  name="role"
+                  value={
+                    testimonialForm.role
+                  }
+                  onChange={
+                    handleTestimonialChange
+                  }
+                  required
+                />
+
+                <Input
+                  size="lg"
+                  type="number"
+                  label="Rating (1-5)"
+                  name="rating"
+                  min="1"
+                  max="5"
+                  value={
+                    testimonialForm.rating
+                  }
+                  onChange={
+                    handleTestimonialChange
+                  }
+                />
+
+                <Textarea
+                  label="Your Experience"
+                  name="message"
+                  value={
+                    testimonialForm.message
+                  }
+                  onChange={
+                    handleTestimonialChange
+                  }
+                  required
+                />
+
+                {
+                  testimonialSuccess && (
+
+                    <Typography
+                      color="green"
+                      className="text-center"
+                    >
+                      {
+                        testimonialSuccess
+                      }
+                    </Typography>
+                  )
+                }
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  className="
+                    rounded-2xl
+                    py-4
+                    bg-blue-700
+                  "
+                >
+                  Submit Testimonial
+                </Button>
+
+              </form>
 
             </CardBody>
 
@@ -740,151 +2320,480 @@ export default function PublicSchoolPage() {
 
         </div>
 
-      </div>
+      </section>
 
-      {/* ======================================================
-          INQUIRY FORM
-      ====================================================== */}
+
+
+{/* ====================================================== */}
+{/* INQUIRY */}
+{/* ====================================================== */}
+
+      <section
+  id="admission-inquiry"
+  
+  className="
+    py-24
+    px-6
+    bg-gray-100
+  "
+>
+
+        <div className="max-w-5xl mx-auto">
+
+          <Card
+            className="
+              rounded-[40px]
+              overflow-hidden
+            "
+          >
+
+            <div className="grid lg:grid-cols-2">
+
+              {/* LEFT */}
+
+              {/* LEFT */}
+
+<div
+  id="contact-school"
+  className="
+    bg-gradient-to-br
+    from-blue-700
+    to-cyan-600
+    p-12
+    text-white
+  "
+>
+
+                <Typography
+                  variant="h2"
+                  className="
+                    font-black
+                    text-5xl
+                  "
+                >
+                  Admission Inquiry
+                </Typography>
+
+                <div className="space-y-8 mt-12">
+
+                  <div className="flex gap-4">
+
+                    <PhoneIcon className="h-6 w-6" />
+
+                    <span>
+                      {school?.phone}
+                    </span>
+
+                  </div>
+
+                  <div className="flex gap-4">
+
+                    <EnvelopeIcon className="h-6 w-6" />
+
+                    <span>
+                      {school?.email}
+                    </span>
+
+                  </div>
+
+                  <div className="flex gap-4">
+
+                    <MapPinIcon className="h-6 w-6" />
+
+                    <span>
+                      {school?.address}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* RIGHT */}
+
+              <div className="p-12">
+
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-6"
+                >
+
+                  <Input
+                    size="lg"
+                    label="Student Name"
+                    name="studentName"
+                    value={
+                      formData.studentName
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <Input
+                    size="lg"
+                    label="Parent Name"
+                    name="parentName"
+                    value={
+                      formData.parentName
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <Input
+                    size="lg"
+                    label="Phone Number"
+                    name="phone"
+                    value={
+                      formData.phone
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <Input
+                    size="lg"
+                    label="Email"
+                    name="email"
+                    value={
+                      formData.email
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <Input
+                    size="lg"
+                    label="Class Applying For"
+                    name="classApplying"
+                    value={
+                      formData.classApplying
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <Textarea
+                    label="Message"
+                    name="message"
+                    value={
+                      formData.message
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  {
+                    success && (
+
+                      <Typography
+                        color="green"
+                      >
+                        {success}
+                      </Typography>
+                    )
+                  }
+
+                  {
+                    error && (
+
+                      <Typography
+                        color="red"
+                      >
+                        {error}
+                      </Typography>
+                    )
+                  }
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    className="
+                      bg-blue-700
+                      rounded-2xl
+                      py-4
+                    "
+                  >
+                    Submit Inquiry
+                  </Button>
+
+                </form>
+
+              </div>
+
+            </div>
+
+          </Card>
+
+        </div>
+
+      </section>
+
+{/* ====================================================== */}
+{/* VIDEO PREVIEW */}
+{/* ====================================================== */}
+
+{
+  previewOpen &&
+  selectedVideo && (
+
+    <div
+      className="
+        fixed
+        inset-0
+        z-[9999]
+        bg-black/80
+        flex
+        items-center
+        justify-center
+        p-4
+      "
+      onClick={() =>
+        setPreviewOpen(false)
+      }
+    >
 
       <div
         className="
-          max-w-3xl
-          mx-auto
-          px-6
-          pb-24
+          bg-white
+          rounded-3xl
+          overflow-hidden
+          max-w-5xl
+          w-full
+          relative
         "
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
 
-        <Card
+        {/* CLOSE */}
+
+        <button
+          onClick={() =>
+            setPreviewOpen(false)
+          }
           className="
-            rounded-3xl
-            shadow-2xl
+            absolute
+            top-4
+            right-4
+            z-20
+            h-10
+            w-10
+            rounded-full
+            bg-black/70
+            text-white
           "
         >
+          ✕
+        </button>
 
-          <CardBody className="p-8 md:p-12">
+        {/* VIDEO */}
 
-            <Typography
-              variant="h2"
-              className="
-                text-center
-                font-black
-                mb-10
-              "
-            >
-              Admission Inquiry
-            </Typography>
+        <video
+          src={
+            selectedVideo.videoUrl
+          }
+          controls
+          autoPlay
+          playsInline
+          className="
+            w-full
+            max-h-[80vh]
+            bg-black
+          "
+        />
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-6"
-            >
+        {/* CONTENT */}
 
-              <Input
-                size="lg"
-                label="Student Name"
-                name="studentName"
-                value={
-                  formData.studentName
-                }
-                onChange={handleChange}
-                required
-              />
+        <div className="p-6">
 
-              <Input
-                size="lg"
-                label="Parent Name"
-                name="parentName"
-                value={
-                  formData.parentName
-                }
-                onChange={handleChange}
-                required
-              />
+          <Typography
+            variant="h4"
+            className="font-black"
+          >
+            {
+              selectedVideo.title
+            }
+          </Typography>
 
-              <Input
-                size="lg"
-                label="Phone Number"
-                name="phone"
-                value={
-                  formData.phone
-                }
-                onChange={handleChange}
-                required
-              />
+          <Typography
+            className="
+              mt-3
+              text-gray-600
+            "
+          >
+            {
+              selectedVideo.description
+            }
+          </Typography>
 
-              <Input
-                size="lg"
-                type="email"
-                label="Email"
-                name="email"
-                value={
-                  formData.email
-                }
-                onChange={handleChange}
-              />
-
-              <Textarea
-                label="Message"
-                name="message"
-                value={
-                  formData.message
-                }
-                onChange={handleChange}
-              />
-
-              {/* SUCCESS */}
-
-              {success && (
-
-                <Typography
-                  color="green"
-                  className="
-                    text-center
-                    font-medium
-                  "
-                >
-                  {success}
-                </Typography>
-              )}
-
-              {/* ERROR */}
-
-              {error && (
-
-                <Typography
-                  color="red"
-                  className="
-                    text-center
-                    font-medium
-                  "
-                >
-                  {error}
-                </Typography>
-              )}
-
-              <Button
-                type="submit"
-                fullWidth
-                className="
-                  bg-blue-700
-                  rounded-xl
-                  py-4
-                  text-base
-                  shadow-lg
-                "
-              >
-                Submit Inquiry
-              </Button>
-
-            </form>
-
-          </CardBody>
-
-        </Card>
+        </div>
 
       </div>
 
-    </section>
+    </div>
+  )
+}
+
+{/* ====================================================== */}
+{/* FOOTER */}
+{/* ====================================================== */}
+
+      <footer className="bg-gray-950 text-white py-20 px-6">
+
+        <div
+          className="
+            max-w-7xl
+            mx-auto
+            grid
+            lg:grid-cols-4
+            gap-12
+          "
+        >
+
+          <div>
+
+            <Typography
+              variant="h4"
+              className="font-black"
+            >
+              {
+                school?.schoolName
+              }
+            </Typography>
+
+            <Typography
+              className="
+                mt-6
+                text-gray-400
+              "
+            >
+              Building future-ready students through modern education.
+            </Typography>
+
+            <div className="flex gap-4 mt-8">
+
+              <div
+                className="
+                  h-12
+                  w-12
+                  rounded-full
+                  bg-white/10
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <FaFacebookF />
+              </div>
+
+              <div
+                className="
+                  h-12
+                  w-12
+                  rounded-full
+                  bg-white/10
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <FaInstagram />
+              </div>
+
+              <div
+                className="
+                  h-12
+                  w-12
+                  rounded-full
+                  bg-white/10
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <FaYoutube />
+              </div>
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <Typography
+              variant="h5"
+              className="
+                font-black
+                mb-6
+              "
+            >
+              Contact Info
+            </Typography>
+
+            <div className="space-y-5 text-gray-400">
+
+              <div className="flex gap-3">
+
+                <PhoneIcon className="h-5 w-5" />
+
+                <span>
+                  {school?.phone}
+                </span>
+
+              </div>
+
+              <div className="flex gap-3">
+
+                <EnvelopeIcon className="h-5 w-5" />
+
+                <span>
+                  {school?.email}
+                </span>
+
+              </div>
+
+              <div className="flex gap-3">
+
+                <MapPinIcon className="h-5 w-5" />
+
+                <span>
+                  {school?.address}
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div
+          className="
+            border-t
+            border-white/10
+            mt-16
+            pt-8
+            text-center
+            text-gray-500
+          "
+        >
+          © 2026 {
+            school?.schoolName
+          }. All Rights Reserved.
+        </div>
+
+      </footer>
+
+    </div>
   );
 }
