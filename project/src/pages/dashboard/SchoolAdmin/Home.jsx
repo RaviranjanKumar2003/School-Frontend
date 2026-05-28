@@ -98,6 +98,12 @@ export default function Home() {
     useState([]);
 
   // =====================================================
+  // NOTIFICATIONS OVERVIEW STATE
+  // =====================================================
+  const [notifications, setNotifications] =
+    useState([]);
+
+  // =====================================================
   // FETCH DASHBOARD DATA
   // =====================================================
 
@@ -140,6 +146,10 @@ export default function Home() {
 
         attendanceWeeklyRes,
 
+        lowAttendanceRes,
+
+        activitiesRes,
+
       ] = await Promise.all([
 
         axios.get(
@@ -180,6 +190,22 @@ export default function Home() {
 
         axios.get(
           `http://localhost:8080/api/stu-attendance/weekly-summary/${schoolId}`
+        ),
+
+        // =========================================
+        // MONTHLY ATTENDANCE
+        // =========================================
+
+        axios.get(
+         `http://localhost:8080/api/stu-attendance/low-attendance-alert/${schoolId}`
+        ),
+
+        // =========================================
+        // RECENTLY ACTIVITIES
+        // =========================================
+
+        axios.get(
+         `http://localhost:8080/api/activity/${schoolId}`
         ),
       ]);
 
@@ -250,6 +276,34 @@ export default function Home() {
       );
 
       setAttendanceChart(formattedChart);
+
+      const lowAttendanceData =
+  lowAttendanceRes.data || [];
+
+const formattedNotifications =
+  lowAttendanceData.map((item) => ({
+
+    className: item.className,
+
+    section: item.section,
+
+    attendancePercentage:
+      item.attendancePercentage,
+
+    presentAttendance:
+      item.presentAttendance,
+
+    totalAttendance:
+      item.totalAttendance,
+  }));
+
+setNotifications(formattedNotifications);
+
+
+
+setRecentActivities(
+  activitiesRes.data || []
+);
 
       // =========================================
       // CLASS OVERVIEW DATA
@@ -519,36 +573,12 @@ export default function Home() {
   ];
 
   // =====================================================
-  // ACTIVITIES
+  // Recent ACTIVITIES
   // =====================================================
 
-  const recentActivities = [
+  const [recentActivities, setRecentActivities] =
+  useState([]);
 
-    "New student admitted in Class 9",
-
-    "Mathematics teacher added",
-
-    "Fee payment received from 18 students",
-
-    "Science exam schedule uploaded",
-
-    "New class timetable published",
-  ];
-
-  // =====================================================
-  // NOTIFICATIONS
-  // =====================================================
-
-  const notifications = [
-
-    "15 students have pending fees",
-
-    "Class 10 attendance below 75%",
-
-    "Annual exam starts next week",
-
-    "3 teachers leave requests pending",
-  ];
 
   // =====================================================
   // CUSTOM TOOLTIP
@@ -1055,17 +1085,21 @@ export default function Home() {
 
               {recentActivities.map((item, index) => (
 
-                <div
-                  key={index}
-                  className="p-3 bg-gray-50 rounded-lg"
-                >
+  <div
+    key={index}
+    className="p-3 bg-gray-50 rounded-lg"
+  >
 
-                  <Typography className="text-sm">
-                    {item}
-                  </Typography>
+    <Typography className="font-semibold text-sm text-gray-800">
+      {item.title}
+    </Typography>
 
-                </div>
-              ))}
+    <Typography className="text-sm text-gray-600 mt-1">
+      {item.description}
+    </Typography>
+
+  </div>
+))}
 
             </div>
 
@@ -1140,36 +1174,120 @@ export default function Home() {
 
         <Card className="shadow-lg">
 
-          <CardBody>
+  <CardBody>
 
-            <Typography
-              variant="h6"
-              className="mb-4 text-gray-800"
-            >
-              Notifications & Alerts
-            </Typography>
+    {/* ================= HEADER ================= */}
 
-            <div className="space-y-3">
+    <div className="flex items-center gap-2 mb-5">
 
-              {notifications.map((item, index) => (
+      <BellAlertIcon className="h-6 w-6 text-red-600" />
 
-                <div
-                  key={index}
-                  className="p-3 rounded-lg bg-red-50 border-l-4 border-red-500"
-                >
+      <Typography
+        variant="h6"
+        className="text-red-700 font-bold"
+      >
+        Low Attendance Alerts
+      </Typography>
 
-                  <Typography className="text-sm text-gray-700">
-                    {item}
-                  </Typography>
+    </div>
 
-                </div>
-              ))}
+    {/* ================= ALERT LIST ================= */}
+
+    <div className="space-y-3">
+
+      {loading ? (
+
+        <div className="flex justify-center py-10">
+
+          <Spinner className="h-8 w-8" />
+
+        </div>
+
+      ) : notifications.length === 0 ? (
+
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 text-center">
+
+          <Typography className="text-green-700 font-semibold text-base">
+            All Classes Attendance Above 75%
+          </Typography>
+
+          <Typography className="text-sm text-green-600 mt-1">
+            No low attendance alerts found.
+          </Typography>
+
+        </div>
+
+      ) : (
+
+        notifications.map((item, index) => (
+
+          <div
+            key={index}
+            className="
+              p-4
+              rounded-xl
+              bg-red-50
+              border-l-4
+              border-red-500
+              shadow-sm
+              hover:shadow-md
+              transition-all
+            "
+          >
+
+            <div className="flex items-start justify-between gap-3">
+
+              <div>
+
+                <Typography className="text-sm font-bold text-red-700">
+                  Attendance Below 75%
+                </Typography>
+
+                <Typography className="text-sm text-gray-700 mt-1 leading-relaxed">
+
+  Class
+  {" "}
+  <span className="font-bold">
+    {item.className}
+  </span>
+
+  {" "}Section{" "}
+
+  <span className="font-bold">
+    {item.section}
+  </span>
+
+  {" "}attendance is{" "}
+
+  <span className="font-bold text-red-600">
+    {item.attendancePercentage}%
+  </span>
+
+  . Present:
+  {" "}
+
+  <span className="font-bold">
+    {item.presentAttendance}/
+    {item.totalAttendance}
+  </span>
+
+</Typography>
+
+              </div>
+
+              <BellAlertIcon className="h-5 w-5 text-red-500 mt-1" />
 
             </div>
 
-          </CardBody>
+          </div>
+        ))
+      )}
 
-        </Card>
+    </div>
+
+  </CardBody>
+
+</Card>
 
       </div>
 

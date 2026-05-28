@@ -184,6 +184,10 @@ const Testimonials = lazy(() =>
   import("@/pages/dashboard/SchoolAdmin/Testimonials")
 );
 
+const AboutSchool = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/AboutSchool")
+);
+
 /* =========================================================
    HOD
 ========================================================= */
@@ -965,6 +969,13 @@ export const routes = [
   name: "Testimonials",
   path: "/schooladmin/testimonials",
   element: Load(Testimonials),
+},
+
+{
+  icon: <ChatBubbleLeftRightIcon {...icon} />,
+  name: "About School",
+  path: "/schooladmin/aboutSchool",
+  element: Load(AboutSchool),
 },
       
     ],

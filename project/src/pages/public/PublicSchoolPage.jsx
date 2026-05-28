@@ -59,6 +59,8 @@ import {
   PaintBrushIcon,
   MicrophoneIcon,
   SparklesIcon,
+  ArrowRightIcon,
+  PhotoIcon
 
 } from "@heroicons/react/24/solid";
 
@@ -127,6 +129,9 @@ export default function PublicSchoolPage() {
 
   const [facilities, setFacilities] =
     useState([]);
+
+  const [aboutSchool, setAboutSchool] =
+    useState(null);
 
 //============================================================= GALLERY STATES
 
@@ -203,7 +208,7 @@ const [selectedVideo, setSelectedVideo] =
 
   }, [slug]);
 
-//============================================================= FETCH SCHOOL=
+//============================================================= FETCH SCHOOL
 
   const fetchSchool = async () => {
 
@@ -230,6 +235,8 @@ const [selectedVideo, setSelectedVideo] =
         data
       );
 
+    // About School
+    fetchAboutSchool(data.id);
     setSchool(data);
     // Statistics
     fetchStatistics(data.id);
@@ -385,6 +392,34 @@ const fetchFacilities = async (
       setFacilities(
         activeFacilities
       );
+    }
+
+  } catch (err) {
+
+    console.log(err);
+  }
+};
+
+
+//=============================================================== FETCH ABOUT SCHOOL
+
+const fetchAboutSchool = async (
+  schoolId
+) => {
+
+  try {
+
+    const response =
+      await fetch(
+        `${BASE_URL}/about-school/${schoolId}`
+      );
+
+    if (response.ok) {
+
+      const data =
+        await response.json();
+
+      setAboutSchool(data);
     }
 
   } catch (err) {
@@ -770,408 +805,1229 @@ const facilityIcons = {
 
     <div className="bg-white overflow-hidden">
 
-      {/* ====================================================== */}
-      {/* HERO */}
-      {/* ====================================================== */}
+{/* ====================================================== */}
+{/* PREMIUM HERO SECTION */}
+{/* ====================================================== */}
 
-      <section className="relative h-screen">
+<section
+  className="
+    relative
+    h-screen
+    overflow-hidden
+    bg-black
+  "
+>
 
-        <Swiper
-          modules={[
-            Autoplay,
-            Pagination,
-          ]}
-          autoplay={{
-            delay: 4000,
-          }}
-          pagination={{
-            clickable: true,
-          }}
-          loop
-          className="h-full"
-        >
+  {/* SLIDER */}
 
-          {
-            school?.coverImages
-              ?.length > 0 ? (
+  <Swiper
+    modules={[
+      Autoplay,
+      Pagination,
+    ]}
+    autoplay={{
+      delay: 4500,
+      disableOnInteraction: false,
+    }}
+    pagination={{
+      clickable: true,
+    }}
+    loop
+    className="h-full"
+  >
 
-              school.coverImages.map(
-                (
-                  img,
-                  index
-                ) => (
+    {
+      school?.coverImages
+        ?.length > 0 ? (
 
-                  <SwiperSlide
-                    key={index}
-                  >
+        school.coverImages.map(
+          (
+            img,
+            index
+          ) => (
 
-                    <div className="relative h-screen">
+            <SwiperSlide
+              key={index}
+            >
 
-                      <img
-                        src={getImageUrl(
-                          img
-                        )}
-                        alt="school"
-                        className="
-                          h-full
-                          w-full
-                          object-cover
-                        "
-                      />
+              <div className="relative h-screen">
 
-                      <div
-                        className="
-                          absolute
-                          inset-0
-                          bg-black/60
-                        "
-                      />
-
-                    </div>
-
-                  </SwiperSlide>
-                )
-              )
-
-            ) : (
-
-              <SwiperSlide>
+                {/* IMAGE */}
 
                 <img
-                  src={defaultImage}
+                  src={getImageUrl(
+                    img
+                  )}
                   alt="school"
                   className="
                     h-full
                     w-full
                     object-cover
+                    scale-105
+                    animate-[slowZoom_10s_linear_infinite]
                   "
                 />
 
-              </SwiperSlide>
-            )
-          }
+                {/* DARK OVERLAY */}
 
-        </Swiper>
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-black/60
+                  "
+                />
 
-        {/* HERO CONTENT */}
+                {/* GRADIENT */}
 
-        <div
-          className="
-            absolute
-            inset-0
-            z-20
-            flex
-            items-center
-          "
-        >
-
-          <div
-            className="
-              max-w-7xl
-              mx-auto
-              px-6
-              w-full
-            "
-          >
-
-            <motion.div
-
-              initial={{
-                opacity: 0,
-                y: 50,
-              }}
-
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-
-              transition={{
-                duration: 0.8,
-              }}
-            >
-
-              <Chip
-                value={
-                  school?.board ||
-                  "Premium School"
-                }
-                className="
-                  w-fit
-                  mb-6
-                  bg-white/20
-                "
-              />
-
-              <Typography
-                variant="h1"
-                className="
-                  text-white
-                  text-5xl
-                  md:text-7xl
-                  font-black
-                "
-              >
-                {
-                  school?.schoolName
-                }
-              </Typography>
-
-              <Typography
-                className="
-                  text-blue-100
-                  mt-8
-                  text-xl
-                  max-w-3xl
-                "
-              >
-                {
-                  school?.description ||
-                  "Quality education with innovation and excellence."
-                }
-              </Typography>
-
-              <div
-                className="
-                  flex
-                  flex-wrap
-                  gap-4
-                  mt-10
-                "
-              >
-
-                <Button
-  size="lg"
-  className="
-    rounded-full
-    bg-white
-    text-blue-700
-    hover:scale-105
-    transition-all
-    duration-300
-  "
-  onClick={() => {
-
-    const section =
-      document.getElementById(
-        "admission-inquiry"
-      );
-
-    if (section) {
-
-      section.scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-  }}
->
-  Apply Admission
-</Button>
-
-                <Button
-  size="lg"
-  variant="outlined"
-  className="
-    rounded-full
-    border-white
-    text-white
-    hover:bg-white
-    hover:text-blue-700
-    transition-all
-    duration-300
-  "
-  onClick={() => {
-
-    const section =
-      document.getElementById(
-        "contact-school"
-      );
-
-    if (section) {
-
-      section.scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-  }}
->
-  Contact School
-</Button>
+                <div
+                  className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-r
+                    from-black/80
+                    via-black/50
+                    to-black/20
+                  "
+                />
 
               </div>
 
-            </motion.div>
+            </SwiperSlide>
+          )
+        )
+
+      ) : (
+
+        <SwiperSlide>
+
+          <div className="relative h-screen">
+
+            <img
+              src={defaultImage}
+              alt="school"
+              className="
+                h-full
+                w-full
+                object-cover
+              "
+            />
+
+            <div
+              className="
+                absolute
+                inset-0
+                bg-black/60
+              "
+            />
+
+          </div>
+
+        </SwiperSlide>
+      )
+    }
+
+  </Swiper>
+
+  {/* FLOATING BLUR EFFECTS */}
+
+  <div
+    className="
+      absolute
+      top-[-100px]
+      left-[-100px]
+      h-[300px]
+      w-[300px]
+      rounded-full
+      bg-cyan-500/20
+      blur-3xl
+      z-10
+    "
+  />
+
+  <div
+    className="
+      absolute
+      bottom-[-100px]
+      right-[-100px]
+      h-[300px]
+      w-[300px]
+      rounded-full
+      bg-blue-700/20
+      blur-3xl
+      z-10
+    "
+  />
+
+  {/* HERO CONTENT */}
+
+  <div
+    className="
+      absolute
+      inset-0
+      z-20
+      flex
+      items-center
+    "
+  >
+
+    <div
+      className="
+        max-w-7xl
+        mx-auto
+        w-full
+        px-4
+        sm:px-6
+      "
+    >
+
+      <motion.div
+
+        initial={{
+          opacity: 0,
+          y: 50,
+        }}
+
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+
+        transition={{
+          duration: 0.9,
+        }}
+
+        className="
+          max-w-4xl
+        "
+      >
+
+        {/* TOP BADGE */}
+
+        <div
+          className="
+            inline-flex
+            items-center
+            gap-3
+            rounded-full
+            border
+            border-white/20
+            bg-white/10
+            backdrop-blur-xl
+            px-5
+            py-2
+            text-white
+            shadow-2xl
+          "
+        >
+
+          <AcademicCapIcon
+            className="
+              h-5
+              w-5
+              text-cyan-400
+            "
+          />
+
+          <span
+            className="
+              text-sm
+              font-semibold
+              tracking-wider
+            "
+          >
+            {
+              aboutSchool?.board ||
+              "PREMIUM SCHOOL"
+            }
+          </span>
+
+        </div>
+
+        {/* TITLE */}
+
+        <Typography
+          variant="h1"
+          className="
+            mt-8
+            text-white
+            text-4xl
+            sm:text-5xl
+            md:text-6xl
+            lg:text-7xl
+            font-black
+            leading-tight
+          "
+        >
+
+          {
+            school?.schoolName
+          }
+
+          <span
+            className="
+              block
+              mt-3
+              bg-gradient-to-r
+              from-cyan-400
+              via-blue-400
+              to-cyan-300
+              bg-clip-text
+              text-transparent
+            "
+          >
+            Future Starts Here
+          </span>
+
+        </Typography>
+
+        {/* DESCRIPTION */}
+
+        <Typography
+          className="
+            mt-8
+            text-gray-200
+            text-base
+            sm:text-lg
+            md:text-xl
+            leading-relaxed
+            max-w-3xl
+          "
+        >
+          {
+            aboutSchool?.about ||
+            "Quality education with innovation, leadership, discipline and future-ready learning experiences."
+          }
+        </Typography>
+
+        {/* BUTTONS */}
+
+        <div
+          className="
+            flex
+            flex-col
+            sm:flex-row
+            gap-4
+            mt-10
+          "
+        >
+
+          {/* APPLY */}
+
+          <Button
+            size="lg"
+            className="
+              rounded-full
+              bg-gradient-to-r
+              from-cyan-500
+              to-blue-600
+              px-8
+              py-4
+              text-base
+              shadow-[0_10px_40px_rgba(6,182,212,0.4)]
+              hover:scale-105
+              transition-all
+              duration-300
+            "
+            onClick={() => {
+
+              const section =
+                document.getElementById(
+                  "admission-inquiry"
+                );
+
+              if (section) {
+
+                section.scrollIntoView({
+                  behavior: "smooth",
+                });
+              }
+            }}
+          >
+            Apply Admission
+          </Button>
+
+          {/* CONTACT */}
+
+          <Button
+            size="lg"
+            variant="outlined"
+            className="
+              rounded-full
+              border-2
+              border-white/50
+              bg-white/10
+              backdrop-blur-xl
+              text-white
+              px-8
+              py-4
+              text-base
+              hover:bg-white
+              hover:text-blue-700
+              transition-all
+              duration-300
+            "
+            onClick={() => {
+
+              const section =
+                document.getElementById(
+                  "contact-school"
+                );
+
+              if (section) {
+
+                section.scrollIntoView({
+                  behavior: "smooth",
+                });
+              }
+            }}
+          >
+            Contact School
+          </Button>
+
+        </div>
+
+        {/* STATS */}
+
+        <div
+          className="
+            grid
+            grid-cols-3
+            gap-4
+            sm:gap-6
+            mt-14
+            max-w-2xl
+          "
+        >
+
+          {/* STUDENTS */}
+
+          <div
+            className="
+              rounded-3xl
+              border
+              border-white/10
+              bg-white/10
+              backdrop-blur-2xl
+              p-5
+              text-center
+            "
+          >
+
+            <Typography
+              className="
+                text-2xl
+                sm:text-3xl
+                font-black
+                text-white
+              "
+            >
+              {
+                statistics?.totalStudents ||
+                "2K+"
+              }
+            </Typography>
+
+            <Typography
+              className="
+                mt-1
+                text-sm
+                text-gray-300
+              "
+            >
+              Students
+            </Typography>
+
+          </div>
+
+          {/* TEACHERS */}
+
+          <div
+            className="
+              rounded-3xl
+              border
+              border-white/10
+              bg-white/10
+              backdrop-blur-2xl
+              p-5
+              text-center
+            "
+          >
+
+            <Typography
+              className="
+                text-2xl
+                sm:text-3xl
+                font-black
+                text-white
+              "
+            >
+              {
+                statistics?.totalTeachers ||
+                "100+"
+              }
+            </Typography>
+
+            <Typography
+              className="
+                mt-1
+                text-sm
+                text-gray-300
+              "
+            >
+              Teachers
+            </Typography>
+
+          </div>
+
+          {/* FACILITIES */}
+
+          <div
+            className="
+              rounded-3xl
+              border
+              border-white/10
+              bg-white/10
+              backdrop-blur-2xl
+              p-5
+              text-center
+            "
+          >
+
+            <Typography
+              className="
+                text-2xl
+                sm:text-3xl
+                font-black
+                text-white
+              "
+            >
+              {
+                facilities?.length ||
+                "25+"
+              }
+            </Typography>
+
+            <Typography
+              className="
+                mt-1
+                text-sm
+                text-gray-300
+              "
+            >
+              Facilities
+            </Typography>
 
           </div>
 
         </div>
 
-      </section>
+      </motion.div>
 
-      {/* ====================================================== */}
-      {/* ABOUT */}
-      {/* ====================================================== */}
+    </div>
 
-      <section className="py-24 px-6 bg-white">
+  </div>
+
+  {/* SCROLL INDICATOR */}
+
+  <div
+    className="
+      absolute
+      bottom-6
+      left-1/2
+      -translate-x-1/2
+      z-30
+      flex
+      flex-col
+      items-center
+      text-white
+    "
+  >
+
+    <span
+      className="
+        text-xs
+        tracking-[4px]
+        uppercase
+        text-gray-300
+      "
+    >
+      Scroll
+    </span>
+
+    <div
+      className="
+        mt-2
+        h-10
+        w-6
+        rounded-full
+        border
+        border-white/40
+        flex
+        justify-center
+      "
+    >
+
+      <div
+        className="
+          mt-2
+          h-2
+          w-2
+          rounded-full
+          bg-white
+          animate-bounce
+        "
+      />
+
+    </div>
+
+  </div>
+
+</section>
+      
+{/* ====================================================== */}
+{/* PREMIUM ABOUT SCHOOL SECTION */}
+{/* ====================================================== */}
+
+<section
+  id="about-school"
+  className="
+    relative
+    overflow-hidden
+    py-16
+    sm:py-20
+    lg:py-28
+    px-4
+    sm:px-6
+    bg-gradient-to-b
+    from-[#f8fbff]
+    via-white
+    to-[#f3f9ff]
+  "
+>
+
+  {/* BACKGROUND EFFECTS */}
+
+  <div
+    className="
+      absolute
+      top-[-120px]
+      left-[-120px]
+      h-[260px]
+      w-[260px]
+      sm:h-[320px]
+      sm:w-[320px]
+      rounded-full
+      bg-blue-200/40
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      absolute
+      bottom-[-120px]
+      right-[-120px]
+      h-[260px]
+      w-[260px]
+      sm:h-[320px]
+      sm:w-[320px]
+      rounded-full
+      bg-cyan-200/40
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      relative
+      z-10
+      max-w-7xl
+      mx-auto
+    "
+  >
+
+    <div
+      className="
+        grid
+        lg:grid-cols-2
+        gap-14
+        lg:gap-20
+        items-center
+      "
+    >
+
+      {/* LEFT CONTENT */}
+
+      <motion.div
+
+        initial={{
+          opacity: 0,
+          y: 40,
+        }}
+
+        whileInView={{
+          opacity: 1,
+          y: 0,
+        }}
+
+        transition={{
+          duration: 0.7,
+        }}
+
+        viewport={{
+          once: true,
+        }}
+
+        className="order-2 lg:order-1"
+      >
+
+        {/* BADGE */}
 
         <div
           className="
-            max-w-7xl
-            mx-auto
-            grid
-            lg:grid-cols-2
-            gap-16
+            inline-flex
             items-center
+            gap-3
+            rounded-full
+            bg-blue-100
+            px-5
+            py-2.5
+            text-xs
+            sm:text-sm
+            font-bold
+            text-blue-700
+            shadow-md
           "
         >
 
+          <AcademicCapIcon
+            className="
+              h-5
+              w-5
+            "
+          />
+
+          ABOUT OUR SCHOOL
+
+        </div>
+
+        {/* TITLE */}
+
+        <Typography
+          variant="h1"
+          className="
+            mt-6
+            text-3xl
+            sm:text-5xl
+            lg:text-6xl
+            font-black
+            leading-tight
+            text-gray-900
+          "
+        >
+
+          {
+            school?.schoolName
+          }
+
+          <span
+            className="
+              block
+              mt-3
+              bg-gradient-to-r
+              from-blue-700
+              via-cyan-500
+              to-blue-500
+              bg-clip-text
+              text-transparent
+            "
+          >
+            Building Future Leaders
+          </span>
+
+        </Typography>
+
+        {/* DESCRIPTION */}
+
+        <Typography
+          className="
+            mt-7
+            text-gray-600
+            text-sm
+            sm:text-base
+            lg:text-lg
+            leading-[2]
+          "
+        >
+          {
+            aboutSchool?.about ||
+            school?.description
+          }
+        </Typography>
+
+        {/* FEATURES */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            sm:grid-cols-2
+            gap-5
+            mt-10
+          "
+        >
+
+          {/* ESTABLISHED */}
+
           <motion.div
-            initial={{
-              opacity: 0,
-              x: -50,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              duration: 0.7,
-            }}
-            viewport={{
-              once: true,
+            whileHover={{
+              y: -6,
             }}
           >
 
-            <Typography
-              variant="h2"
+            <Card
               className="
-                font-black
-                text-5xl
-              "
-            >
-              About School
-            </Typography>
-
-            <Typography
-              className="
-                mt-8
-                text-gray-600
-                text-lg
-                leading-relaxed
-              "
-            >
-              {
-                school?.about ||
-                school?.description
-              }
-            </Typography>
-
-            <div
-              className="
-                grid
-                grid-cols-2
-                gap-5
-                mt-10
+                rounded-[28px]
+                border
+                border-blue-100
+                bg-white/80
+                backdrop-blur-xl
+                shadow-xl
+                overflow-hidden
+                h-full
               "
             >
 
-              <Card className="rounded-3xl shadow-xl">
+              <CardBody
+                className="
+                  p-6
+                  sm:p-7
+                "
+              >
 
-                <CardBody>
+                <div
+                  className="
+                    h-16
+                    w-16
+                    rounded-2xl
+                    bg-gradient-to-br
+                    from-blue-600
+                    to-cyan-500
+                    flex
+                    items-center
+                    justify-center
+                    shadow-xl
+                  "
+                >
 
-                  <Typography className="text-gray-500">
-                    Established
-                  </Typography>
-
-                  <Typography
+                  <BuildingLibraryIcon
                     className="
-                      text-3xl
-                      font-black
-                      mt-2
+                      h-8
+                      w-8
+                      text-white
                     "
-                  >
-                    {
-                      school?.establishedYear ||
-                      "2000"
-                    }
-                  </Typography>
+                  />
 
-                </CardBody>
+                </div>
 
-              </Card>
+                <Typography
+                  className="
+                    mt-5
+                    text-gray-500
+                    font-medium
+                  "
+                >
+                  Established
+                </Typography>
 
-              <Card className="rounded-3xl shadow-xl">
+                <Typography
+                  className="
+                    mt-2
+                    text-3xl
+                    font-black
+                    text-gray-900
+                  "
+                >
+                  {
+                    aboutSchool?.establishedYear ||
+                    "2000"
+                  }
+                </Typography>
 
-                <CardBody>
+              </CardBody>
 
-                  <Typography className="text-gray-500">
-                    Medium
-                  </Typography>
-
-                  <Typography
-                    className="
-                      text-3xl
-                      font-black
-                      mt-2
-                    "
-                  >
-                    {
-                      school?.medium ||
-                      "English"
-                    }
-                  </Typography>
-
-                </CardBody>
-
-              </Card>
-
-            </div>
+            </Card>
 
           </motion.div>
 
+          {/* MEDIUM */}
+
           <motion.div
-            initial={{
-              opacity: 0,
-              x: 50,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            transition={{
-              duration: 0.7,
-            }}
-            viewport={{
-              once: true,
+            whileHover={{
+              y: -6,
             }}
           >
 
-            <img
-              src={
-                school?.coverImages
-                  ?.length > 0
-                  ? getImageUrl(
-                      school
-                        ?.coverImages[0]
-                    )
-                  : defaultImage
-              }
-              alt="about"
+            <Card
               className="
-                rounded-[40px]
-                shadow-2xl
+                rounded-[28px]
+                border
+                border-cyan-100
+                bg-white/80
+                backdrop-blur-xl
+                shadow-xl
+                overflow-hidden
+                h-full
               "
-            />
+            >
+
+              <CardBody
+                className="
+                  p-6
+                  sm:p-7
+                "
+              >
+
+                <div
+                  className="
+                    h-16
+                    w-16
+                    rounded-2xl
+                    bg-gradient-to-br
+                    from-cyan-500
+                    to-blue-700
+                    flex
+                    items-center
+                    justify-center
+                    shadow-xl
+                  "
+                >
+
+                  <BookOpenIcon
+                    className="
+                      h-8
+                      w-8
+                      text-white
+                    "
+                  />
+
+                </div>
+
+                <Typography
+                  className="
+                    mt-5
+                    text-gray-500
+                    font-medium
+                  "
+                >
+                  Medium
+                </Typography>
+
+                <Typography
+                  className="
+                    mt-2
+                    text-2xl
+                    sm:text-3xl
+                    font-black
+                    text-gray-900
+                    break-words
+                  "
+                >
+                  {
+                    aboutSchool?.medium ||
+                    "English"
+                  }
+                </Typography>
+
+              </CardBody>
+
+            </Card>
 
           </motion.div>
 
         </div>
 
-      </section>
+      </motion.div>
 
-      {/* ====================================================== */}
-      {/* STATS */}
-      {/* ====================================================== */}
+      {/* RIGHT IMAGE */}
+
+      <motion.div
+
+        initial={{
+          opacity: 0,
+          scale: 0.9,
+        }}
+
+        whileInView={{
+          opacity: 1,
+          scale: 1,
+        }}
+
+        transition={{
+          duration: 0.7,
+        }}
+
+        viewport={{
+          once: true,
+        }}
+
+        className="
+          relative
+          order-1
+          lg:order-2
+        "
+      >
+
+        {/* MAIN IMAGE CARD */}
+
+        <div
+          className="
+            relative
+            overflow-hidden
+            rounded-[32px]
+            sm:rounded-[40px]
+            bg-gradient-to-br
+            from-blue-700
+            to-cyan-500
+            p-[6px]
+            shadow-[0_25px_80px_rgba(0,0,0,0.18)]
+          "
+        >
+
+          <div
+            className="
+              relative
+              overflow-hidden
+              rounded-[28px]
+              sm:rounded-[36px]
+              bg-white
+            "
+          >
+
+            <img
+              src={
+                aboutSchool?.logo
+                  ? getImageUrl(
+                      aboutSchool.logo
+                    )
+                  : defaultImage
+              }
+              alt="school-logo"
+              className="
+                h-[320px]
+                sm:h-[480px]
+                lg:h-[620px]
+                w-full
+                object-contain
+                bg-white
+                p-6
+                sm:p-10
+              "
+            />
+
+            {/* OVERLAY */}
+
+            <div
+              className="
+                absolute
+                inset-0
+                bg-gradient-to-t
+                from-black/50
+                via-black/10
+                to-transparent
+              "
+            />
+
+          </div>
+
+        </div>
+
+        {/* FLOATING CARD */}
+
+        <motion.div
+
+          initial={{
+            opacity: 0,
+            y: 30,
+          }}
+
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+
+          transition={{
+            duration: 0.7,
+            delay: 0.2,
+          }}
+
+          viewport={{
+            once: true,
+          }}
+
+          className="
+            relative
+            sm:absolute
+            mt-6
+            sm:mt-0
+            sm:bottom-[-30px]
+            sm:left-1/2
+            sm:-translate-x-1/2
+            lg:left-auto
+            lg:right-8
+            lg:translate-x-0
+            w-full
+            sm:w-[92%]
+            lg:w-auto
+          "
+        >
+
+          <div
+            className="
+              rounded-[28px]
+              border
+              border-white/30
+              bg-white/90
+              backdrop-blur-2xl
+              shadow-2xl
+              px-5
+              sm:px-6
+              py-5
+            "
+          >
+
+            <div
+              className="
+                flex
+                items-center
+                gap-4
+                sm:gap-5
+              "
+            >
+
+              {/* MINI LOGO */}
+
+              <div
+                className="
+                  h-16
+                  w-16
+                  sm:h-20
+                  sm:w-20
+                  rounded-3xl
+                  overflow-hidden
+                  border-4
+                  border-white
+                  shadow-xl
+                  bg-white
+                  flex-shrink-0
+                "
+              >
+
+                <img
+                  src={
+                    aboutSchool?.logo
+                      ? getImageUrl(
+                          aboutSchool.logo
+                        )
+                      : defaultImage
+                  }
+                  alt="logo"
+                  className="
+                    h-full
+                    w-full
+                    object-contain
+                    p-2
+                  "
+                />
+
+              </div>
+
+              {/* INFO */}
+
+              <div className="min-w-0">
+
+                <Typography
+                  variant="h5"
+                  className="
+                    font-black
+                    text-gray-900
+                    leading-tight
+                    text-lg
+                    sm:text-xl
+                    break-words
+                  "
+                >
+                  {
+                    school?.schoolName
+                  }
+                </Typography>
+
+                <Typography
+                  className="
+                    mt-1
+                    text-cyan-600
+                    font-semibold
+                    text-sm
+                    sm:text-base
+                  "
+                >
+                  {
+                    school?.board ||
+                    "Premium Education"
+                  }
+                </Typography>
+
+                <div
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    mt-3
+                  "
+                >
+
+                  <CheckCircleIcon
+                    className="
+                      h-5
+                      w-5
+                      text-green-500
+                      flex-shrink-0
+                    "
+                  />
+
+                  <Typography
+                    className="
+                      text-xs
+                      sm:text-sm
+                      font-semibold
+                      text-gray-600
+                    "
+                  >
+                    Trusted By Parents
+                  </Typography>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </motion.div>
+
+      </motion.div>
+
+    </div>
+
+  </div>
+
+</section>
+
+{/* ====================================================== */}
+{/* STATS School Statistics */}
+{/* ====================================================== */}
 
       <section
         className="
@@ -1258,93 +2114,176 @@ const facilityIcons = {
 {/* ====================================================== */}
 
 <section
+  id="facilities"
   className="
-    py-28
-    px-6
-    bg-gradient-to-b
-    from-white
-    via-blue-50/40
-    to-white
     relative
     overflow-hidden
+    py-16
+    sm:py-20
+    lg:py-28
+    px-4
+    sm:px-6
+    bg-gradient-to-b
+    from-[#f8fbff]
+    via-white
+    to-[#eef7ff]
   "
 >
 
-  {/* BG BLUR */}
+  {/* BACKGROUND EFFECTS */}
 
   <div
     className="
       absolute
-      top-0
-      left-0
-      h-72
-      w-72
-      bg-blue-200/30
-      blur-3xl
+      top-[-120px]
+      left-[-120px]
+      h-[260px]
+      w-[260px]
+      sm:h-[360px]
+      sm:w-[360px]
       rounded-full
+      bg-blue-200/40
+      blur-3xl
     "
   />
 
   <div
     className="
       absolute
-      bottom-0
-      right-0
-      h-72
-      w-72
-      bg-cyan-200/30
-      blur-3xl
+      bottom-[-120px]
+      right-[-120px]
+      h-[260px]
+      w-[260px]
+      sm:h-[360px]
+      sm:w-[360px]
       rounded-full
+      bg-cyan-200/40
+      blur-3xl
     "
   />
 
-  <div className="max-w-7xl mx-auto relative z-10">
+  <div
+    className="
+      relative
+      z-10
+      max-w-7xl
+      mx-auto
+    "
+  >
 
     {/* HEADING */}
 
-    <div className="text-center">
+    <motion.div
 
-      <Chip
-        value="PREMIUM CAMPUS"
+      initial={{
+        opacity: 0,
+        y: 40,
+      }}
+
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+
+      transition={{
+        duration: 0.7,
+      }}
+
+      viewport={{
+        once: true,
+      }}
+
+      className="text-center"
+    >
+
+      {/* BADGE */}
+
+      <div
         className="
-          mx-auto
-          w-fit
+          inline-flex
+          items-center
+          gap-3
+          rounded-full
           bg-blue-100
+          px-5
+          py-2.5
+          text-xs
+          sm:text-sm
+          font-bold
           text-blue-700
-          mb-6
-        "
-      />
-
-      <Typography
-        variant="h2"
-        className="
-          text-5xl
-          md:text-6xl
-          font-black
-          text-gray-900
+          shadow-md
         "
       >
-        School Facilities
+
+        <SparklesIcon
+          className="
+            h-5
+            w-5
+          "
+        />
+
+        PREMIUM CAMPUS
+
+      </div>
+
+      {/* TITLE */}
+
+      <Typography
+        variant="h1"
+        className="
+          mt-6
+          text-3xl
+          sm:text-5xl
+          lg:text-6xl
+          font-black
+          text-gray-900
+          leading-tight
+        "
+      >
+
+        World Class
+
+        <span
+          className="
+            block
+            mt-2
+            bg-gradient-to-r
+            from-blue-700
+            via-cyan-500
+            to-blue-500
+            bg-clip-text
+            text-transparent
+          "
+        >
+          School Facilities
+        </span>
+
       </Typography>
+
+      {/* DESC */}
 
       <Typography
         className="
           mt-6
-          text-gray-600
           max-w-3xl
           mx-auto
-          text-lg
-          leading-relaxed
+          text-sm
+          sm:text-base
+          lg:text-lg
+          text-gray-600
+          leading-[2]
         "
       >
-        Modern infrastructure &
-        world-class facilities designed
-        for future-ready education.
+        Modern infrastructure,
+        innovative learning spaces &
+        premium campus facilities
+        designed to create future-ready
+        students with excellence.
       </Typography>
 
-    </div>
+    </motion.div>
 
-    {/* GRID */}
+    {/* FACILITY GRID */}
 
     {
       facilities?.length > 0 ? (
@@ -1352,10 +2291,13 @@ const facilityIcons = {
         <div
           className="
             grid
-            md:grid-cols-2
+            grid-cols-1
+            sm:grid-cols-2
             xl:grid-cols-3
-            gap-8
-            mt-20
+            gap-6
+            sm:gap-8
+            mt-14
+            sm:mt-20
           "
         >
 
@@ -1375,86 +2317,140 @@ const facilityIcons = {
                 return (
 
                   <motion.div
+
                     key={facility.id}
+
                     initial={{
                       opacity: 0,
-                      y: 40,
+                      y: 50,
                     }}
+
                     whileInView={{
                       opacity: 1,
                       y: 0,
                     }}
+
                     transition={{
                       duration: 0.5,
                       delay:
                         index * 0.1,
                     }}
+
                     viewport={{
                       once: true,
                     }}
+
                     whileHover={{
                       y: -10,
                     }}
+
+                    className="h-full"
                   >
 
                     <Card
                       className="
-                        rounded-[36px]
-                        border
-                        border-white
-                        bg-white/80
-                        backdrop-blur-xl
-                        shadow-xl
-                        hover:shadow-2xl
-                        transition-all
-                        overflow-hidden
+                        relative
                         h-full
+                        overflow-hidden
+                        rounded-[30px]
+                        sm:rounded-[38px]
+                        border
+                        border-white/60
+                        bg-white/70
+                        backdrop-blur-2xl
+                        shadow-[0_10px_40px_rgba(0,0,0,0.08)]
+                        transition-all
+                        duration-500
                         group
+                        hover:shadow-[0_20px_60px_rgba(37,99,235,0.18)]
                       "
                     >
 
-                      <CardBody className="p-10 relative">
+                      {/* TOP GLOW */}
 
-                        {/* GLOW */}
+                      <div
+                        className="
+                          absolute
+                          top-0
+                          right-0
+                          h-36
+                          w-36
+                          bg-blue-200/30
+                          rounded-full
+                          blur-3xl
+                          opacity-0
+                          group-hover:opacity-100
+                          transition-all
+                          duration-500
+                        "
+                      />
 
-                        <div
-                          className="
-                            absolute
-                            top-0
-                            right-0
-                            h-32
-                            w-32
-                            bg-blue-100
-                            blur-3xl
-                            opacity-0
-                            group-hover:opacity-100
-                            transition-all
-                          "
-                        />
+                      {/* BORDER LIGHT */}
+
+                      <div
+                        className="
+                          absolute
+                          inset-x-0
+                          top-0
+                          h-[3px]
+                          bg-gradient-to-r
+                          from-blue-500
+                          via-cyan-400
+                          to-blue-500
+                        "
+                      />
+
+                      <CardBody
+                        className="
+                          relative
+                          z-10
+                          p-6
+                          sm:p-8
+                          lg:p-10
+                        "
+                      >
 
                         {/* ICON */}
 
                         <div
                           className="
-                            h-24
-                            w-24
+                            relative
+                            h-20
+                            w-20
+                            sm:h-24
+                            sm:w-24
                             rounded-[28px]
                             bg-gradient-to-br
-                            from-blue-600
+                            from-blue-700
+                            via-blue-600
                             to-cyan-500
                             flex
                             items-center
                             justify-center
-                            shadow-2xl
-                            relative
-                            z-10
+                            shadow-[0_15px_40px_rgba(37,99,235,0.35)]
+                            group-hover:scale-110
+                            transition-all
+                            duration-500
                           "
                         >
 
+                          <div
+                            className="
+                              absolute
+                              inset-0
+                              rounded-[28px]
+                              bg-white/10
+                            "
+                          />
+
                           <Icon
                             className="
-                              h-12
-                              w-12
+                              relative
+                              z-10
+                              h-10
+                              w-10
+                              sm:h-12
+                              sm:w-12
                               text-white
                             "
                           />
@@ -1463,14 +2459,16 @@ const facilityIcons = {
 
                         {/* COUNT */}
 
-                        <div className="mt-8">
+                        <div className="mt-7">
 
                           <Chip
                             value={`Total ${facility.totalCount}`}
                             className="
                               w-fit
-                              bg-blue-50
+                              rounded-full
+                              bg-blue-100
                               text-blue-700
+                              font-bold
                             "
                           />
 
@@ -1481,9 +2479,12 @@ const facilityIcons = {
                         <Typography
                           variant="h4"
                           className="
-                            font-black
                             mt-6
+                            text-2xl
+                            sm:text-3xl
+                            font-black
                             text-gray-900
+                            leading-snug
                           "
                         >
                           {facility.title}
@@ -1494,9 +2495,10 @@ const facilityIcons = {
                         <Typography
                           className="
                             mt-5
+                            text-sm
+                            sm:text-base
                             text-gray-600
-                            leading-relaxed
-                            text-lg
+                            leading-[2]
                           "
                         >
                           {
@@ -1504,33 +2506,58 @@ const facilityIcons = {
                           }
                         </Typography>
 
-                        {/* ACTIVE */}
+                        {/* FOOTER */}
 
                         <div
                           className="
                             flex
                             items-center
-                            gap-2
+                            justify-between
+                            gap-3
                             mt-8
+                            pt-6
+                            border-t
+                            border-gray-100
                           "
                         >
 
-                          <CheckCircleIcon
+                          <div
+                            className="
+                              flex
+                              items-center
+                              gap-2
+                            "
+                          >
+
+                            <CheckCircleIcon
+                              className="
+                                h-5
+                                w-5
+                                text-green-500
+                              "
+                            />
+
+                            <Typography
+                              className="
+                                text-sm
+                                font-semibold
+                                text-green-600
+                              "
+                            >
+                              Premium Facility
+                            </Typography>
+
+                          </div>
+
+                          <ArrowRightIcon
                             className="
                               h-5
                               w-5
-                              text-green-500
+                              text-blue-600
+                              group-hover:translate-x-1
+                              transition-all
                             "
                           />
-
-                          <Typography
-                            className="
-                              text-green-600
-                              font-semibold
-                            "
-                          >
-                            Premium Facility
-                          </Typography>
 
                         </div>
 
@@ -1548,13 +2575,55 @@ const facilityIcons = {
 
       ) : (
 
-        <div className="text-center py-24">
+        <div
+          className="
+            text-center
+            py-20
+            sm:py-24
+          "
+        >
+
+          <div
+            className="
+              mx-auto
+              h-24
+              w-24
+              rounded-full
+              bg-blue-100
+              flex
+              items-center
+              justify-center
+            "
+          >
+
+            <BuildingOffice2Icon
+              className="
+                h-12
+                w-12
+                text-blue-600
+              "
+            />
+
+          </div>
 
           <Typography
-            variant="h5"
-            className="text-gray-500"
+            variant="h4"
+            className="
+              mt-8
+              font-black
+              text-gray-800
+            "
           >
             No Facilities Available
+          </Typography>
+
+          <Typography
+            className="
+              mt-3
+              text-gray-500
+            "
+          >
+            Facilities will appear here soon.
           </Typography>
 
         </div>
@@ -1569,33 +2638,141 @@ const facilityIcons = {
 {/* GALLERY */}
 {/* ====================================================== */}
 
-<section className="py-24 px-6 bg-white">
+<section
+  id="gallery"
+  className="
+    relative
+    overflow-hidden
+    py-16
+    sm:py-20
+    lg:py-28
+    px-4
+    sm:px-6
+    bg-gradient-to-b
+    from-[#f8fbff]
+    via-white
+    to-[#f4f9ff]
+  "
+>
 
-  <div className="max-w-7xl mx-auto">
+  {/* BG EFFECTS */}
 
-    <Typography
-      variant="h2"
-      className="
-        text-center
-        font-black
-        text-5xl
-      "
-    >
-      School Gallery
-    </Typography>
+  <div
+    className="
+      absolute
+      top-[-120px]
+      left-[-120px]
+      h-[280px]
+      w-[280px]
+      rounded-full
+      bg-blue-200/30
+      blur-3xl
+    "
+  />
 
-    <Typography
-      className="
-        text-center
-        text-gray-500
-        mt-5
-        max-w-2xl
-        mx-auto
-      "
-    >
-      Explore moments, achievements,
-      campus life & activities.
-    </Typography>
+  <div
+    className="
+      absolute
+      bottom-[-120px]
+      right-[-120px]
+      h-[280px]
+      w-[280px]
+      rounded-full
+      bg-cyan-200/30
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      relative
+      z-10
+      max-w-7xl
+      mx-auto
+    "
+  >
+
+    {/* HEADER */}
+
+    <div className="text-center">
+
+      <div
+        className="
+          inline-flex
+          items-center
+          gap-2
+          rounded-full
+          bg-blue-100
+          px-5
+          py-2
+          text-sm
+          font-bold
+          text-blue-700
+          shadow-md
+        "
+      >
+
+        <PhotoIcon
+          className="
+            h-5
+            w-5
+          "
+        />
+
+        SCHOOL GALLERY
+
+      </div>
+
+      <Typography
+        variant="h1"
+        className="
+          mt-6
+          text-3xl
+          sm:text-4xl
+          md:text-5xl
+          lg:text-6xl
+          font-black
+          text-gray-900
+          leading-tight
+        "
+      >
+        Capturing Beautiful
+        <span
+          className="
+            block
+            mt-2
+            bg-gradient-to-r
+            from-blue-700
+            to-cyan-500
+            bg-clip-text
+            text-transparent
+          "
+        >
+          School Moments
+        </span>
+      </Typography>
+
+      <Typography
+        className="
+          mt-6
+          text-gray-600
+          text-sm
+          sm:text-base
+          lg:text-lg
+          leading-relaxed
+          max-w-3xl
+          mx-auto
+        "
+      >
+        Explore campus life,
+        achievements, events,
+        celebrations & unforgettable
+        student memories.
+      </Typography>
+
+    </div>
+
+    {/* GALLERY */}
 
     {
       gallery?.length > 0 ? (
@@ -1603,10 +2780,14 @@ const facilityIcons = {
         <div
           className="
             grid
-            md:grid-cols-2
-            lg:grid-cols-3
-            gap-8
-            mt-16
+            grid-cols-1
+            sm:grid-cols-2
+            xl:grid-cols-3
+            gap-6
+            lg:gap-8
+            mt-14
+            sm:mt-16
+            lg:mt-20
           "
         >
 
@@ -1619,75 +2800,332 @@ const facilityIcons = {
 
                 <motion.div
                   key={index}
+
+                  initial={{
+                    opacity: 0,
+                    y: 40,
+                  }}
+
+                  whileInView={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+
+                  transition={{
+                    duration: 0.5,
+                    delay: index * 0.1,
+                  }}
+
+                  viewport={{
+                    once: true,
+                  }}
+
                   whileHover={{
                     y: -10,
                   }}
-                  className="
-                    rounded-[32px]
-                    overflow-hidden
-                    shadow-2xl
-                    bg-white
-                    group
-                    cursor-pointer
-                  "
+
+                  className="h-full"
                 >
 
-                  {/* VIDEO */}
+                  <Card
+                    className="
+                      relative
+                      overflow-hidden
+                      rounded-[32px]
+                      border
+                      border-white/60
+                      bg-white/80
+                      backdrop-blur-xl
+                      shadow-xl
+                      hover:shadow-2xl
+                      transition-all
+                      duration-500
+                      h-full
+                      group
+                    "
+                  >
 
-                  {
-                    item.type ===
-                    "VIDEO" ? (
+                    {/* TOP IMAGE / VIDEO */}
+
+                    <div
+                      className="
+                        relative
+                        overflow-hidden
+                        h-[240px]
+                        sm:h-[280px]
+                        lg:h-[320px]
+                      "
+                    >
+
+                      {
+                        item.type ===
+                        "VIDEO" ? (
+
+                          <div
+                            className="
+                              relative
+                              h-full
+                              cursor-pointer
+                            "
+                            onClick={() =>
+                              openVideoPreview(
+                                item
+                              )
+                            }
+                          >
+
+                            <img
+                              src={
+                                item.thumbnail ||
+                                "https://via.placeholder.com/600x400?text=Video"
+                              }
+                              alt={
+                                item.title ||
+                                "Video"
+                              }
+                              className="
+                                h-full
+                                w-full
+                                object-cover
+                                group-hover:scale-110
+                                transition-all
+                                duration-700
+                              "
+                            />
+
+                            {/* OVERLAY */}
+
+                            <div
+                              className="
+                                absolute
+                                inset-0
+                                bg-gradient-to-t
+                                from-black/70
+                                via-black/20
+                                to-transparent
+                                flex
+                                items-center
+                                justify-center
+                              "
+                            >
+
+                              <div
+                                className="
+                                  h-20
+                                  w-20
+                                  sm:h-24
+                                  sm:w-24
+                                  rounded-full
+                                  bg-white/20
+                                  backdrop-blur-xl
+                                  flex
+                                  items-center
+                                  justify-center
+                                  border
+                                  border-white/30
+                                  shadow-2xl
+                                  group-hover:scale-110
+                                  transition-all
+                                  duration-500
+                                "
+                              >
+
+                                <PlayCircleIcon
+                                  className="
+                                    h-14
+                                    w-14
+                                    sm:h-16
+                                    sm:w-16
+                                    text-white
+                                  "
+                                />
+
+                              </div>
+
+                            </div>
+
+                          </div>
+
+                        ) : (
+
+                          <img
+                            src={
+                              item.fileName
+                            }
+                            alt={
+                              item.title ||
+                              "Gallery"
+                            }
+                            className="
+                              h-full
+                              w-full
+                              object-cover
+                              group-hover:scale-110
+                              transition-all
+                              duration-700
+                            "
+                          />
+
+                        )
+                      }
+
+                      {/* TOP CHIPS */}
 
                       <div
                         className="
-                          relative
-                          h-[320px]
+                          absolute
+                          top-4
+                          left-4
+                          right-4
+                          flex
+                          items-center
+                          justify-between
+                          gap-2
                         "
-                        onClick={() =>
-                          openVideoPreview(
-                            item
-                          )
-                        }
                       >
 
-                        {/* THUMBNAIL */}
-
-                        <img
-                          src={
-                            item.thumbnail ||
-                            "https://via.placeholder.com/600x400?text=Video"
+                        <Chip
+                          value={
+                            item.type ||
+                            "IMAGE"
                           }
-                          alt={
-                            item.title
-                          }
-                          className="
-                            h-full
-                            w-full
-                            object-cover
-                          "
+                          className={`
+                            ${
+                              item.type ===
+                              "VIDEO"
+                                ? "bg-purple-500"
+                                : "bg-green-500"
+                            }
+                            text-white
+                            shadow-lg
+                          `}
                         />
-
-                        {/* OVERLAY */}
 
                         <div
                           className="
-                            absolute
-                            inset-0
-                            bg-black/30
-                            group-hover:bg-black/40
-                            transition-all
+                            px-3
+                            py-1
+                            rounded-full
+                            bg-white/20
+                            backdrop-blur-xl
+                            text-white
+                            text-xs
+                            font-bold
+                            border
+                            border-white/20
+                          "
+                        >
+                          ACTIVE
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    {/* CONTENT */}
+
+                    <CardBody
+                      className="
+                        p-5
+                        sm:p-6
+                        lg:p-7
+                      "
+                    >
+
+                      <Typography
+                        variant="h4"
+                        className="
+                          font-black
+                          text-gray-900
+                          text-xl
+                          sm:text-2xl
+                          leading-tight
+                        "
+                      >
+                        {
+                          item.title ||
+                          "Gallery Title"
+                        }
+                      </Typography>
+
+                      <Typography
+                        className="
+                          mt-4
+                          text-gray-600
+                          text-sm
+                          sm:text-base
+                          leading-relaxed
+                          line-clamp-3
+                        "
+                      >
+                        {
+                          item.description ||
+                          "School activity and campus memories showcased beautifully."
+                        }
+                      </Typography>
+
+                      {/* FOOTER */}
+
+                      <div
+                        className="
+                          flex
+                          items-center
+                          justify-between
+                          mt-6
+                        "
+                      >
+
+                        <div
+                          className="
                             flex
                             items-center
-                            justify-center
+                            gap-2
                           "
                         >
 
-                          <PlayCircleIcon
+                          <CheckCircleIcon
                             className="
-                              h-24
-                              w-24
+                              h-5
+                              w-5
+                              text-green-500
+                            "
+                          />
+
+                          <Typography
+                            className="
+                              text-sm
+                              font-semibold
+                              text-green-600
+                            "
+                          >
+                            Verified Media
+                          </Typography>
+
+                        </div>
+
+                        <div
+                          className="
+                            h-11
+                            w-11
+                            rounded-2xl
+                            bg-gradient-to-br
+                            from-blue-600
+                            to-cyan-500
+                            flex
+                            items-center
+                            justify-center
+                            shadow-lg
+                            group-hover:rotate-45
+                            transition-all
+                            duration-500
+                          "
+                        >
+
+                          <ArrowRightIcon
+                            className="
+                              h-5
+                              w-5
                               text-white
-                              drop-shadow-2xl
                             "
                           />
 
@@ -1695,86 +3133,9 @@ const facilityIcons = {
 
                       </div>
 
-                    ) : (
+                    </CardBody>
 
-                      // IMAGE
-
-                      <div
-                        className="
-                          overflow-hidden
-                          h-[320px]
-                        "
-                      >
-
-                        <img
-                          src={
-                            item.fileName
-                          }
-                          alt={
-                            item.title
-                          }
-                          className="
-                            h-full
-                            w-full
-                            object-cover
-                            group-hover:scale-110
-                            transition-all
-                            duration-700
-                          "
-                        />
-
-                      </div>
-                    )
-                  }
-
-                  {/* CONTENT */}
-
-                  <div className="p-6">
-
-                    <div className="flex items-center justify-between">
-
-                      <Chip
-                        value={
-                          item.type
-                        }
-                        color={
-                          item.type ===
-                          "VIDEO"
-                            ? "purple"
-                            : "green"
-                        }
-                      />
-
-                      <Chip
-                        value="ACTIVE"
-                        color="green"
-                      />
-
-                    </div>
-
-                    <Typography
-                      variant="h5"
-                      className="
-                        font-black
-                        mt-5
-                      "
-                    >
-                      {item.title}
-                    </Typography>
-
-                    <Typography
-                      className="
-                        mt-3
-                        text-gray-600
-                        line-clamp-3
-                      "
-                    >
-                      {
-                        item.description
-                      }
-                    </Typography>
-
-                  </div>
+                  </Card>
 
                 </motion.div>
               )
@@ -1789,17 +3150,59 @@ const facilityIcons = {
           className="
             text-center
             py-20
+            sm:py-24
           "
         >
 
+          <div
+            className="
+              mx-auto
+              h-28
+              w-28
+              rounded-full
+              bg-blue-100
+              flex
+              items-center
+              justify-center
+            "
+          >
+
+            <PhotoIcon
+              className="
+                h-14
+                w-14
+                text-blue-600
+              "
+            />
+
+          </div>
+
           <Typography
-            variant="h5"
-            className="text-gray-500"
+            variant="h4"
+            className="
+              mt-8
+              font-black
+              text-gray-800
+            "
           >
             No Gallery Available
           </Typography>
 
+          <Typography
+            className="
+              mt-3
+              text-gray-500
+              max-w-md
+              mx-auto
+            "
+          >
+            Gallery photos & videos
+            will appear here once
+            uploaded by the school.
+          </Typography>
+
         </div>
+
       )
     }
 
@@ -1812,6 +3215,7 @@ const facilityIcons = {
 {/* ====================================================== */}
 
 <section
+  id="testimonials"
   className="
     relative
     py-32
@@ -2644,26 +4048,119 @@ const facilityIcons = {
 }
 
 {/* ====================================================== */}
-{/* FOOTER */}
+{/* PREMIUM MOBILE FIRST FOOTER */}
 {/* ====================================================== */}
 
-      <footer className="bg-gray-950 text-white py-20 px-6">
+<footer
+  className="
+    relative
+    overflow-hidden
+    bg-[#020617]
+    text-white
+  "
+>
 
-        <div
-          className="
-            max-w-7xl
-            mx-auto
-            grid
-            lg:grid-cols-4
-            gap-12
-          "
-        >
+  {/* BG EFFECTS */}
+
+  <div
+    className="
+      absolute
+      top-[-120px]
+      left-[-120px]
+      h-[260px]
+      w-[260px]
+      rounded-full
+      bg-cyan-500/20
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      absolute
+      bottom-[-120px]
+      right-[-120px]
+      h-[260px]
+      w-[260px]
+      rounded-full
+      bg-blue-600/20
+      blur-3xl
+    "
+  />
+
+  <div
+    className="
+      relative
+      z-10
+      max-w-7xl
+      mx-auto
+      px-5
+      py-16
+    "
+  >
+
+    {/* TOP GRID */}
+
+    <div
+      className="
+        grid
+        grid-cols-1
+        md:grid-cols-2
+        xl:grid-cols-4
+        gap-12
+      "
+    >
+
+      {/* ====================================================== */}
+      {/* SCHOOL INFO */}
+      {/* ====================================================== */}
+
+      <div>
+
+        {/* LOGO */}
+
+        <div className="flex items-center gap-4">
+
+          <div
+            className="
+              h-16
+              w-16
+              rounded-3xl
+              overflow-hidden
+              border
+              border-white/10
+              bg-white
+              shadow-2xl
+            "
+          >
+
+            <img
+              src={
+                aboutSchool?.logo
+                  ? getImageUrl(
+                      aboutSchool.logo
+                    )
+                  : defaultImage
+              }
+              alt="logo"
+              className="
+                h-full
+                w-full
+                object-cover
+              "
+            />
+
+          </div>
 
           <div>
 
             <Typography
               variant="h4"
-              className="font-black"
+              className="
+                font-black
+                text-white
+                leading-tight
+              "
             >
               {
                 school?.schoolName
@@ -2672,127 +4169,584 @@ const facilityIcons = {
 
             <Typography
               className="
-                mt-6
-                text-gray-400
+                text-cyan-400
+                text-sm
+                mt-1
               "
             >
-              Building future-ready students through modern education.
+              {
+                aboutSchool?.board ||
+                "Premium School"
+              }
             </Typography>
 
-            <div className="flex gap-4 mt-8">
+          </div>
 
-              <div
+        </div>
+
+        {/* TAGLINE */}
+
+        <Typography
+          className="
+            mt-7
+            text-gray-400
+            leading-relaxed
+            text-[15px]
+          "
+        >
+          {
+            aboutSchool?.tagline ||
+            "Building future-ready students through modern education."
+          }
+        </Typography>
+
+        {/* WEBSITE */}
+
+        {
+          aboutSchool?.website && (
+
+            <a
+              href={
+                aboutSchool.website.startsWith(
+                  "http"
+                )
+                  ? aboutSchool.website
+                  : `https://${aboutSchool.website}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                mt-6
+                inline-flex
+                items-center
+                gap-3
+                rounded-2xl
+                border
+                border-cyan-400/20
+                bg-cyan-500/10
+                px-5
+                py-3
+                text-cyan-300
+                font-semibold
+                hover:bg-cyan-500/20
+                transition-all
+                duration-300
+              "
+            >
+
+              <GlobeAltIcon
+                className="
+                  h-5
+                  w-5
+                "
+              />
+
+              Visit Website
+
+            </a>
+          )
+        }
+
+        {/* SOCIALS */}
+
+        <div className="flex gap-4 mt-8">
+
+          {
+            aboutSchool?.facebookLink && (
+
+              <a
+                href={
+                  aboutSchool.facebookLink
+                }
+                target="_blank"
+                rel="noopener noreferrer"
                 className="
                   h-12
                   w-12
-                  rounded-full
-                  bg-white/10
+                  rounded-2xl
+                  bg-blue-600
                   flex
                   items-center
                   justify-center
+                  text-white
+                  text-lg
+                  hover:scale-110
+                  transition-all
+                  duration-300
+                  shadow-lg
                 "
               >
                 <FaFacebookF />
-              </div>
+              </a>
+            )
+          }
 
-              <div
+          {
+            aboutSchool?.instagramLink && (
+
+              <a
+                href={
+                  aboutSchool.instagramLink
+                }
+                target="_blank"
+                rel="noopener noreferrer"
                 className="
                   h-12
                   w-12
-                  rounded-full
-                  bg-white/10
+                  rounded-2xl
+                  bg-gradient-to-r
+                  from-pink-500
+                  to-orange-500
                   flex
                   items-center
                   justify-center
+                  text-white
+                  text-lg
+                  hover:scale-110
+                  transition-all
+                  duration-300
+                  shadow-lg
                 "
               >
                 <FaInstagram />
-              </div>
+              </a>
+            )
+          }
 
-              <div
+          {
+            aboutSchool?.youtubeLink && (
+
+              <a
+                href={
+                  aboutSchool.youtubeLink
+                }
+                target="_blank"
+                rel="noopener noreferrer"
                 className="
                   h-12
                   w-12
-                  rounded-full
-                  bg-white/10
+                  rounded-2xl
+                  bg-red-600
                   flex
                   items-center
                   justify-center
+                  text-white
+                  text-lg
+                  hover:scale-110
+                  transition-all
+                  duration-300
+                  shadow-lg
                 "
               >
                 <FaYoutube />
-              </div>
+              </a>
+            )
+          }
+
+        </div>
+
+      </div>
+
+      {/* ====================================================== */}
+      {/* CONTACT INFO */}
+      {/* ====================================================== */}
+
+      <div>
+
+        <Typography
+          variant="h5"
+          className="
+            font-black
+            text-white
+            mb-8
+          "
+        >
+          Contact Info
+        </Typography>
+
+        <div className="space-y-6">
+
+          {/* PHONE */}
+
+          <div className="flex gap-4">
+
+            <div
+              className="
+                h-12
+                w-12
+                rounded-2xl
+                bg-blue-500/10
+                flex
+                items-center
+                justify-center
+                flex-shrink-0
+              "
+            >
+
+              <PhoneIcon
+                className="
+                  h-5
+                  w-5
+                  text-cyan-400
+                "
+              />
+
+            </div>
+
+            <div>
+
+              <Typography
+                className="
+                  text-sm
+                  text-gray-500
+                "
+              >
+                Phone
+              </Typography>
+
+              <Typography
+                className="
+                  text-white
+                  font-medium
+                  break-all
+                "
+              >
+                {
+                  school?.phone ||
+                  "N/A"
+                }
+              </Typography>
 
             </div>
 
           </div>
 
-          <div>
+          {/* EMAIL */}
 
-            <Typography
-              variant="h5"
+          <div className="flex gap-4">
+
+            <div
               className="
-                font-black
-                mb-6
+                h-12
+                w-12
+                rounded-2xl
+                bg-blue-500/10
+                flex
+                items-center
+                justify-center
+                flex-shrink-0
               "
             >
-              Contact Info
-            </Typography>
 
-            <div className="space-y-5 text-gray-400">
+              <EnvelopeIcon
+                className="
+                  h-5
+                  w-5
+                  text-cyan-400
+                "
+              />
 
-              <div className="flex gap-3">
+            </div>
 
-                <PhoneIcon className="h-5 w-5" />
+            <div>
 
-                <span>
-                  {school?.phone}
-                </span>
+              <Typography
+                className="
+                  text-sm
+                  text-gray-500
+                "
+              >
+                Email
+              </Typography>
 
-              </div>
+              <Typography
+                className="
+                  text-white
+                  font-medium
+                  break-all
+                "
+              >
+                {
+                  school?.email ||
+                  "N/A"
+                }
+              </Typography>
 
-              <div className="flex gap-3">
+            </div>
 
-                <EnvelopeIcon className="h-5 w-5" />
+          </div>
 
-                <span>
-                  {school?.email}
-                </span>
+          {/* ADDRESS */}
 
-              </div>
+          <div className="flex gap-4">
 
-              <div className="flex gap-3">
+            <div
+              className="
+                h-12
+                w-12
+                rounded-2xl
+                bg-blue-500/10
+                flex
+                items-center
+                justify-center
+                flex-shrink-0
+              "
+            >
 
-                <MapPinIcon className="h-5 w-5" />
+              <MapPinIcon
+                className="
+                  h-5
+                  w-5
+                  text-cyan-400
+                "
+              />
 
-                <span>
-                  {school?.address}
-                </span>
+            </div>
 
-              </div>
+            <div>
+
+              <Typography
+                className="
+                  text-sm
+                  text-gray-500
+                "
+              >
+                Address
+              </Typography>
+
+              <Typography
+                className="
+                  text-white
+                  leading-relaxed
+                "
+              >
+                {
+                  school?.address ||
+                  "N/A"
+                }
+              </Typography>
 
             </div>
 
           </div>
 
         </div>
+
+      </div>
+
+      {/* ====================================================== */}
+      {/* QUICK LINKS */}
+      {/* ====================================================== */}
+
+      <div>
+
+        <Typography
+          variant="h5"
+          className="
+            font-black
+            text-white
+            mb-8
+          "
+        >
+          Quick Links
+        </Typography>
+
+        <div className="space-y-5">
+
+          {
+            [
+              {
+                label: "About School",
+                id: "about-school",
+              },
+              {
+                label: "Facilities",
+                id: "facilities",
+              },
+              {
+                label: "Gallery",
+                id: "gallery",
+              },
+              {
+                label: "Testimonials",
+                id: "testimonials",
+              },
+              {
+                label: "Admission Inquiry",
+                id: "admission-inquiry",
+              },
+            ].map((item, index) => (
+
+              <button
+                key={index}
+                onClick={() => {
+
+                  const section =
+                    document.getElementById(
+                      item.id
+                    );
+
+                  if (section) {
+
+                    section.scrollIntoView({
+                      behavior:
+                        "smooth",
+                    });
+                  }
+                }}
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  text-gray-400
+                  hover:text-cyan-400
+                  transition-all
+                  duration-300
+                "
+              >
+
+                <CheckCircleIcon
+                  className="
+                    h-4
+                    w-4
+                  "
+                />
+
+                {item.label}
+
+              </button>
+            ))
+          }
+
+        </div>
+
+      </div>
+
+      {/* ====================================================== */}
+      {/* ADMISSION */}
+      {/* ====================================================== */}
+
+      <div>
 
         <div
           className="
-            border-t
+            rounded-[32px]
+            border
             border-white/10
-            mt-16
-            pt-8
-            text-center
-            text-gray-500
+            bg-white/5
+            backdrop-blur-xl
+            p-8
           "
         >
-          © 2026 {
-            school?.schoolName
-          }. All Rights Reserved.
+
+          <Typography
+            variant="h4"
+            className="
+              font-black
+              text-white
+              leading-tight
+            "
+          >
+            Admissions Open
+          </Typography>
+
+          <Typography
+            className="
+              mt-5
+              text-gray-400
+              leading-relaxed
+            "
+          >
+            Enroll your child in one of
+            the best modern schools for
+            future-ready education.
+          </Typography>
+
+          <Button
+            fullWidth
+            onClick={() => {
+
+              const section =
+                document.getElementById(
+                  "admission-inquiry"
+                );
+
+              if (section) {
+
+                section.scrollIntoView({
+                  behavior:
+                    "smooth",
+                });
+              }
+            }}
+            className="
+              mt-8
+              rounded-2xl
+              bg-gradient-to-r
+              from-cyan-500
+              to-blue-600
+              py-4
+              text-base
+              shadow-2xl
+            "
+          >
+            Apply Now
+          </Button>
+
         </div>
 
-      </footer>
+      </div>
+
+    </div>
+
+    {/* ====================================================== */}
+    {/* BOTTOM */}
+    {/* ====================================================== */}
+
+    <div
+      className="
+        mt-16
+        border-t
+        border-white/10
+        pt-8
+        flex
+        flex-col
+        md:flex-row
+        items-center
+        justify-between
+        gap-5
+      "
+    >
+
+      <Typography
+        className="
+          text-gray-500
+          text-center
+          md:text-left
+          text-sm
+        "
+      >
+        © 2026 {
+          school?.schoolName
+        }. All Rights Reserved.
+      </Typography>
+
+      <Typography
+        className="
+          text-gray-600
+          text-sm
+          text-center
+        "
+      >
+        Designed with ❤️ for modern
+        education
+      </Typography>
+
+    </div>
+
+  </div>
+
+</footer>
 
     </div>
   );

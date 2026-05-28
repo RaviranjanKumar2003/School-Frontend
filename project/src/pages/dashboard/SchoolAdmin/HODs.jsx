@@ -283,7 +283,7 @@ function HODs() {
             variant="h4"
             className="font-bold text-blue-700"
           >
-            HOD Management
+            Principle Management
           </Typography>
 
           <Typography className="text-gray-500 text-sm">
@@ -300,7 +300,7 @@ function HODs() {
 
           <UserPlusIcon className="h-5 w-5" />
 
-          Create HOD
+          Create Principles
 
         </Button>
 
@@ -312,7 +312,7 @@ function HODs() {
         <div className="w-full md:w-[350px]">
 
           <Input
-            label="Search HOD"
+            label="Search Principles"
             value={search}
             onChange={(e) =>
               setSearch(e.target.value)
@@ -325,7 +325,7 @@ function HODs() {
         <div className="bg-white px-4 py-3 rounded-xl shadow min-w-[170px]">
 
           <Typography className="font-medium">
-            Total HODs: <b>{hods.length}</b>
+            Total Principals: <b>{hods.length}</b>
           </Typography>
 
         </div>
@@ -350,7 +350,7 @@ function HODs() {
         <div className="text-center py-16 bg-white rounded-xl shadow">
 
           <Typography variant="h6">
-            No HODs Found
+            No Principals Found
           </Typography>
 
         </div>
