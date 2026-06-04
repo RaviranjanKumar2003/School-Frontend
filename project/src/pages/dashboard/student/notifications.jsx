@@ -19,53 +19,93 @@ function Notices() {
   const [activeType, setActiveType] = useState("ALL");
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [leaves, setLeaves] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-
   const [leaveData, setLeaveData] = useState({
+  studentId:
+  localStorage.getItem("id"),
+  senderType: "STUDENT",
+  senderId:
+  localStorage.getItem("id"),
   reason: "",
   fromDate: "",
   toDate: "",
   sendTo: "HOD",
-  teacherId: "",
-  sendToAll: false
+  teacherId: null,
+  leaveType: "CASUAL",
   });
 
-  const [leaves, setLeaves] = useState([]);
+
+
+
 
   useEffect(() => {
     fetchNotices();
     fetchLeaves();
+    fetchLeaveTypes();
   }, []);
+
+
+
+
+
+  const fetchLeaveTypes = async () => {
+  try {
+
+    const res = await axios.get(
+      "http://localhost:8080/api/leave/types"
+    );
+
+    setLeaveTypes(res.data);
+
+  } catch (err) {
+
+    console.log(err);
+  }
+  };
+
+
+
+
 
 
  const loadTeachers = async () => {
 
   try {
 
-    const studentId = localStorage.getItem("id");
+    const studentId =
+      localStorage.getItem("id");
 
-    const studentRes = await axios.get(
-      `http://localhost:8080/api/students/by-id/${studentId}`
-    );
+    const studentRes =
+      await axios.get(
+        `http://localhost:8080/api/students/${studentId}`
+      );
 
-    const className = studentRes.data.className;
+    const schoolId =
+      studentRes.data.schoolId;
 
-    if (!className) return;
+    if (!schoolId) return;
 
     const res = await axios.get(
-      `http://localhost:8080/api/professors/class/${className}`
+      `http://localhost:8080/api/professors/by-school/${schoolId}`
     );
 
+    console.log("TEACHERS => ", res.data);
     setTeachers(res.data);
 
   } catch (err) {
+
     console.log(err);
   }
-};
+  };
 
- const fetchNotices = async () => {
+
+
+
+  const fetchNotices = async () => {
   try {
     const studentId = localStorage.getItem("id");
 
@@ -78,12 +118,20 @@ function Notices() {
       `http://localhost:8080/api/notifications/student/${studentId}`
     );
     if (res.data && res.data.length > 0) {
-      const mapped = res.data.map((n) => ({
-      ...n,
-      notificationUserId: n.notificationUserId ,
-      notificationId: n.notificationId // 🔥 ये add
-    }));
+     const mapped = res.data.map((n) => ({
 
+  ...n,
+
+  notificationUserId:
+  n.notificationUserId,
+
+  notificationId:
+  n.notificationId,
+
+  category:
+  n.senderType
+
+  }));
     setNotices(mapped);
     setFiltered(mapped);
 
@@ -107,9 +155,16 @@ function Notices() {
     const notice = notices.find((n) => n.notificationId === id);
 
     // 🔥 read (notificationId से)
-    if (notice && !notice.readStatus) {
-   await axios.put(
-    `http://localhost:8080/api/notifications/read/${notice.notificationId}/${studentId}`
+  //   if (notice && !notice.readStatus) {
+  //  await axios.put(
+  //   `http://localhost:8080/api/notifications/read/${notice.notificationId}/${studentId}`
+  // );
+  // }
+
+  if (notice && !notice.readStatus) {
+
+  await axios.put(
+    `http://localhost:8080/api/notifications/read/${notice.notificationId}/${studentId}/STUDENT`
   );
   }
 
@@ -135,7 +190,7 @@ function Notices() {
       const studentId = localStorage.getItem("id");
 
       const res = await axios.get(
-        `http://localhost:8080/api/leave/my?studentId=${studentId}`
+      `http://localhost:8080/api/leave/student/${studentId}`
       );
 
       setLeaves(res.data);
@@ -150,10 +205,10 @@ function Notices() {
 
     if (type === "ALL") {
       setFiltered(notices);
-    } else if (type === "REQUEST") {
-      setFiltered([]); 
+    } else if (type === "REQUEST"){
+      fetchLeaves();
     } else {
-     setFiltered(notices.filter((n) => n.sender === type));
+     setFiltered(notices.filter((n) => n.category === type));
     }
   };
 
@@ -166,31 +221,49 @@ function Notices() {
   }));
   };
 
+
   const submitLeave = async () => {
-    try {
-      const studentId = localStorage.getItem("id");
+  try {
 
-      await axios.post(
-  `http://localhost:8080/api/leave?studentId=${studentId}`,
-  leaveData
-  );
+    await axios.post(
 
-      alert("Leave Applied ✅");
-      setShowLeaveModal(false);
+      "http://localhost:8080/api/leave/apply",
 
-     setLeaveData({
+      leaveData
+
+    );
+    alert("✅ Leave Applied");
+    setShowLeaveModal(false);
+    setLeaveData({
+  studentId:
+    localStorage.getItem("id"),
+
+  senderType: "STUDENT",
+
+  senderId:
+    localStorage.getItem("id"),
+
   reason: "",
+
   fromDate: "",
+
   toDate: "",
+
   sendTo: "HOD",
-  teacherId: "",
-  sendToAll: false
- });
-      fetchLeaves();
-    } catch (err) {
-      console.error(err);
-      alert("Error ❌");
-    }
+
+  teacherId: null,
+
+  leaveType: "CASUAL",
+  });
+
+  fetchLeaves();
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("❌ Failed");
+  }
   };
 
   return (
@@ -213,7 +286,7 @@ function Notices() {
 
         {/* FILTER */}
         <div className="flex flex-wrap gap-3 mb-8">
-          {["ALL", "HOD", "TEACHER", "REQUEST"].map((type) => (
+          {["ALL","ADMIN","HOD","TEACHER","REQUEST"].map((type) => (
             <button
               key={type}
               onClick={() => handleFilter(type)}
@@ -233,38 +306,81 @@ function Notices() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((item, i) => (
               <div
-                key={i}
-                className="bg-white p-6 rounded-2xl shadow border 
-                hover:shadow-xl hover:-translate-y-1 transition duration-300 cursor-pointer"
-              >
-                <p className="text-sm text-gray-400">
-                  {new Date(item.sentAt).toLocaleDateString()}
-                </p>
+  key={i}
+  className="
+  bg-white
+  rounded-3xl
+  border border-gray-100
+  shadow-md
+  hover:shadow-xl
+  transition-all duration-300
+  overflow-hidden
+  flex
+  flex-col
+  min-h-[260px]
+"
+>
 
-                <h3 className="text-xl font-semibold mt-2 hover:text-blue-600 transition">
-                  {item.title}
-                </h3>
+  {/* TOP COLOR */}
+  <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
-                <p className="text-gray-600 mt-2 line-clamp-3">
-                  {item.message}
-                </p>
+  <div className="p-6 flex flex-col flex-1">
 
-                <button
-                  onClick={() => setSelectedNotice(item)}
-                  className="mt-4 text-blue-600 font-medium hover:underline"
-                >
-                  Read More →
-                </button>
-                <button
-                 onClick={(e) => {
-                 e.stopPropagation();
-                 archiveNotice(item.notificationId);
-                 }}
-                 className="mt-10 mr-10 ml-10 mb-10 text-1xl text-gray-500 rounded-full hover:text-red-500"
-                 >
-                 Move to Archive
-                </button>
-              </div>
+    {/* DATE */}
+    <p className="text-sm text-gray-400">
+      {new Date(item.sentAt).toLocaleDateString()}
+    </p>
+
+    {/* TITLE */}
+    <h3 className="text-2xl font-bold text-gray-800 mt-3 line-clamp-2">
+      {item.title}
+    </h3>
+
+    {/* MESSAGE */}
+    <p className="text-gray-500 mt-4 leading-7 line-clamp-3 flex-1">
+      {item.message}
+    </p>
+
+    {/* BUTTONS */}
+    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+
+      <button
+        onClick={() => setSelectedNotice(item)}
+        className="
+        text-blue-600
+        font-semibold
+        hover:text-indigo-700
+        transition
+      "
+      >
+        Read More →
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          archiveNotice(item.notificationId);
+        }}
+        className="
+        px-4 py-2
+        rounded-xl
+        bg-gray-100
+        text-gray-600
+        hover:bg-red-100
+        hover:text-red-500
+        transition
+        text-sm
+        font-medium
+      "
+      >
+        Archive
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
             ))}
           </div>
         )}
@@ -291,9 +407,46 @@ function Notices() {
                     {l.fromDate} → {l.toDate}
                   </p>
 
-                  <h3 className="font-semibold text-lg mt-2">
-                    {l.reason}
-                  </h3>
+                 <div className="space-y-2 mt-3">
+
+                <h3 className="font-bold text-lg text-slate-800">
+               {l.leaveType} Leave
+             </h3>
+
+            <p className="text-gray-600 text-sm">
+            {l.reason}
+            </p>
+
+           <div className="flex items-center gap-2 text-sm">
+
+             <span className="font-semibold text-gray-700">
+              Sent To:
+            </span>
+
+             <span className="text-blue-600">
+             {l.sendTo}
+            </span>
+
+          </div>
+
+
+        {l.responseMessage && (
+
+        <div className="bg-gray-50 border rounded-lg p-2 text-sm">
+
+      <span className="font-semibold text-gray-700">
+        Response:
+      </span>
+
+      <p className="text-gray-600 mt-1">
+        {l.responseMessage}
+      </p>
+
+    </div>
+
+     )}
+
+     </div>
 
                   <span
                     className={`inline-block mt-4 px-3 py-1 rounded-full text-sm font-medium ${
@@ -304,7 +457,11 @@ function Notices() {
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {l.status}
+                    {l.status === "PENDING"
+                    ? "⏳ Pending"
+                    : l.status === "APPROVED"
+                    ? "✅ Approved"
+                    : "❌ Rejected"}
                   </span>
                 </div>
               ))}
@@ -361,38 +518,37 @@ function Notices() {
             Send To
           </label>
           <select
-  name="sendTo"
-  value={leaveData.sendTo}
-  onChange={(e) => {
+          name="sendTo"
+          value={leaveData.sendTo}
+          onChange={(e) => {
+          handleLeaveChange(e);
 
-    handleLeaveChange(e);
-
-    if (e.target.value === "TEACHER") {
-      loadTeachers();
-    }
-  }}
-  className="w-full border border-gray-300 p-2 rounded-lg"
->
-  <option value="HOD">HOD</option>
-  <option value="TEACHER">Teacher</option>
-</select>
+          if (e.target.value === "TEACHER") {
+          loadTeachers();
+        }
+        }}
+       className="w-full border border-gray-300 p-2 rounded-lg"
+      >
+      <option value="HOD">HOD</option>
+      <option value="TEACHER">Teacher</option>
+    </select>
 
 {/* 🔥 TEACHER LIST */}
 {leaveData.sendTo === "TEACHER" && (
-  <div>
+  <div className="mt-3">
 
     <label className="text-sm text-gray-500 mb-1 block">
       Select Teacher
     </label>
 
     <select
-      value={leaveData.teacherId}
+      name="teacherId"
+      value={leaveData.teacherId || ""}
       onChange={(e) =>
-        setLeaveData({
-          ...leaveData,
+        setLeaveData((prev) => ({
+          ...prev,
           teacherId: e.target.value,
-          sendToAll: false
-        })
+        }))
       }
       className="w-full border border-gray-300 p-2 rounded-lg"
     >
@@ -401,31 +557,22 @@ function Notices() {
         Select Teacher
       </option>
 
-      {teachers.map((t) => (
-        <option key={t.id} value={t.id}>
-          {t.name}
-        </option>
-      ))}
+      {teachers &&
+        teachers.length > 0 &&
+        teachers.map((t) => (
+          <option
+            key={t.id}
+            value={t.id}
+          >
+            {t.name}
+          </option>
+        ))}
 
     </select>
 
-    <button
-      type="button"
-      onClick={() =>
-        setLeaveData({
-          ...leaveData,
-          teacherId: "",
-          sendToAll: true
-        })
-      }
-      className="mt-2 text-sm text-blue-600"
-    >
-      Send To All Teachers
-    </button>
-
   </div>
 )}
-        </div>
+      </div>
 
         {/* Reason */}
         <div>
@@ -440,6 +587,42 @@ function Notices() {
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
           />
         </div>
+        {/* LEAVE TYPE */}
+
+          <div>
+
+          <label className="text-sm text-gray-500 mb-1 block">
+          Leave Type
+         </label>
+
+   <select
+    name="leaveType"
+    value={leaveData.leaveType}
+    onChange={handleLeaveChange}
+    className="
+    w-full
+    border border-gray-300
+    p-2
+    rounded-lg
+    "
+  >
+
+  {leaveTypes.map((type) => (
+
+  <option
+    key={type}
+    value={type}
+  >
+
+    {type.replaceAll("_", " ")}
+
+  </option>
+
+  ))}
+
+  </select>
+
+ </div>
 
         {/* Dates */}
         <div className="grid grid-cols-2 gap-3">

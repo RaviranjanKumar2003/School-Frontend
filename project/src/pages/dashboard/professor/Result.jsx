@@ -186,18 +186,15 @@ const Result = () => {
               onClick={async () => {
                 try {
                   await axios.put(
-                    "http://localhost:8080/api/results/update-marks",
-                    null,
-                    {
-                      params: {
-                        studentId: r.studentId,
-                        subject: r.subjects[0],
-                        newMarks: marks[r.id],
-                        requestId: r.id,
-                        professorId: teacherId
-                      }
-                    }
-                  );
+  `http://localhost:8080/api/recheck/update/${r.id}`,
+  null,
+  {
+    params: {
+      subject: r.subjects[0],
+      newMarks: marks[r.id]
+    }
+  }
+);
 
                   alert("Marks Updated ✅");
 

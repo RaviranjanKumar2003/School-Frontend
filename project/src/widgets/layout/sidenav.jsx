@@ -717,7 +717,6 @@ import {
   Button,
   IconButton,
   Typography,
-  Avatar,
 } from "@material-tailwind/react";
 
 import {
@@ -725,10 +724,17 @@ import {
   setOpenSidenav,
 } from "@/context";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import axios from "axios";
 
-export function Sidenav({ brandImg, routes }) {
+export function Sidenav({
+  brandImg,
+  routes,
+}) {
 
   const [controller, dispatch] =
     useMaterialTailwindController();
@@ -739,21 +745,63 @@ export function Sidenav({ brandImg, routes }) {
     openSidenav,
   } = controller;
 
+  // =====================================================
+  // STATES
+  // =====================================================
+
   const [userRole, setUserRole] =
     useState("student");
 
   const [userData, setUserData] =
     useState(null);
 
-  // =========================================
-  // SCHOOL LOGO STATE
-  // =========================================
-
   const [schoolLogo, setSchoolLogo] =
-    useState("/img/logo-ct.png");
+    useState("");
 
   const [loadingLogo, setLoadingLogo] =
     useState(false);
+
+  // =====================================================
+  // ROLE BASED DEFAULT IMAGES
+  // =====================================================
+
+  const roleDefaultImages = {
+
+    superadmin:
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+
+    schooladmin:
+      "https://cdn-icons-png.flaticon.com/512/1995/1995574.png",
+
+    hod:
+      "https://cdn-icons-png.flaticon.com/512/4140/4140048.png",
+
+    professor:
+      "https://cdn-icons-png.flaticon.com/512/2784/2784445.png",
+
+    teacher:
+      "https://cdn-icons-png.flaticon.com/512/2784/2784445.png",
+
+    student:
+      "https://cdn-icons-png.flaticon.com/512/2202/2202112.png",
+
+    receptionist:
+      "https://cdn-icons-png.flaticon.com/512/4320/4320337.png",
+  };
+
+  // =====================================================
+  // GET DEFAULT IMAGE
+  // =====================================================
+
+  const getDefaultLogo = () => {
+
+    return (
+      roleDefaultImages[
+        userRole
+      ] ||
+      "/img/logo-ct.png"
+    );
+  };
 
   // =====================================================
   // SIDENAV TYPES
@@ -806,63 +854,84 @@ export function Sidenav({ brandImg, routes }) {
     let isMounted = true;
 
     const role =
-      localStorage.getItem("userRole") ||
-      "student";
-
-    const schoolId =
-      localStorage.getItem("schoolId");
+      localStorage.getItem(
+        "userRole"
+      ) || "student";
 
     setUserRole(role);
 
     let data = null;
 
-    // ================= STUDENT =================
+    // =================================================
+    // ROLE DATA
+    // =================================================
 
     if (role === "student") {
 
       data =
-        getParsed("studentData");
+        getParsed(
+          "studentData"
+        );
     }
 
-    // ================= PROFESSOR =================
-
-    else if (role === "professor") {
+    else if (
+      role === "professor"
+    ) {
 
       data =
-        getParsed("professorData");
+        getParsed(
+          "professorData"
+        );
     }
 
-    // ================= HOD =================
-
-    else if (role === "hod") {
-
-      data = getParsed("hodData");
-      console.log("hod d : ",data);
-      
-    }
-
-    // ================= SCHOOL ADMIN =================
-
-    else if (role === "schooladmin") {
+    else if (
+      role === "teacher"
+    ) {
 
       data =
-        getParsed("schoolAdminData");
+        getParsed(
+          "teacherData"
+        );
     }
 
-    // ================= RECEPTIONIST =================
-
-    else if (role === "receptionist") {
+    else if (
+      role === "hod"
+    ) {
 
       data =
-        getParsed("receptionistData");
+        getParsed(
+          "hodData"
+        );
     }
 
-    // ================= SUPER ADMIN =================
-
-    else if (role === "superadmin") {
+    else if (
+      role === "schooladmin"
+    ) {
 
       data =
-        getParsed("adminData");
+        getParsed(
+          "schoolAdminData"
+        );
+    }
+
+    else if (
+      role === "receptionist"
+    ) {
+
+      data =
+        getParsed(
+          "receptionistData"
+        );
+    }
+
+    else if (
+      role === "superadmin"
+    ) {
+
+      data =
+        getParsed(
+          "adminData"
+        );
     }
 
     if (isMounted) {
@@ -870,67 +939,116 @@ export function Sidenav({ brandImg, routes }) {
       setUserData(data);
     }
 
-    // =====================================================
-    // LOAD SCHOOL LOGO FOR ALL USERS
-    // =====================================================
+    // =================================================
+    // LOAD SCHOOL LOGO
+    // =================================================
 
-    const loadSchoolLogo = async () => {
+    const loadSchoolLogo =
+      async () => {
 
-  if (role === "superadmin") {
+        // =============================================
+        // SUPER ADMIN
+        // =============================================
 
-    setSchoolLogo("/img/logo-ct.png");
-    return;
-  }
+        if (
+          role ===
+          "superadmin"
+        ) {
 
-  const schoolId =
+          setSchoolLogo(
+            getDefaultLogo()
+          );
 
-    data?.school?.id ||
+          return;
+        }
 
-    data?.schoolId ||
+        const schoolId =
 
-    localStorage.getItem("schoolId");
+          data?.school?.id ||
 
-  if (!schoolId) return;
+          data?.schoolId ||
 
-  try {
+          localStorage.getItem(
+            "schoolId"
+          );
 
-    setLoadingLogo(true);
+        // =============================================
+        // NO SCHOOL ID
+        // =============================================
 
-    const res = await axios.get(
-      `http://localhost:8080/api/about-school/${schoolId}`
-    );
+        if (!schoolId) {
 
-    const logo = res?.data?.logo;
+          setSchoolLogo(
+            getDefaultLogo()
+          );
 
-    if (isMounted) {
+          return;
+        }
 
-      setSchoolLogo(
-        logo || "/img/logo-ct.png"
-      );
-    }
+        try {
 
-  } catch (err) {
+          setLoadingLogo(
+            true
+          );
 
-    console.log(
-      "School Logo API Error:",
-      err
-    );
+          const res =
+            await axios.get(
 
-    if (isMounted) {
+              `http://localhost:8080/api/about-school/${schoolId}`
+            );
 
-      setSchoolLogo(
-        "/img/logo-ct.png"
-      );
-    }
+          const logo =
+            res?.data?.logo;
 
-  } finally {
+          // ===========================================
+          // IF LOGO EXISTS
+          // ===========================================
 
-    if (isMounted) {
+          if (
+            isMounted
+          ) {
 
-      setLoadingLogo(false);
-    }
-  }
-};
+            setSchoolLogo(
+
+              logo &&
+              logo !== ""
+                ? logo
+                : getDefaultLogo()
+            );
+          }
+
+        } catch (err) {
+
+          console.log(
+            "School Logo API Error:",
+            err
+          );
+
+          // ===========================================
+          // FALLBACK IMAGE
+          // ===========================================
+
+          if (
+            isMounted
+          ) {
+
+            setSchoolLogo(
+              getDefaultLogo()
+            );
+          }
+
+        } finally {
+
+          if (
+            isMounted
+          ) {
+
+            setLoadingLogo(
+              false
+            );
+          }
+        }
+      };
 
     loadSchoolLogo();
 
@@ -1002,7 +1120,8 @@ export function Sidenav({ brandImg, routes }) {
   const getSchoolName = () => {
 
     if (
-      userRole === "superadmin"
+      userRole ===
+      "superadmin"
     ) {
 
       return "System Administration";
@@ -1010,7 +1129,8 @@ export function Sidenav({ brandImg, routes }) {
 
     return (
 
-      userData?.school?.schoolName ||
+      userData?.school
+        ?.schoolName ||
 
       userData?.schoolName ||
 
@@ -1039,7 +1159,9 @@ export function Sidenav({ brandImg, routes }) {
             z-40
             xl:hidden
           "
-          onClick={closeSidebar}
+          onClick={
+            closeSidebar
+          }
         />
 
       )}
@@ -1109,76 +1231,73 @@ export function Sidenav({ brandImg, routes }) {
               xl:hidden
               text-white
             "
-            onClick={closeSidebar}
+            onClick={
+              closeSidebar
+            }
           >
 
             <XMarkIcon
               strokeWidth={2.5}
-              className="h-6 w-6"
+              className="
+                h-6
+                w-6
+              "
             />
 
           </IconButton>
 
           {/* PROFILE */}
 
-          <div className="flex flex-col items-center text-center">
+          <div
+            className="
+              flex
+              flex-col
+              items-center
+              text-center
+            "
+          >
 
-            {/* SCHOOL LOGO */}
+            {/* LOGO */}
 
-            {/* <Avatar
-              src={schoolLogo}
-              alt="school-logo"
-              size="xxl"
-              className="
-                border-4
-                p-1
-                border-white
-                shadow-2xl
-                object-cover
-              "
-              onError={(e) => {
-
-                e.target.onerror = null;
-
-                e.target.src =
-                  "/img/logo-ct.png";
-              }}
-            /> */}
             <div
-  className="
-    w-28
-    h-28
-    rounded-full
-    bg-white
-    p-2
-    shadow-2xl
-    border-4
-    border-white
-    overflow-hidden
-    flex
-    items-center
-    justify-center
-  "
->
+              className="
+                w-28
+                h-28
+                rounded-full
+                bg-white
+                p-2
+                shadow-2xl
+                border-4
+                border-white
+                overflow-hidden
+                flex
+                items-center
+                justify-center
+              "
+            >
 
-  <img
-    src={schoolLogo}
-    alt="school-logo"
-    className="
-      w-full
-      h-full
-      object-contain
-    "
-    onError={(e) => {
+              <img
+                src={
+                  schoolLogo ||
+                  getDefaultLogo()
+                }
+                alt="school-logo"
+                className="
+                  w-full
+                  h-full
+                  object-contain
+                "
+                onError={(e) => {
 
-      e.target.onerror = null;
+                  e.target.onerror =
+                    null;
 
-      e.target.src =
-        "/img/logo-ct.png";
-    }}
-  />
+                  e.target.src =
+                    getDefaultLogo();
+                }}
+              />
 
-</div>
+            </div>
 
             {/* SCHOOL */}
 
@@ -1212,7 +1331,12 @@ export function Sidenav({ brandImg, routes }) {
               "
             >
 
-              <AcademicCapIcon className="h-4 w-4" />
+              <AcademicCapIcon
+                className="
+                  h-4
+                  w-4
+                "
+              />
 
               <Typography
                 variant="small"
@@ -1369,7 +1493,9 @@ export function Sidenav({ brandImg, routes }) {
 
                       <NavLink
                         to={`/${layout}${path}`}
-                        onClick={closeSidebar}
+                        onClick={
+                          closeSidebar
+                        }
                       >
 
                         {({

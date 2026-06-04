@@ -30,6 +30,7 @@ import {
   BuildingOffice2Icon,
   PhotoIcon,
   ChatBubbleLeftRightIcon,
+  VideoCameraIcon,
 } from "@heroicons/react/24/solid";
 
 import { lazy, Suspense } from "react";
@@ -188,6 +189,15 @@ const AboutSchool = lazy(() =>
   import("@/pages/dashboard/SchoolAdmin/AboutSchool")
 );
 
+const SchoolAdminLeaveManagement = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/SchoolAdminLeaveManagement")
+);
+
+
+const SchoolAdminNotification = lazy(() =>
+  import("@/pages/dashboard/SchoolAdmin/SchoolAdminNotification")
+);
+
 /* =========================================================
    HOD
 ========================================================= */
@@ -232,6 +242,10 @@ const StudentFees = lazy(() =>
   import("@/pages/dashboard/hod/StudentFees")
 );
 
+const HodLeaveManagement = lazy(() =>
+  import("@/pages/dashboard/hod/HodLeaveManagement")
+);
+
 /* =========================================================
    PROFESSOR
 ========================================================= */
@@ -272,6 +286,14 @@ const TeacherTimeTable = lazy(() =>
   import("@/pages/dashboard/professor/TeacherTimeTable")
 );
 
+const LiveSession = lazy(() =>
+  import("@/pages/dashboard/professor/LiveClasses/LiveClassesInTeacher")
+);
+
+const StuLeaveRequest = lazy(() => 
+  import("@/pages/dashboard/professor/StuLeaveRequest")
+);
+
 /* =========================================================
    STUDENT
 ========================================================= */
@@ -282,8 +304,9 @@ const StudentProfile = lazy(() => import("@/pages/dashboard/student/Profile"));
 const Exams = lazy(() => import("@/pages/dashboard/student/Exams"));
 const Attendances = lazy(() => import("@/pages/dashboard/student/Attendance"));
 const StudentFee = lazy(() => import("@/pages/dashboard/student/StudentFee"));
+
 const LiveClass = lazy(() =>
-  import("@/pages/dashboard/student/LiveClass")
+  import("@/pages/dashboard/student/LiveClassInStudent")
 );
 
 const StudentNotifications = lazy(() =>
@@ -305,6 +328,7 @@ const StudentEvents = lazy(() =>
 const StuTimeTable = lazy(() =>
   import("@/pages/dashboard/student/StuTimeTable")
 );
+
 
 /* =========================================================
    AUTH
@@ -494,6 +518,12 @@ export const routes = [
         path: "/hod/attendance",
         element: Load(Attendance),
       },
+      {
+        icon: <BellIcon {...icon} />,
+        name: "Leave Management",
+        path: "/hod/hod-leave-management",
+        element: Load(HodLeaveManagement),
+      },
     ],
   },
 
@@ -572,6 +602,19 @@ export const routes = [
        path: "/professor/teacherTimeTable",
        element: Load(TeacherTimeTable),
       },
+      {
+       icon: <VideoCameraIcon {...icon} />,
+       name: "Online Classes",
+       path: "/professor/liveSession",
+       element: Load(LiveSession),
+      },
+      {
+        icon: <TableCellsIcon {...icon} />,
+        name: "Student Leave Requests",
+        path: "/professor/stu-leave-request",
+        element: <Suspense fallback={<LoadingSpinner />}><StuLeaveRequest /></Suspense>,
+      },
+
     ],
   },
 
@@ -636,12 +679,12 @@ export const routes = [
         path: "/student/events",
         element: <Suspense fallback={<LoadingSpinner />}><StudentEvents /></Suspense>,
       },
-      // {
-      //   icon: <CalendarDaysIcon {...icon} />,
-      //   name: "Live Class",
-      //   path: "/student/live-class",
-      //   element: <Suspense fallback={<LoadingSpinner />}><LiveClass /></Suspense>,
-      // },
+      {
+        icon: <VideoCameraIcon {...icon} />,
+        name: "Online Class",
+        path: "/student/live-class",
+        element: <Suspense fallback={<LoadingSpinner />}><LiveClass /></Suspense>,
+      },
       {
         icon: <CurrencyRupeeIcon {...icon} />,
         name: "Payment",
@@ -977,6 +1020,19 @@ export const routes = [
   path: "/schooladmin/aboutSchool",
   element: Load(AboutSchool),
 },
+{
+        icon: <CalendarDaysIcon {...icon} />,
+        name: "Leave Management",
+        path: "/schooladmin/leave-management",
+        element: Load(SchoolAdminLeaveManagement),
+      },
+
+      {
+        icon: <BellAlertIcon {...icon} />,
+        name: "Notifications",
+        path: "/schooladmin/notification",
+        element: Load(SchoolAdminNotification),
+      },
       
     ],
   },

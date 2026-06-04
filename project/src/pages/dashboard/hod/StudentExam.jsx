@@ -90,7 +90,9 @@ const StudentExam = () => {
 
     schoolCode: hodData?.school?.schoolCode,
   
-    createdBy: hodData?.name
+    createdBy: hodData?.name,
+    senderId: hodData?.id,
+    senderType: "HOD"
   });
 
     alert("✅ Exam Created");
@@ -130,8 +132,7 @@ const StudentExam = () => {
   const grouped = {};
 
   notices.forEach((n) => {
-  const key = `${n.className}_${n.examType}`;
-
+ const key = `${n.className}_${n.examType}_${n.message}`;
   if (!grouped[key]) {
     grouped[key] = {
       classId: n.classId,

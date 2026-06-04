@@ -131,6 +131,17 @@ export function StudentSignIn() {
         studentData
       );
 
+      // ================= SAVE CLASS INFO =================
+      localStorage.setItem(
+       "classId",
+       studentData.classId || ""
+      );
+
+      localStorage.setItem(
+       "className",
+       studentData.className || ""
+      );
+
       // ================= SAVE FULL DATA =================
       localStorage.setItem(
         "studentData",

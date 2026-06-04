@@ -1,150 +1,3 @@
- 
-// import { useState } from "react";
-// import {
-//   Card,
-//   CardBody,
-//   CardHeader,
-//   Button,
-//   Input,
-//   Typography,
-//   Select,
-//   Option,
-//   Spinner,
-// } from "@material-tailwind/react";
-
-// const NotificationSender = () => {
-//   const [recipientType, setRecipientType] = useState("ALL_STUDENTS");
-//   const [title, setTitle] = useState("");
-//   const [message, setMessage] = useState("");
-//   const [subject, setSubject] = useState("");
-//   const [receiverId, setReceiverId] = useState("");
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const notificationData = {
-//       title,
-//       message,
-//       subject,
-//       recipientType,
-//       receiverId: recipientType === "INDIVIDUAL" ? receiverId : null,
-//       sender: localStorage.getItem("userName") || "HOD",
-//       timestamp: new Date().toISOString(),
-//       readStatus: false,
-//     };
-
-//     try {
-//       setIsLoading(true);
-
-//       const response = await fetch(
-//         "http://localhost:8080/api/notifications/send",
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//           body: JSON.stringify(notificationData),
-//         }
-//       );
-
-//       if (response.ok) {
-//         alert("✅ Notification Sent Successfully!");
-//         resetForm();
-//       } else {
-//         alert("❌ Failed to send notification");
-//       }
-//     } catch (error) {
-//       console.error("Error:", error);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   const resetForm = () => {
-//     setTitle("");
-//     setMessage("");
-//     setSubject("");
-//     setReceiverId("");
-//     setRecipientType("ALL_STUDENTS");
-//   };
-
-//   return (
-//     <Card className="max-w-lg mx-auto mt-10 shadow-lg">
-//       <CardHeader className="bg-blue-600 text-white p-4">
-//         <Typography variant="h5">Send Notification</Typography>
-//       </CardHeader>
-
-//       <CardBody>
-//         <form onSubmit={handleSubmit} className="space-y-5">
-
-//           {/* Recipient */}
-//           <div>
-//             <Typography variant="small" className="mb-2">
-//               Recipient Type
-//             </Typography>
-//             <Select
-//               value={recipientType}
-//               onChange={(val) => setRecipientType(val)}
-//             >
-//               <Option value="ALL_STUDENTS">ALL STUDENTS</Option>
-//               <Option value="ALL_TEACHERS">ALL TEACHERS</Option>
-//               <Option value="ALL">ALL (Students + Teachers)</Option>
-//               <Option value="INDIVIDUAL">INDIVIDUAL</Option>
-//             </Select>
-//           </div>
-
-//           {/* Individual Field */}
-//           {recipientType === "INDIVIDUAL" && (
-//             <Input
-//               label="Receiver ID / Email"
-//               value={receiverId}
-//               onChange={(e) => setReceiverId(e.target.value)}
-//               required
-//             />
-//           )}
-
-//           {/* Title */}
-//           <Input
-//             label="Notification Title"
-//             value={title}
-//             onChange={(e) => setTitle(e.target.value)}
-//             required
-//           />
-
-//           {/* Message */}
-//           <textarea
-//             className="w-full border p-2 rounded"
-//             placeholder="Enter Message"
-//             rows="4"
-//             value={message}
-//             onChange={(e) => setMessage(e.target.value)}
-//             required
-//           />
-
-//           {/* Subject */}
-//           <Input
-//             label="Subject"
-//             value={subject}
-//             onChange={(e) => setSubject(e.target.value)}
-//           />
-
-//           {/* Button */}
-//           <Button type="submit" fullWidth disabled={isLoading}>
-//             {isLoading ? <Spinner className="h-5 w-5" /> : "Send Notification"}
-//           </Button>
-
-//         </form>
-//       </CardBody>
-//     </Card>
-//   );
-// };
-
-// export default NotificationSender;
-
-
-
-
 import React, { useEffect, useState } from "react";
 
 import {
@@ -157,22 +10,35 @@ import {
   Select,
   Option,
   Spinner,
+  Chip,
 } from "@material-tailwind/react";
 
-const NotificationSender = () => {
+import {
+  PencilSquareIcon,
+  TrashIcon,
+  BellIcon,
+} from "@heroicons/react/24/solid";
+
+const HodNotifications = () => {
 
   // ======================================================
   // STATES
   // ======================================================
 
+  const [activeTab, setActiveTab] =
+    useState("MY");
+
   const [recipientType, setRecipientType] =
     useState("ALL_STUDENTS");
 
-  const [title, setTitle] = useState("");
+  const [title, setTitle] =
+    useState("");
 
-  const [message, setMessage] = useState("");
+  const [message, setMessage] =
+    useState("");
 
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] =
+    useState("");
 
   const [teacherId, setTeacherId] =
     useState("");
@@ -180,7 +46,7 @@ const NotificationSender = () => {
   const [studentId, setStudentId] =
     useState("");
 
-  const [className, setClassName] =
+  const [classId, setClassId] =
     useState("");
 
   const [teachers, setTeachers] =
@@ -192,6 +58,15 @@ const NotificationSender = () => {
   const [classes, setClasses] =
     useState([]);
 
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const [myNotices, setMyNotices] =
+    useState([]);
+
+  const [editingNotice, setEditingNotice] =
+    useState(null);
+
   const [isLoading, setIsLoading] =
     useState(false);
 
@@ -200,24 +75,30 @@ const NotificationSender = () => {
   // ======================================================
 
   const hodData =
-  JSON.parse(localStorage.getItem("hodData"));
-  const schoolId = hodData?.school?.id;
+    JSON.parse(
+      localStorage.getItem("hodData")
+    );
+
+  const schoolId =
+    hodData?.school?.id;
 
   const sender =
     localStorage.getItem("userName");
 
   const senderId =
-    localStorage.getItem("id");
+    hodData?.id;
 
   // ======================================================
-  // LOAD INITIAL DATA
+  // INITIAL LOAD
   // ======================================================
 
   useEffect(() => {
 
-    // =========================================
-    // LOAD TEACHERS
-    // =========================================
+    loadNotifications();
+
+    loadMyNotices();
+
+    // TEACHERS
 
     fetch(
       `http://localhost:8080/api/professors/by-school/${schoolId}`
@@ -225,16 +106,12 @@ const NotificationSender = () => {
       .then((res) => res.json())
       .then((data) => {
 
-        console.log("TEACHERS => ", data);
-
         setTeachers(data || []);
 
       })
       .catch((err) => console.log(err));
 
-    // =========================================
-    // LOAD CLASSES
-    // =========================================
+    // CLASSES
 
     fetch(
       `http://localhost:8080/api/classes/by-school/${schoolId}`
@@ -242,37 +119,179 @@ const NotificationSender = () => {
       .then((res) => res.json())
       .then((data) => {
 
-        console.log("CLASSES => ", data);
-
         setClasses(data || []);
 
       })
       .catch((err) => console.log(err));
 
-  }, []);
+  }, [schoolId]);
+
+  // ======================================================
+  // LOAD RECEIVED NOTIFICATIONS
+  // ======================================================
+
+  const loadNotifications = async () => {
+
+    try {
+
+      const res = await fetch(
+
+        `http://localhost:8080/api/notifications/hod/${senderId}`
+
+      );
+
+      const data =
+        await res.json();
+
+      setNotifications(data || []);
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
+
+  // ======================================================
+  // LOAD MY NOTICES
+  // ======================================================
+
+  const loadMyNotices = async () => {
+
+    try {
+
+      const res = await fetch(
+
+        `http://localhost:8080/api/notifications/my/${senderId}/HOD`
+
+      );
+
+      const data =
+        await res.json();
+
+      setMyNotices(data || []);
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
 
   // ======================================================
   // LOAD STUDENTS
   // ======================================================
 
-  const loadStudents = async (selectedClass) => {
+  const loadStudents = async (
+    selectedClassId
+  ) => {
 
     try {
 
       const res = await fetch(
-        `http://localhost:8080/api/students/school/${schoolId}/class/${selectedClass}`
+
+        `http://localhost:8080/api/students/school/${schoolId}/class/${selectedClassId}`
+
       );
 
-      const data = await res.json();
-
-      console.log("STUDENTS => ", data);
+      const data =
+        await res.json();
 
       setStudents(data || []);
 
     } catch (err) {
 
       console.log(err);
+    }
+  };
 
+  // ======================================================
+  // RESET FORM
+  // ======================================================
+
+  const resetForm = () => {
+
+    setTitle("");
+
+    setSubject("");
+
+    setMessage("");
+
+    setRecipientType(
+      "ALL_STUDENTS"
+    );
+
+    setTeacherId("");
+
+    setStudentId("");
+
+    setClassId("");
+
+    setStudents([]);
+
+    setEditingNotice(null);
+  };
+
+  // ======================================================
+  // EDIT NOTICE
+  // ======================================================
+
+  const editNotice = (
+    notice
+  ) => {
+
+    setEditingNotice(notice);
+
+    setActiveTab("CREATE");
+
+    setTitle(notice.title);
+
+    setSubject(notice.subject);
+
+    setMessage(notice.message);
+
+    setRecipientType(
+      notice.recipientType
+    );
+  };
+
+  // ======================================================
+  // DELETE NOTICE
+  // ======================================================
+
+  const deleteNotice = async (
+    noticeId
+  ) => {
+
+    const confirmDelete =
+      window.confirm(
+        "Delete this notice?"
+      );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await fetch(
+
+        `http://localhost:8080/api/notifications/delete-notice/${noticeId}/${senderId}/HOD`,
+
+        {
+          method: "DELETE",
+        }
+      );
+
+      alert(
+        "✅ Notice Deleted"
+      );
+
+      loadMyNotices();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert(
+        "❌ Delete Failed"
+      );
     }
   };
 
@@ -280,7 +299,9 @@ const NotificationSender = () => {
   // SUBMIT
   // ======================================================
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (
+    e
+  ) => {
 
     e.preventDefault();
 
@@ -294,72 +315,128 @@ const NotificationSender = () => {
 
       sender,
 
-      senderId: Number(senderId),
+      senderType: "HOD",
 
-      schoolId: Number(schoolId),
+      senderId:
+        Number(senderId),
+
+      schoolId:
+        Number(schoolId),
 
       recipientType,
 
       teacherId:
-        recipientType === "SINGLE_TEACHER"
+        recipientType ===
+        "SINGLE_TEACHER"
+
           ? Number(teacherId)
+
           : null,
 
       studentId:
-        recipientType === "SINGLE_STUDENT"
+        recipientType ===
+        "SINGLE_STUDENT"
+
           ? Number(studentId)
+
           : null,
 
-      className:
-        recipientType === "CLASS_STUDENTS" ||
-        recipientType === "SINGLE_STUDENT"
-          ? className
+      classId:
+        recipientType ===
+        "CLASS_STUDENTS"
+
+        ||
+
+        recipientType ===
+        "SINGLE_STUDENT"
+
+          ? Number(classId)
+
           : null,
     };
-
-    console.log(
-      "NOTIFICATION DATA => ",
-      notificationData
-    );
 
     try {
 
       setIsLoading(true);
 
-      const response = await fetch(
-        "http://localhost:8080/api/notifications/send",
-        {
-          method: "POST",
+      let response;
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+      // UPDATE
 
-          body: JSON.stringify(notificationData),
-        }
-      );
+      if (editingNotice) {
+
+        response = await fetch(
+
+          `http://localhost:8080/api/notifications/update/${editingNotice.id}`,
+
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify(
+              notificationData
+            ),
+          }
+        );
+      }
+
+      // CREATE
+
+      else {
+
+        response = await fetch(
+
+          "http://localhost:8080/api/notifications/send",
+
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify(
+              notificationData
+            ),
+          }
+        );
+      }
 
       if (response.ok) {
 
         alert(
-          "✅ Notification Sent Successfully!"
+
+          editingNotice
+
+            ? "✅ Notice Updated"
+
+            : "✅ Notice Sent Successfully"
+
         );
 
         resetForm();
 
+        loadNotifications();
+
+        loadMyNotices();
+
+        setActiveTab("MY");
+
       } else {
 
-        const err = await response.text();
-
-        console.log(err);
-
-        alert("❌ Failed to send notification");
-
+        alert(
+          "❌ Failed"
+        );
       }
 
-    } catch (error) {
+    } catch (err) {
 
-      console.error("Error:", error);
+      console.log(err);
 
     } finally {
 
@@ -369,349 +446,775 @@ const NotificationSender = () => {
   };
 
   // ======================================================
-  // RESET
-  // ======================================================
-
-  const resetForm = () => {
-
-    setTitle("");
-
-    setMessage("");
-
-    setSubject("");
-
-    setTeacherId("");
-
-    setStudentId("");
-
-    setClassName("");
-
-    setRecipientType("ALL_STUDENTS");
-  };
-
-  // ======================================================
   // UI
   // ======================================================
 
   return (
 
-    <div className="p-6 bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 min-h-screen">
+    <div className="
+    min-h-screen
+    bg-gradient-to-br
+    from-slate-100
+    via-blue-50
+    to-indigo-100
+    p-6
+    ">
 
-      <Card className="max-w-3xl mx-auto shadow-2xl rounded-3xl border border-gray-100">
+      {/* ====================================================== */}
+      {/* HEADER */}
+      {/* ====================================================== */}
 
-        {/* HEADER */}
+      <div className="
+      max-w-7xl
+      mx-auto
+      ">
 
-        <CardHeader
-          floated={false}
-          shadow={false}
-          className="rounded-t-3xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6"
-        >
-
-          <Typography
-            variant="h4"
-            color="white"
-            className="font-bold"
-          >
-            Send Notification
-          </Typography>
-
-          <Typography
-            color="white"
-            className="mt-2 text-sm opacity-80"
-          >
-            Send professional school notifications
-          </Typography>
-
-        </CardHeader>
-
-        {/* BODY */}
-
-        <CardBody className="space-y-6">
-
-          {/* RECIPIENT TYPE */}
+        <div className="
+        flex
+        justify-between
+        items-center
+        flex-wrap
+        gap-5
+        mb-8
+        ">
 
           <div>
 
-            <Typography
-              variant="small"
-              className="mb-2 font-semibold"
-            >
-              Recipient Type
-            </Typography>
+            <div className="
+            flex
+            items-center
+            gap-4
+            ">
 
-            <Select
-              value={recipientType}
-              onChange={(val) =>
-                setRecipientType(val)
-              }
-            >
+              <div className="
+              bg-gradient-to-r
+              from-blue-600
+              to-indigo-600
+              p-4
+              rounded-2xl
+              shadow-lg
+              ">
 
-              <Option value="ALL_STUDENTS">
-                ALL STUDENTS
-              </Option>
-
-              <Option value="ALL_TEACHERS">
-                ALL TEACHERS
-              </Option>
-
-              <Option value="ALL">
-                ALL USERS
-              </Option>
-
-              <Option value="SINGLE_TEACHER">
-                SINGLE TEACHER
-              </Option>
-
-              <Option value="SINGLE_STUDENT">
-                SINGLE STUDENT
-              </Option>
-
-              <Option value="CLASS_STUDENTS">
-                CLASS STUDENTS
-              </Option>
-
-            </Select>
-
-          </div>
-
-          {/* ========================================= */}
-          {/* SINGLE TEACHER */}
-          {/* ========================================= */}
-
-          {recipientType ===
-            "SINGLE_TEACHER" && (
-
-            <div>
-
-              <Typography
-                variant="small"
-                className="mb-2 font-semibold"
-              >
-                Select Teacher
-              </Typography>
-
-              <Select
-                value={teacherId}
-                onChange={(val) =>
-                  setTeacherId(val)
-                }
-              >
-
-                {teachers.map((teacher) => (
-
-                  <Option
-                    key={teacher.id}
-                    value={teacher.id}
-                  >
-                    {teacher.name}
-                  </Option>
-
-                ))}
-
-              </Select>
-
-            </div>
-          )}
-
-          {/* ========================================= */}
-          {/* CLASS STUDENTS */}
-          {/* ========================================= */}
-
-          {recipientType ===
-            "CLASS_STUDENTS" && (
-
-            <div>
-
-              <Typography
-                variant="small"
-                className="mb-2 font-semibold"
-              >
-                Select Class
-              </Typography>
-
-              <Select
-                value={className}
-                onChange={(val) => {
-
-                  setClassName(val);
-
-                  loadStudents(val);
-
-                }}
-              >
-
-                {classes.map((cls) => (
-
-                  <Option
-                    key={cls.id}
-                    value={cls.className}
-                  >
-                    {cls.className}
-                  </Option>
-
-                ))}
-
-              </Select>
-
-            </div>
-          )}
-
-          {/* ========================================= */}
-          {/* SINGLE STUDENT */}
-          {/* ========================================= */}
-
-          {recipientType ===
-            "SINGLE_STUDENT" && (
-
-            <>
-
-              {/* CLASS */}
-
-              <div>
-
-                <Typography
-                  variant="small"
-                  className="mb-2 font-semibold"
-                >
-                  Select Class
-                </Typography>
-
-                <Select
-                  value={className}
-                  onChange={(val) => {
-
-                    setClassName(val);
-
-                    loadStudents(val);
-
-                  }}
-                >
-
-                  {classes.map((cls) => (
-
-                    <Option
-                      key={cls.id}
-                      value={cls.className}
-                    >
-                      {cls.className}
-                    </Option>
-
-                  ))}
-
-                </Select>
+                <BellIcon className="
+                h-10
+                w-10
+                text-white
+                " />
 
               </div>
 
-              {/* STUDENTS */}
-
               <div>
 
+                <h1 className="
+                text-4xl
+                font-bold
+                text-gray-800
+                ">
+                  HOD Notifications
+                </h1>
+
+                <p className="
+                text-gray-500
+                mt-1
+                ">
+                  Professional Notification Management
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ====================================================== */}
+        {/* TABS */}
+        {/* ====================================================== */}
+
+        <div className="
+        flex
+        gap-4
+        mb-10
+        flex-wrap
+        ">
+
+          <Button
+
+            onClick={() =>
+              setActiveTab("MY")
+            }
+
+            className={
+
+              activeTab === "MY"
+
+              ?
+
+              "rounded-2xl bg-blue-600 shadow-lg"
+
+              :
+
+              "rounded-2xl bg-white text-black shadow-md"
+            }
+          >
+            My Notices
+          </Button>
+
+          <Button
+
+            onClick={() =>
+              setActiveTab("RECEIVED")
+            }
+
+            className={
+
+              activeTab === "RECEIVED"
+
+              ?
+
+              "rounded-2xl bg-indigo-600 shadow-lg"
+
+              :
+
+              "rounded-2xl bg-white text-black shadow-md"
+            }
+          >
+            Received Notices
+          </Button>
+
+          <Button
+
+            onClick={() =>
+              setActiveTab("CREATE")
+            }
+
+            className={
+
+              activeTab === "CREATE"
+
+              ?
+
+              "rounded-2xl bg-green-600 shadow-lg"
+
+              :
+
+              "rounded-2xl bg-white text-black shadow-md"
+            }
+          >
+            Create Notice
+          </Button>
+
+        </div>
+
+        {/* ====================================================== */}
+        {/* CREATE FORM */}
+        {/* ====================================================== */}
+
+        {
+          activeTab === "CREATE" && (
+
+            <Card className="
+            rounded-3xl
+            shadow-2xl
+            border
+            border-gray-100
+            mb-10
+            ">
+
+              <CardHeader
+                floated={false}
+                shadow={false}
+                className="
+                rounded-t-3xl
+                bg-gradient-to-r
+                from-blue-600
+                to-indigo-600
+                p-6
+                "
+              >
+
                 <Typography
-                  variant="small"
-                  className="mb-2 font-semibold"
+                  variant="h4"
+                  color="white"
                 >
-                  Select Student
+
+                  {
+                    editingNotice
+
+                    ? "Update Notice"
+
+                    : "Create New Notice"
+                  }
+
                 </Typography>
 
+              </CardHeader>
+
+              <CardBody className="
+              space-y-6
+              ">
+
+                {/* RECIPIENT */}
+
                 <Select
-                  value={studentId}
+                  value={recipientType}
                   onChange={(val) =>
-                    setStudentId(val)
+                    setRecipientType(val)
                   }
                 >
 
-                  {students.map((student) => (
+                  <Option value="ALL_STUDENTS">
+                    ALL STUDENTS
+                  </Option>
 
-                    <Option
-                      key={student.id}
-                      value={student.id}
-                    >
-                      {student.fullName}
-                    </Option>
+                  <Option value="ALL_TEACHERS">
+                    ALL TEACHERS
+                  </Option>
 
-                  ))}
+                  <Option value="ALL">
+                    ALL USERS
+                  </Option>
+
+                  <Option value="SINGLE_TEACHER">
+                    SINGLE TEACHER
+                  </Option>
+
+                  <Option value="SINGLE_STUDENT">
+                    SINGLE STUDENT
+                  </Option>
+
+                  <Option value="CLASS_STUDENTS">
+                    CLASS STUDENTS
+                  </Option>
 
                 </Select>
 
+                {/* SINGLE TEACHER */}
+
+                {
+                  recipientType ===
+                  "SINGLE_TEACHER"
+
+                  && (
+
+                    <Select
+                      value={teacherId}
+                      onChange={(val) =>
+                        setTeacherId(val)
+                      }
+                    >
+
+                      {
+                        teachers.map((teacher) => (
+
+                          <Option
+                            key={teacher.id}
+                            value={teacher.id.toString()}
+                          >
+                            {teacher.name}
+                          </Option>
+
+                        ))
+                      }
+
+                    </Select>
+                  )
+                }
+
+                {/* CLASS */}
+
+                {
+                  (
+                    recipientType ===
+                    "CLASS_STUDENTS"
+
+                    ||
+
+                    recipientType ===
+                    "SINGLE_STUDENT"
+                  )
+
+                  && (
+
+                    <Select
+                      value={classId}
+                      onChange={(val) => {
+
+                        setClassId(val);
+
+                        loadStudents(val);
+
+                      }}
+                    >
+
+                      {
+                        classes.map((cls) => (
+
+                          <Option
+                            key={cls.id}
+                            value={cls.id.toString()}
+                          >
+                            {cls.className}
+                          </Option>
+
+                        ))
+                      }
+
+                    </Select>
+                  )
+                }
+
+                {/* SINGLE STUDENT */}
+
+                {
+                  recipientType ===
+                  "SINGLE_STUDENT"
+
+                  && (
+
+                    <Select
+                      value={studentId}
+                      onChange={(val) =>
+                        setStudentId(val)
+                      }
+                    >
+
+                      {
+                        students.map((student) => (
+
+                          <Option
+                            key={student.id}
+                            value={student.id.toString()}
+                          >
+                            {
+                              student.studfirstName
+                            }{" "}
+                            {
+                              student.studlastName
+                            }
+                          </Option>
+
+                        ))
+                      }
+
+                    </Select>
+                  )
+                }
+
+                {/* TITLE */}
+
+                <Input
+                  label="Notification Title"
+                  value={title}
+                  onChange={(e) =>
+                    setTitle(e.target.value)
+                  }
+                />
+
+                {/* SUBJECT */}
+
+                <Input
+                  label="Subject"
+                  value={subject}
+                  onChange={(e) =>
+                    setSubject(e.target.value)
+                  }
+                />
+
+                {/* MESSAGE */}
+
+                <textarea
+                  className="
+                  w-full
+                  min-h-[180px]
+                  rounded-2xl
+                  border
+                  border-gray-300
+                  p-5
+                  focus:outline-none
+                  focus:ring-2
+                  focus:ring-blue-500
+                  "
+                  placeholder="
+                  Write your notification message...
+                  "
+                  value={message}
+                  onChange={(e) =>
+                    setMessage(
+                      e.target.value
+                    )
+                  }
+                />
+
+                {/* BUTTON */}
+
+                <Button
+                  fullWidth
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="
+                  bg-gradient-to-r
+                  from-blue-600
+                  to-indigo-600
+                  rounded-2xl
+                  py-4
+                  text-lg
+                  "
+                >
+
+                  {
+                    isLoading
+
+                    ?
+
+                    <Spinner className="
+                    mx-auto
+                    h-5
+                    w-5
+                    " />
+
+                    :
+
+                    editingNotice
+
+                    ? "UPDATE NOTICE"
+
+                    : "SEND NOTICE"
+                  }
+
+                </Button>
+
+              </CardBody>
+
+            </Card>
+          )
+        }
+
+        {/* ====================================================== */}
+        {/* MY NOTICES */}
+        {/* ====================================================== */}
+
+        {
+          activeTab === "MY" && (
+
+            <div>
+
+              <h2 className="
+              text-3xl
+              font-bold
+              text-gray-800
+              mb-8
+              ">
+                My Notices
+              </h2>
+
+              <div className="
+              grid
+              md:grid-cols-2
+              gap-8
+              ">
+
+                {
+                  myNotices.map((notice) => (
+
+                    <Card
+                      key={notice.id}
+                      className="
+                      rounded-3xl
+                      shadow-xl
+                      border
+                      border-gray-100
+                      hover:scale-[1.01]
+                      transition
+                      "
+                    >
+
+                      <CardBody>
+
+                        <div className="
+                        flex
+                        justify-between
+                        items-start
+                        mb-5
+                        ">
+
+                          <div>
+
+                            <h2 className="
+                            text-2xl
+                            font-bold
+                            text-gray-800
+                            ">
+                              {notice.title}
+                            </h2>
+
+                            <p className="
+                            text-blue-600
+                            font-semibold
+                            mt-1
+                            ">
+                              {
+                                notice.recipientType
+                              }
+                            </p>
+
+                          </div>
+
+                          <Chip
+                            value="MY NOTICE"
+                            color="blue"
+                          />
+
+                        </div>
+
+                        <p className="
+                        text-gray-600
+                        leading-relaxed
+                        min-h-[80px]
+                        ">
+                          {notice.message}
+                        </p>
+
+                        <div className="
+                        flex
+                        justify-between
+                        items-center
+                        mt-8
+                        ">
+
+                          <Button
+                            color="blue"
+                            size="sm"
+                            className="
+                            rounded-xl
+                            flex
+                            items-center
+                            gap-2
+                            "
+                            onClick={() =>
+                              editNotice(notice)
+                            }
+                          >
+
+                            <PencilSquareIcon
+                              className="
+                              h-4
+                              w-4
+                              "
+                            />
+
+                            Edit
+
+                          </Button>
+
+                          <Button
+                            color="red"
+                            size="sm"
+                            className="
+                            rounded-xl
+                            flex
+                            items-center
+                            gap-2
+                            "
+                            onClick={() =>
+                              deleteNotice(
+                                notice.id
+                              )
+                            }
+                          >
+
+                            <TrashIcon
+                              className="
+                              h-4
+                              w-4
+                              "
+                            />
+
+                            Delete
+
+                          </Button>
+
+                        </div>
+
+                      </CardBody>
+
+                    </Card>
+                  ))
+                }
+
               </div>
 
-            </>
-          )}
+            </div>
+          )
+        }
 
-          {/* TITLE */}
+        {/* ====================================================== */}
+        {/* RECEIVED */}
+        {/* ====================================================== */}
 
-          <Input
-            label="Notification Title"
-            value={title}
-            onChange={(e) =>
-              setTitle(e.target.value)
-            }
-            required
-          />
+        {
+          activeTab === "RECEIVED" && (
 
-          {/* SUBJECT */}
+            <div>
 
-          <Input
-            label="Subject"
-            value={subject}
-            onChange={(e) =>
-              setSubject(e.target.value)
-            }
-          />
+              <h2 className="
+              text-3xl
+              font-bold
+              text-gray-800
+              mb-8
+              ">
+                Received Notifications
+              </h2>
 
-          {/* MESSAGE */}
+              {
+                notifications.length === 0 && (
 
-          <div>
+                  <Card className="
+                  rounded-3xl
+                  shadow-lg
+                  ">
 
-            <Typography
-              variant="small"
-              className="mb-2 font-semibold"
-            >
-              Message
-            </Typography>
+                    <CardBody className="
+                    p-10
+                    text-center
+                    ">
 
-            <textarea
-              className="w-full border border-gray-300 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[140px]"
-              placeholder="Enter your message..."
-              value={message}
-              onChange={(e) =>
-                setMessage(e.target.value)
+                      <h2 className="
+                      text-2xl
+                      font-bold
+                      text-gray-700
+                      ">
+                        No Notifications
+                      </h2>
+
+                      <p className="
+                      text-gray-500
+                      mt-2
+                      ">
+                        No notices received yet
+                      </p>
+
+                    </CardBody>
+
+                  </Card>
+                )
               }
-              required
-            />
 
-          </div>
+              <div className="
+              grid
+              md:grid-cols-2
+              gap-8
+              ">
 
-          {/* BUTTON */}
+                {
+                  notifications.map((notice) => (
 
-          <Button
-            type="submit"
-            fullWidth
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl py-4 text-lg shadow-lg hover:scale-[1.02] transition-all duration-300"
-          >
+                    <Card
+                      key={
+                        notice.notificationId
+                      }
+                      className="
+                      rounded-3xl
+                      shadow-xl
+                      border
+                      border-gray-100
+                      hover:scale-[1.01]
+                      transition
+                      "
+                    >
 
-            {isLoading ? (
+                      <CardBody>
 
-              <div className="flex justify-center">
+                        <div className="
+                        flex
+                        justify-between
+                        items-start
+                        mb-5
+                        ">
 
-                <Spinner className="h-5 w-5" />
+                          <div>
+
+                            <h2 className="
+                            text-2xl
+                            font-bold
+                            text-gray-800
+                            ">
+                              {notice.title}
+                            </h2>
+
+                            <p className="
+                            text-indigo-600
+                            font-semibold
+                            mt-1
+                            ">
+                              {notice.sender}
+                            </p>
+
+                          </div>
+
+                          <Chip
+                            value="NOTICE"
+                            color="indigo"
+                          />
+
+                        </div>
+
+                        <p className="
+                        text-gray-600
+                        leading-relaxed
+                        min-h-[80px]
+                        ">
+                          {notice.message}
+                        </p>
+
+                        <div className="
+                        flex
+                        justify-between
+                        items-center
+                        mt-6
+                        text-sm
+                        text-gray-400
+                        ">
+
+                          <span>
+
+                            {
+                              new Date(
+                                notice.sentAt
+                              ).toLocaleDateString()
+                            }
+
+                          </span>
+
+                          <span>
+
+                            {
+                              new Date(
+                                notice.sentAt
+                              ).toLocaleTimeString()
+                            }
+
+                          </span>
+
+                        </div>
+
+                      </CardBody>
+
+                    </Card>
+                  ))
+                }
 
               </div>
 
-            ) : (
+            </div>
+          )
+        }
 
-              "SEND NOTIFICATION"
+      </div>
 
-            )}
-
-          </Button>
-
-        </CardBody>
-      </Card>
     </div>
   );
 };
 
-export default NotificationSender;
+export default HodNotifications;
